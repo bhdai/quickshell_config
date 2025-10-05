@@ -4,15 +4,34 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-WrapperRectangle {
+Item {
     id: workspaceIndicatorRoot
-    color: "#444444"
-    radius: 20
-    margin: 5
 
     readonly property int defaultWorkspaceCount: 5
+    readonly property int horizontalPadding: 5
+    readonly property int pillSpacing: 1
 
-    readonly property int horizontalPadding: 3
+    readonly property int activeSize: 20
+    readonly property int hasWindowsSize: 12
+    readonly property int emptySize: 8
+    readonly property real itemContainerWidth: activeSize * 1.2
+
+    readonly property real activeWidthMultiplier: 1.2
+    readonly property real activeIndicatorWidth: itemContainerWidth * activeWidthMultiplier
+
+    readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
+    property real animatedIndex: targetIndex
+
+    Behavior on animatedIndex {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.InOutCubic
+        }
+    }
+
+    onTargetIndexChanged: {
+        animatedIndex = targetIndex;
+    }
 
     readonly property int maxWorkspaceId: {
         if (Hyprland.workspaces?.values?.length > 0) {
@@ -22,54 +41,55 @@ WrapperRectangle {
         return defaultWorkspaceCount;
     }
 
+    // the component's implicit size is calculated based on its contents
+    implicitHeight: activeSize + 10 // WrapperRectangle's margin * 2
+    implicitWidth: {
+        const repeaterWidth = (itemContainerWidth * maxWorkspaceId) + (pillSpacing * (maxWorkspaceId - 1));
+        return repeaterWidth + (horizontalPadding * 2) + 10; // WrapperRectangle's margin * 2
+    }
+
+    WrapperRectangle {
+        id: background
+        anchors.fill: parent
+        color: "#444444"
+        radius: 20
+        margin: 5
+    }
+
     RowLayout {
-        spacing: 1
-        Layout.alignment: Qt.AlignVCenter
+        id: dotsLayout
+        anchors.centerIn: parent
+        spacing: pillSpacing
 
         Item {
             Layout.preferredWidth: horizontalPadding
         }
 
         Repeater {
-            model: workspaceIndicatorRoot.maxWorkspaceId
+            id: dotsRepeater
+            model: maxWorkspaceId
 
             delegate: Item {
-                id: container
+
+                Layout.preferredWidth: itemContainerWidth
+                Layout.preferredHeight: activeSize
 
                 readonly property int workspaceId: index + 1
                 readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
 
-                readonly property int activeSize: 20
-                readonly property int hasWindowsSize: 12
-                readonly property int emptySize: 8
-
-                Layout.preferredWidth: activeSize * 1.2
-                Layout.preferredHeight: activeSize
-                Layout.alignment: Qt.AlignVCenter
-
                 Rectangle {
-                    id: workspacePill
                     anchors.centerIn: parent
 
-                    height: {
-                        if (Hyprland.focusedWorkspace?.id === workspaceId) {
-                            return activeSize;
-                        } else if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
-                            return hasWindowsSize;
-                        } else {
-                            return emptySize;
-                        }
-                    }
-                    width: Hyprland.focusedWorkspace?.id === workspaceId ? height * 1.5 : height
+                    height: actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? hasWindowsSize : emptySize
+                    width: height
                     radius: height / 2
 
                     color: {
                         if (workspaceMouseArea.containsMouse) {
                             return "#5aa5f6";
                         }
-                        if (Hyprland.focusedWorkspace?.id === workspaceId) {
-                            return "#5aa5f6";
-                        } else if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
+                        // it never gets to this logic for the active dot because the blue pill is on top
+                        if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
                             return "#ffffff";
                         } else {
                             return "#77767b";
@@ -79,15 +99,8 @@ WrapperRectangle {
                     Behavior on height {
                         NumberAnimation {
                             duration: 200
-                            easing.type: Easing.Linear
                         }
                     }
-                    // Behavior on width {
-                    //     NumberAnimation {
-                    //         duration: 200
-                    //         easing.type: Easing.Linear
-                    //     }
-                    // }
                 }
 
                 MouseArea {
@@ -100,8 +113,33 @@ WrapperRectangle {
                 }
             }
         }
+
         Item {
             Layout.preferredWidth: horizontalPadding
+        }
+    }
+
+    // the animated indicator
+    // this regtangle sits on top of everything else
+    Rectangle {
+        z: 1 // make sure it's drawn on top of the dots
+        anchors.verticalCenter: parent.verticalCenter
+        height: activeSize
+        radius: height / 2
+        color: "#5aa5f6"
+
+        width: activeIndicatorWidth
+
+        enabled: false
+
+        function indexToPx(index) {
+            return dotsLayout.x + horizontalPadding + (index * (itemContainerWidth + pillSpacing));
+        }
+
+        x: {
+            const base_x = indexToPx(animatedIndex);
+            const width_diff = (activeIndicatorWidth - itemContainerWidth);
+            return base_x - (width_diff / 2);
         }
     }
 }
