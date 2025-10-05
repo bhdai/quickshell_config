@@ -40,16 +40,14 @@ RowLayout {
             id: batteryText
             anchors.centerIn: parent
             text: {
-                if (UPower.onBattery && UPower.displayDevice.ready) {
-                    const percent = Math.round(UPower.displayDevice.percentage);
+                const percent = Math.round(UPower.displayDevice.percentage * 100);
+                if (UPower.onBattery) {
                     return `󰁹 ${percent}%`;
-                } else if (UPower.onBattery) {
-                    return "󰁹 ...";
                 } else {
-                    return " AC";
+                    return `󰂅 ${percent}%`;
                 }
             }
-            color: UPower.onBattery && UPower.displayDevice.ready && UPower.displayDevice.percentage < 20 ? "red" : "white"
+            color: UPower.onBattery && UPower.displayDevice.ready && UPower.displayDevice.percentage * 100 < 20 ? "red" : "white"
             font.pixelSize: 12
         }
     }

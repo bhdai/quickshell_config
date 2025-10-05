@@ -1,8 +1,4 @@
 import Quickshell
+import qs.modules.bar
 
-Scope {
-    Variants {
-        model: Quickshell.screens
-        Bar {}
-    }
-}
+Bar {}

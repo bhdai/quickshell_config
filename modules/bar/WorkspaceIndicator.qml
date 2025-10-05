@@ -33,6 +33,10 @@ RowLayout {
             readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
 
             color: {
+                if (workspaceMouseArea.containsMouse) {
+                    return "#5aa5f6";
+                }
+
                 if (Hyprland.focusedWorkspace?.id === workspaceId) {
                     return "#5aa5f6"; //active/focused workspace
                 } else if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
@@ -50,7 +54,9 @@ RowLayout {
             }
 
             MouseArea {
+                id: workspaceMouseArea
                 anchors.fill: parent
+                hoverEnabled: true
                 onClicked: {
                     // activate the workspace, createing it if it doesn't exist
                     Hyprland.dispatch(`workspace ${workspaceId}`);
