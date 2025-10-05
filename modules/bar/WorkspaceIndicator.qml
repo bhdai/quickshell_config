@@ -11,6 +11,9 @@ WrapperRectangle {
     margin: 5
 
     readonly property int defaultWorkspaceCount: 5
+
+    readonly property int horizontalPadding: 3
+
     readonly property int maxWorkspaceId: {
         if (Hyprland.workspaces?.values?.length > 0) {
             let ids = Hyprland.workspaces.values.map(ws => ws.id);
@@ -22,6 +25,10 @@ WrapperRectangle {
     RowLayout {
         spacing: 1
         Layout.alignment: Qt.AlignVCenter
+
+        Item {
+            Layout.preferredWidth: horizontalPadding
+        }
 
         Repeater {
             model: workspaceIndicatorRoot.maxWorkspaceId
@@ -92,6 +99,9 @@ WrapperRectangle {
                     }
                 }
             }
+        }
+        Item {
+            Layout.preferredWidth: horizontalPadding
         }
     }
 }
