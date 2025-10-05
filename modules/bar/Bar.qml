@@ -24,77 +24,73 @@ Scope {
             color: "#2d2d2d"
             implicitHeight: 40
 
+            // left section
             RowLayout {
-                anchors.fill: parent
-                spacing: 15
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 10
+                anchors.leftMargin: 10
 
-                // left section
-                RowLayout {
-                    spacing: 10
-                    anchors.leftMargin: 10
+                // distro logo
+                Rectangle {
+                    id: distroLogo
+                    width: 35
+                    height: 30
+                    radius: 15
+                    color: "#444444"
                     Layout.alignment: Qt.AlignVCenter
 
-                    // distro logo
-                    Rectangle {
-                        id: distroLogo
-                        width: 33
-                        height: 30
-                        radius: 20
-                        color: "#444444"
-                        Layout.alignment: Qt.AlignVCenter
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰣇"
-                            color: "#0e94d2"
-                            font.bold: true
-                            font.pixelSize: 20
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰣇"
+                        color: "#0e94d2"
+                        font.bold: true
+                        font.pixelSize: 20
+                    }
+                }
+                WorkspaceIndicator {}
+                Text {
+                    id: activeWindowTitle
+                    text: {
+                        const activeWin = Hyprland.activeToplevel;
+                        const activeWs = Hyprland.focusedMonitor?.activeWorkspace;
+                        if (activeWin && activeWs && activeWin.workspace === activeWs) {
+                            return activeWin.title || "Desktop";
+                        } else {
+                            return "Desktop";
                         }
                     }
-                    WorkspaceIndicator {}
-                    Text {
-                        id: activeWindowTitle
-                        text: Hyprland.activeToplevel?.title || "Desktop"
-                        color: "white"
-                        font.pixelSize: 12
-                        elide: Text.ElideRight
-                        Layout.maximumWidth: 200
-                    }
+                    color: "white"
+                    font.pixelSize: 12
+                    elide: Text.ElideRight
+                    Layout.maximumWidth: 300
                 }
+            }
 
-                // spacer 1
-                Item {
-                    Layout.fillWidth: true
+            // middle section
+            RowLayout {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 15
+
+                Notification {}
+                Text {
+                    text: Time.time
+                    color: "white"
+                    font.pixelSize: 14
                 }
+            }
 
-                // middle section
-                RowLayout {
-                    spacing: 15
-                    Layout.alignment: Qt.AlignVCenter
+            // right section
+            RowLayout {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: 10
+                spacing: 10
 
-                    Notification {}
-                    Text {
-                        text: Time.time
-                        color: "white"
-                        font.pixelSize: 14
-                    }
-                }
-
-                // spacer 2
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                // right section
-                RowLayout {
-                    anchors.rightMargin: 10
-                    spacing: 10
-                    Layout.alignment: Qt.AlignVCenter
-
-                    SystemTray {}
-                    SystemInfo {}
-                    PowerButton {}
-                }
+                SystemTray {}
+                SystemInfo {}
+                PowerButton {}
             }
 
             // bind Pipewire objects to ensure properties are available
