@@ -36,6 +36,9 @@ WrapperRectangle {
             delegate: Item {
                 id: container
 
+                readonly property int workspaceId: index + 1
+                readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
+
                 readonly property int activeSize: 20
                 readonly property int hasWindowsSize: 12
                 readonly property int emptySize: 8
@@ -59,9 +62,6 @@ WrapperRectangle {
                     }
                     width: Hyprland.focusedWorkspace?.id === workspaceId ? height * 1.5 : height
                     radius: height / 2
-
-                    readonly property int workspaceId: index + 1
-                    readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
 
                     color: {
                         if (workspaceMouseArea.containsMouse) {
