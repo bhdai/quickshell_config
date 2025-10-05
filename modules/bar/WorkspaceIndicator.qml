@@ -76,16 +76,16 @@ WrapperRectangle {
                         }
                     }
 
-                    // Behavior on height {
-                    //     NumberAnimation {
-                    //         duration: 200
-                    //         easing.type: Easing.InOutCubic
-                    //     }
-                    // }
+                    Behavior on height {
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.Linear
+                        }
+                    }
                     // Behavior on width {
                     //     NumberAnimation {
                     //         duration: 200
-                    //         easing.type: Easing.InOutCubic
+                    //         easing.type: Easing.Linear
                     //     }
                     // }
                 }
