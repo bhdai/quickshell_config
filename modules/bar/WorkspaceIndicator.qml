@@ -1,14 +1,16 @@
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-RowLayout {
-    spacing: 8
+WrapperRectangle {
+    id: workspaceIndicatorRoot
+    color: "#444444"
+    radius: 20
+    margin: 5
 
-    // default number of workspaces to show
     readonly property int defaultWorkspaceCount: 5
-
     readonly property int maxWorkspaceId: {
         if (Hyprland.workspaces?.values?.length > 0) {
             let ids = Hyprland.workspaces.values.map(ws => ws.id);
@@ -17,49 +19,77 @@ RowLayout {
         return defaultWorkspaceCount;
     }
 
-    Repeater {
-        model: maxWorkspaceId
+    RowLayout {
+        spacing: 1
+        Layout.alignment: Qt.AlignVCenter
 
-        delegate: Rectangle {
-            id: workspaceRect
-            width: 30
-            height: 30
-            radius: 8
+        Repeater {
+            model: workspaceIndicatorRoot.maxWorkspaceId
 
-            // determine the workspace ID for this item
-            readonly property int workspaceId: index + 1
+            delegate: Item {
+                id: container
 
-            // find the actual workspaces object if it exists
-            readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
+                readonly property int activeSize: 20
+                readonly property int hasWindowsSize: 12
+                readonly property int emptySize: 8
 
-            color: {
-                if (workspaceMouseArea.containsMouse) {
-                    return "#5aa5f6";
+                Layout.preferredWidth: activeSize * 1.2
+                Layout.preferredHeight: activeSize
+                Layout.alignment: Qt.AlignVCenter
+
+                Rectangle {
+                    id: workspacePill
+                    anchors.centerIn: parent
+
+                    height: {
+                        if (Hyprland.focusedWorkspace?.id === workspaceId) {
+                            return activeSize;
+                        } else if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
+                            return hasWindowsSize;
+                        } else {
+                            return emptySize;
+                        }
+                    }
+                    width: Hyprland.focusedWorkspace?.id === workspaceId ? height * 1.5 : height
+                    radius: height / 2
+
+                    readonly property int workspaceId: index + 1
+                    readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
+
+                    color: {
+                        if (workspaceMouseArea.containsMouse) {
+                            return "#5aa5f6";
+                        }
+                        if (Hyprland.focusedWorkspace?.id === workspaceId) {
+                            return "#5aa5f6";
+                        } else if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
+                            return "#ffffff";
+                        } else {
+                            return "#77767b";
+                        }
+                    }
+
+                    // Behavior on height {
+                    //     NumberAnimation {
+                    //         duration: 200
+                    //         easing.type: Easing.InOutCubic
+                    //     }
+                    // }
+                    // Behavior on width {
+                    //     NumberAnimation {
+                    //         duration: 200
+                    //         easing.type: Easing.InOutCubic
+                    //     }
+                    // }
                 }
 
-                if (Hyprland.focusedWorkspace?.id === workspaceId) {
-                    return "#5aa5f6"; //active/focused workspace
-                } else if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
-                    return "#ffffff"; // workspace with windows
-                } else {
-                    return "#77767b"; // empty workspace
-                }
-            }
-
-            Text {
-                anchors.centerIn: parent
-                text: workspaceId
-                font.pixelSize: 12
-                font.bold: Hyprland.focusedWorkspace?.id === workspaceId
-            }
-
-            MouseArea {
-                id: workspaceMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    // activate the workspace, creating it if it doesn't exist
-                    Hyprland.dispatch(`workspace ${workspaceId}`);
+                MouseArea {
+                    id: workspaceMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: {
+                        Hyprland.dispatch(`workspace ${workspaceId}`);
+                    }
                 }
             }
         }
