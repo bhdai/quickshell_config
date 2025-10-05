@@ -58,7 +58,7 @@ RowLayout {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    // activate the workspace, createing it if it doesn't exist
+                    // activate the workspace, creating it if it doesn't exist
                     Hyprland.dispatch(`workspace ${workspaceId}`);
                 }
             }
