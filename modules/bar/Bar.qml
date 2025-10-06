@@ -43,8 +43,8 @@ Scope {
             RowLayout {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
-                anchors.leftMargin: 10
+                spacing: 8
+                anchors.leftMargin: 5
 
                 // distro logo
                 Rectangle {
@@ -85,10 +85,10 @@ Scope {
             RowLayout {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.rightMargin: 10
-                spacing: 10
+                anchors.rightMargin: 5
+                spacing: 8
 
-                SystemTray {}
+                SysTray {}
                 SystemInfo {}
                 PowerButton {}
             }
