@@ -20,17 +20,22 @@ Item {
     readonly property real activeIndicatorWidth: itemContainerWidth * activeWidthMultiplier
 
     readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
-    property real animatedIndex: targetIndex
+    property real targetX: 0
 
-    Behavior on animatedIndex {
-        NumberAnimation {
-            duration: 150
-            easing.type: Easing.InOutCubic
+    function updatePillPosition() {
+        var targetItem = dotsRepeater.itemAt(targetIndex);
+        if (targetItem) {
+            var centerPointInRoot = targetItem.mapToItem(workspaceIndicatorRoot, targetItem.width / 2, 0);
+            targetX = centerPointInRoot.x - (activeIndicatorWidth / 2);
         }
     }
 
+    Component.onCompleted: {
+        updatePillPosition();
+    }
+
     onTargetIndexChanged: {
-        animatedIndex = targetIndex;
+        updatePillPosition();
     }
 
     readonly property int maxWorkspaceId: {
@@ -93,6 +98,7 @@ Item {
                             return "#ffffff";
                         } else {
                             return "#77767b";
+                            // return "#2d2d2d";
                         }
                     }
 
@@ -125,21 +131,18 @@ Item {
         z: 1 // make sure it's drawn on top of the dots
         anchors.verticalCenter: parent.verticalCenter
         height: activeSize
+        width: activeIndicatorWidth
         radius: height / 2
         color: "#5aa5f6"
-
-        width: activeIndicatorWidth
-
         enabled: false
 
-        function indexToPx(index) {
-            return dotsLayout.x + horizontalPadding + (index * (itemContainerWidth + pillSpacing));
-        }
+        x: targetX
 
-        x: {
-            const base_x = indexToPx(animatedIndex);
-            const width_diff = (activeIndicatorWidth - itemContainerWidth);
-            return base_x - (width_diff / 2);
+        Behavior on x {
+            NumberAnimation {
+                duration: 250
+                easing.type: Easing.InOutCubic
+            }
         }
     }
 }
