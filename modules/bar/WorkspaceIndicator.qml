@@ -20,30 +20,41 @@ Item {
     readonly property real activeIndicatorWidth: itemContainerWidth * activeWidthMultiplier
 
     readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
-    property real targetX: 0
 
-    function updatePillPosition() {
+    readonly property real targetX: {
+        if (dotsRepeater.count === 0 || targetIndex < 0 || targetIndex >= dotsRepeater.count) {
+            return 0 - (activeIndicatorWidth / 2);
+        }
+
         var targetItem = dotsRepeater.itemAt(targetIndex);
         if (targetItem) {
             var centerPointInRoot = targetItem.mapToItem(workspaceIndicatorRoot, targetItem.width / 2, 0);
-            targetX = centerPointInRoot.x - (activeIndicatorWidth / 2);
+            return centerPointInRoot.x - (activeIndicatorWidth / 2);
         }
+
+        return 0 - (activeIndicatorWidth / 2);
     }
+
+    property bool isInitialized: false
 
     Component.onCompleted: {
-        updatePillPosition();
-    }
-
-    onTargetIndexChanged: {
-        updatePillPosition();
+        Qt.callLater(() => {
+            isInitialized = true;
+        });
     }
 
     readonly property int maxWorkspaceId: {
         if (Hyprland.workspaces?.values?.length > 0) {
             let ids = Hyprland.workspaces.values.map(ws => ws.id);
-            return Math.max(defaultWorkspaceCount, Math.max(...ids));
+            // ensure have enough items for the target index
+            var count = Math.max(defaultWorkspaceCount, Math.max(...ids));
+            // if focused workspace is outside current max, expand to fill it
+            if (Hyprland.focusedWorkspace) {
+                count = Math.max(count, Hyprland.focusedWorkspace.id);
+            }
+            return count;
         }
-        return defaultWorkspaceCount;
+        return Math.max(defaultWorkspaceCount, Hyprland.focusedWorkspace?.id || 0);
     }
 
     // the component's implicit size is calculated based on its contents
@@ -90,16 +101,9 @@ Item {
                     radius: height / 2
 
                     color: {
-                        if (workspaceMouseArea.containsMouse) {
+                        if (workspaceMouseArea.containsMouse)
                             return "#5aa5f6";
-                        }
-                        // it never gets to this logic for the active dot because the blue pill is on top
-                        if (actualWorkspace && actualWorkspace.toplevels?.values?.length > 0) {
-                            return "#ffffff";
-                        } else {
-                            return "#77767b";
-                            // return "#2d2d2d";
-                        }
+                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? "#ffffff" : "#77767b";
                     }
 
                     Behavior on height {
@@ -113,9 +117,7 @@ Item {
                     id: workspaceMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: {
-                        Hyprland.dispatch(`workspace ${workspaceId}`);
-                    }
+                    onClicked: Hyprland.dispatch(`workspace ${workspaceId}`)
                 }
             }
         }
@@ -125,8 +127,13 @@ Item {
         }
     }
 
-    // the animated indicator
-    // this regtangle sits on top of everything else
+    // move the animation outside the behavior so that it can be referenced
+    NumberAnimation {
+        id: pillMoveAnimation
+        duration: 150
+        easing.type: Easing.InOutCubic
+    }
+
     Rectangle {
         z: 1 // make sure it's drawn on top of the dots
         anchors.verticalCenter: parent.verticalCenter
@@ -138,11 +145,9 @@ Item {
 
         x: targetX
 
+        // condition behavior
         Behavior on x {
-            NumberAnimation {
-                duration: 250
-                easing.type: Easing.InOutCubic
-            }
+            animation: workspaceIndicatorRoot.isInitialized ? pillMoveAnimation : null
         }
     }
 }
