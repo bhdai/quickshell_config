@@ -8,6 +8,21 @@ import QtQuick.Layouts
 Scope {
     id: bar
 
+    Connections {
+        target: Hyprland
+
+        function onRawEvent(event) {
+            switch (event.name) {
+            case "openwindow":
+            case "closewindow":
+            case "movewindow":
+            case "changefloatingmode":
+                Hyprland.refreshToplevels();
+                break;
+            }
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -49,22 +64,7 @@ Scope {
                     }
                 }
                 WorkspaceIndicator {}
-                Text {
-                    id: activeWindowTitle
-                    text: {
-                        const activeWin = Hyprland.activeToplevel;
-                        const activeWs = Hyprland.focusedMonitor?.activeWorkspace;
-                        if (activeWin && activeWs && activeWin.workspace === activeWs) {
-                            return activeWin.title || "Desktop";
-                        } else {
-                            return "Desktop";
-                        }
-                    }
-                    color: "white"
-                    font.pixelSize: 12
-                    elide: Text.ElideRight
-                    Layout.maximumWidth: 300
-                }
+                ActiveWindow {}
             }
 
             // middle section
