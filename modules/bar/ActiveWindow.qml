@@ -14,7 +14,7 @@ WrapperRectangle {
 
     readonly property var activeWin: Hyprland.activeToplevel
     readonly property var activeWs: Hyprland.focusedMonitor?.activeWorkspace
-    readonly property bool isWinActiveOnWs: activeWin && activeWs && activeWin.workspace === activeWs
+    readonly property bool isWinActiveOnWs: activeWin && activeWs && activeWin?.workspace === activeWs
 
     readonly property var desktopEntry: isWinActiveOnWs ? DesktopEntries.heuristicLookup(activeWin.wayland?.appId || "") : null
 
@@ -37,7 +37,7 @@ WrapperRectangle {
             color: "white"
             font.pixelSize: 12
             elide: Text.ElideRight
-            Layout.maximumWidth: 200
+            Layout.maximumWidth: 300
             Layout.alignment: Qt.AlignVCenter
         }
     }
