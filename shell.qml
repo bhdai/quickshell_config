@@ -1,4 +1,7 @@
+//@ pragma UseQApplication
 import Quickshell
 import qs.modules.bar
 
-Bar {}
+ShellRoot {
+    Bar {}
+}
