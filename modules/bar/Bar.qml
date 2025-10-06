@@ -88,6 +88,7 @@ Scope {
                 anchors.rightMargin: 5
                 spacing: 8
 
+                Media {}
                 SysTray {}
                 SystemInfo {}
                 PowerButton {}
