@@ -89,6 +89,7 @@ Scope {
                 spacing: 8
 
                 Media {}
+
                 SysTray {}
                 SystemInfo {}
                 PowerButton {}
