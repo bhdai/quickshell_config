@@ -4,13 +4,11 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
-WrapperRectangle {
-    color: "#444444"
-    radius: 20
-    margin: 5
-
-    leftMargin: 10
-    rightMargin: 10
+MouseArea {
+    id: root
+    implicitWidth: backgroundRect.implicitWidth
+    implicitHeight: backgroundRect.implicitHeight
+    hoverEnabled: true
 
     readonly property var activeWin: Hyprland.activeToplevel
     readonly property var activeWs: Hyprland.focusedMonitor?.activeWorkspace
@@ -18,27 +16,47 @@ WrapperRectangle {
 
     readonly property var desktopEntry: isWinActiveOnWs ? DesktopEntries.heuristicLookup(activeWin.wayland?.appId || "") : null
 
-    RowLayout {
-        spacing: 8
-        Layout.alignment: Qt.AlignVCenter
+    WrapperRectangle {
+        id: backgroundRect
+        color: "#444444"
+        radius: 20
+        margin: 5
 
-        IconImage {
-            id: appIcon
+        leftMargin: 10
+        rightMargin: 10
 
-            visible: isWinActiveOnWs && desktopEntry && desktopEntry.icon
-
-            source: Quickshell.iconPath(desktopEntry?.icon || "", true)
-
-            implicitSize: 20
-        }
-
-        Text {
-            text: isWinActiveOnWs ? (activeWin.title || "Untitled Window") : "Desktop"
-            color: "white"
-            font.pixelSize: 12
-            elide: Text.ElideRight
-            Layout.maximumWidth: 300
+        RowLayout {
+            spacing: 8
             Layout.alignment: Qt.AlignVCenter
+
+            IconImage {
+                id: appIcon
+
+                visible: isWinActiveOnWs && desktopEntry && desktopEntry.icon
+
+                source: Quickshell.iconPath(desktopEntry?.icon || "", true)
+
+                implicitSize: 20
+            }
+
+            Text {
+                text: isWinActiveOnWs ? (activeWin.title || "Untitled Window") : "Desktop"
+                color: "white"
+                font.pixelSize: 12
+                elide: Text.ElideRight
+                Layout.maximumWidth: 300
+                Layout.alignment: Qt.AlignVCenter
+            }
+        }
+    }
+
+    // lazy loaded tooltip
+    Loader {
+        id: tooltipLoader
+        active: root.containsMouse && root.isWinActiveOnWs
+        sourceComponent: ActiveWindowTooltip {
+            activeWin: root.activeWin
+            anchorItem: root
         }
     }
 }
