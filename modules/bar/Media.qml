@@ -4,14 +4,11 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
 
-WrapperRectangle {
+MouseArea {
     id: root
+    implicitWidth: backgroundRect.implicitWidth
     implicitHeight: 30
-    radius: 15
-    color: "#444444"
-
-    leftMargin: 10
-    rightMargin: 10
+    hoverEnabled: true
 
     property var activePlayer: null
 
@@ -67,54 +64,74 @@ WrapperRectangle {
 
     visible: !!activePlayer
 
-    RowLayout {
+    WrapperRectangle {
+        id: backgroundRect
+        implicitHeight: 30
+        radius: 15
+        color: "#444444"
 
-        y: (parent.height - implicitHeight) / 2
-        spacing: 5
+        leftMargin: 10
+        rightMargin: 10
 
-        // music note
-        Text {
-            text: "󰎇"
-            color: "#ffffff"
-            font.pixelSize: 14
-            Layout.alignment: Qt.AlignVCenter
+        RowLayout {
+            y: (parent.height - implicitHeight) / 2
+            spacing: 5
+
+            // music note
+            Text {
+                text: "󰎇"
+                color: "#ffffff"
+                font.pixelSize: 16
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            // track title
+            Text {
+                id: titleText
+                text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
+                color: "#ffffff"
+                font.pixelSize: 12
+
+                elide: Text.ElideRight
+
+                Layout.alignment: Qt.AlignVCenter
+
+                Layout.maximumWidth: 200
+            }
+
+            // separator
+            Rectangle {
+                width: 1
+                height: parent.height * 0.6
+                color: "#aaaaaa"
+                visible: titleText.text && artistText.text
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            // track artist
+            Text {
+                id: artistText
+                text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
+                color: "#aaaaaa"
+                font.pixelSize: 12
+
+                elide: Text.ElideRight
+
+                Layout.alignment: Qt.AlignVCenter
+
+                Layout.maximumWidth: 100
+            }
         }
+    }
 
-        // track title
-        Text {
-            id: titleText
-            text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
-            color: "#ffffff"
-            font.pixelSize: 12
-
-            elide: Text.ElideRight
-
-            Layout.alignment: Qt.AlignVCenter
-
-            Layout.maximumWidth: 200
-        }
-
-        // separator
-        Rectangle {
-            width: 1
-            height: parent.height * 0.6
-            color: "#aaaaaa"
-            visible: titleText.text && artistText.text
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        // Track artist
-        Text {
-            id: artistText
-            text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
-            color: "#aaaaaa"
-            font.pixelSize: 12
-
-            elide: Text.ElideRight
-
-            Layout.alignment: Qt.AlignVCenter
-
-            Layout.maximumWidth: 100
+    // lazy loaded tooltip
+    Loader {
+        id: tooltipLoader
+        active: root.containsMouse && root.activePlayer
+        sourceComponent: MediaTooltip {
+            activePlayer: root.activePlayer
+            anchorItem: root
+            cleanTitleFunc: root.cleanTitle
         }
     }
 }
