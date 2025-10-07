@@ -12,7 +12,6 @@ Text {
     font {
         family: "Material Symbols Rounded"
         pixelSize: iconSize
-        weight: Font.Normal + (Font.DemiBold - Font.Normal) * fill
         hintingPreference: Font.PreferFullHinting
         variableAxes: {
             "FILL": truncatedFill,

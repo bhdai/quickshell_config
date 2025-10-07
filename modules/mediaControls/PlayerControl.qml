@@ -251,7 +251,7 @@ Item {
                         MediaControls.MaterialSymbol {
                             anchors.centerIn: parent
                             iconSize: 28
-                            fill: playerController.player?.isPlaying ? 1 : 0
+                            fill: 1
                             color: playerController.player?.isPlaying ? blendedColors.colOnPrimary : blendedColors.colOnSecondaryContainer
                             text: playerController.player?.isPlaying ? "pause" : "play_arrow"
                             horizontalAlignment: Text.AlignHCenter
