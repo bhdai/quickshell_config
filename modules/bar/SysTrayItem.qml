@@ -20,7 +20,6 @@ MouseArea {
             break;
         case Qt.RightButton:
             if (modelData.hasMenu) {
-                // openMenu();
                 menuLoader.active = true;
                 menuLoader.item.open();
             }
@@ -36,13 +35,28 @@ MouseArea {
         height: root.implicitHeight * 0.7
     }
 
+    Timer {
+        id: tooltipTimer
+        interval: 500
+        running: root.containsMouse && root.QsWindow && root.QsWindow.window
+        onTriggered: tooltipLoader.active = true
+    }
+
     Loader {
         id: tooltipLoader
-        active: root.containsMouse && root.QsWindow && root.QsWindow.window
+        active: false
 
         sourceComponent: SysTrayItemTooltip {
             item: root.modelData
             anchorItem: root
+        }
+    }
+
+    // reset tooltip when mouse leaves
+    onContainsMouseChanged: {
+        if (!containsMouse) {
+            tooltipTimer.stop();
+            tooltipLoader.active = false;
         }
     }
 

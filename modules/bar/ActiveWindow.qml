@@ -23,7 +23,10 @@ MouseArea {
         margin: 5
 
         Behavior on color {
-            ColorAnimation { duration: 150; easing.type: Easing.OutQuad }
+            ColorAnimation {
+                duration: 150
+                easing.type: Easing.OutQuad
+            }
         }
 
         leftMargin: 10
@@ -55,12 +58,27 @@ MouseArea {
     }
 
     // lazy loaded tooltip
+    Timer {
+        id: tooltipTimer
+        interval: 500
+        running: root.containsMouse && root.isWinActiveOnWs
+        onTriggered: tooltipLoader.active = true
+    }
+
     Loader {
         id: tooltipLoader
-        active: root.containsMouse && root.isWinActiveOnWs
+        active: false
         sourceComponent: ActiveWindowTooltip {
             activeWin: root.activeWin
             anchorItem: root
+        }
+    }
+
+    // reset tooltip when mouse leaves
+    onContainsMouseChanged: {
+        if (!containsMouse) {
+            tooltipTimer.stop();
+            tooltipLoader.active = false;
         }
     }
 }

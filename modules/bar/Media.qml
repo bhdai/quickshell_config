@@ -3,14 +3,22 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
+import "../mediaControls" as MediaControlsModule
 
 MouseArea {
     id: root
     implicitWidth: backgroundRect.implicitWidth
     implicitHeight: 30
     hoverEnabled: true
+    acceptedButtons: Qt.LeftButton
 
     property var activePlayer: null
+
+    onClicked: mouse => {
+        if (mouse.button === Qt.LeftButton) {
+            mediaControls.isOpen = !mediaControls.isOpen;
+        }
+    }
 
     function updateActivePlayer() {
         const playingPlayer = Mpris.players.values.find(p => p.playbackState === MprisPlaybackState.Playing);
@@ -71,7 +79,10 @@ MouseArea {
         radius: 15
 
         Behavior on color {
-            ColorAnimation { duration: 150; easing.type: Easing.OutQuad }
+            ColorAnimation {
+                duration: 150
+                easing.type: Easing.OutQuad
+            }
         }
 
         leftMargin: 10
@@ -129,13 +140,34 @@ MouseArea {
     }
 
     // lazy loaded tooltip
+    Timer {
+        id: tooltipTimer
+        interval: 500
+        running: root.containsMouse && root.activePlayer
+        onTriggered: tooltipLoader.active = true
+    }
+
     Loader {
         id: tooltipLoader
-        active: root.containsMouse && root.activePlayer
+        active: false
         sourceComponent: MediaTooltip {
             activePlayer: root.activePlayer
             anchorItem: root
             cleanTitleFunc: root.cleanTitle
         }
+    }
+
+    // reset tooltip when mouse leaves
+    onContainsMouseChanged: {
+        if (!containsMouse) {
+            tooltipTimer.stop();
+            tooltipLoader.active = false;
+        }
+    }
+
+    // media controls popup
+    MediaControlsModule.MediaControls {
+        id: mediaControls
+        anchorItem: root
     }
 }
