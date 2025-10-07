@@ -34,7 +34,7 @@ Scope {
                 item: root.anchorItem
                 edges: Edges.Bottom
                 gravity: Edges.Bottom
-                margins.top: 8
+                margins.top: 40
             }
 
             mask: Region {
