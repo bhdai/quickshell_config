@@ -18,9 +18,13 @@ MouseArea {
 
     WrapperRectangle {
         id: backgroundRect
-        color: "#444444"
+        color: root.containsMouse ? "#555555" : "#444444"
         radius: 20
         margin: 5
+
+        Behavior on color {
+            ColorAnimation { duration: 150; easing.type: Easing.OutQuad }
+        }
 
         leftMargin: 10
         rightMargin: 10
