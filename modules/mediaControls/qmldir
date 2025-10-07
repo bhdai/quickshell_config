@@ -1,0 +1,9 @@
+module mediaControls
+singleton ColorUtils 1.0 ColorUtils.qml
+MediaControls 1.0 MediaControls.qml
+PlayerControl 1.0 PlayerControl.qml
+AdaptedMaterialScheme 1.0 AdaptedMaterialScheme.qml
+MaterialSymbol 1.0 MaterialSymbol.qml
+RippleButton 1.0 RippleButton.qml
+SimpleSlider 1.0 SimpleSlider.qml
+SimpleProgressBar 1.0 SimpleProgressBar.qml
