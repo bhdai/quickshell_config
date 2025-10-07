@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
@@ -299,23 +300,77 @@ Item {
 
                             Component {
                                 id: sliderComponent
-                                MediaControls.SimpleSlider {
-                                    highlightColor: blendedColors.colPrimary
-                                    trackColor: blendedColors.colSecondaryContainer
-                                    handleColor: blendedColors.colPrimary
+                                Slider {
+                                    id: positionSlider
+                                    from: 0
+                                    to: 1
                                     value: playerController.player?.position / playerController.player?.length || 0
-                                    onMoved: newValue => {
-                                        playerController.player.position = newValue * playerController.player.length;
+                                    
+                                    // Style the slider track
+                                    background: Rectangle {
+                                        x: positionSlider.leftPadding
+                                        y: positionSlider.topPadding + positionSlider.availableHeight / 2 - height / 2
+                                        implicitWidth: 200
+                                        implicitHeight: 6
+                                        width: positionSlider.availableWidth
+                                        height: implicitHeight
+                                        radius: 3
+                                        color: blendedColors.colSecondaryContainer
+                                        
+                                        Rectangle {
+                                            width: positionSlider.visualPosition * parent.width
+                                            height: parent.height
+                                            radius: 3
+                                            color: blendedColors.colPrimary
+                                        }
+                                    }
+                                    
+                                    // Style the slider handle
+                                    handle: Rectangle {
+                                        x: positionSlider.leftPadding + positionSlider.visualPosition * (positionSlider.availableWidth - width)
+                                        y: positionSlider.topPadding + positionSlider.availableHeight / 2 - height / 2
+                                        implicitWidth: 16
+                                        implicitHeight: 16
+                                        radius: 8
+                                        color: positionSlider.pressed ? Qt.lighter(blendedColors.colPrimary, 1.2) : blendedColors.colPrimary
+                                        border.color: Qt.darker(color, 1.1)
+                                        border.width: 1
+                                        
+                                        visible: positionSlider.hovered || positionSlider.pressed
+                                    }
+                                    
+                                    onMoved: {
+                                        if (playerController.player?.canSeek) {
+                                            playerController.player.position = value * playerController.player.length;
+                                        }
                                     }
                                 }
                             }
 
                             Component {
                                 id: progressBarComponent
-                                MediaControls.SimpleProgressBar {
-                                    highlightColor: blendedColors.colPrimary
-                                    trackColor: blendedColors.colSecondaryContainer
+                                ProgressBar {
+                                    id: positionProgressBar
+                                    from: 0
+                                    to: 1
                                     value: playerController.player?.position / playerController.player?.length || 0
+                                    
+                                    // Style the progress bar
+                                    contentItem: Rectangle {
+                                        implicitWidth: 200
+                                        implicitHeight: 6
+                                        width: positionProgressBar.availableWidth
+                                        height: implicitHeight
+                                        radius: 3
+                                        color: blendedColors.colSecondaryContainer
+                                        
+                                        Rectangle {
+                                            width: positionProgressBar.visualPosition * parent.width
+                                            height: parent.height
+                                            radius: 3
+                                            color: blendedColors.colPrimary
+                                        }
+                                    }
                                 }
                             }
                         }

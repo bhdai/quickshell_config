@@ -5,5 +5,3 @@ PlayerControl 1.0 PlayerControl.qml
 AdaptedMaterialScheme 1.0 AdaptedMaterialScheme.qml
 MaterialSymbol 1.0 MaterialSymbol.qml
 RippleButton 1.0 RippleButton.qml
-SimpleSlider 1.0 SimpleSlider.qml
-SimpleProgressBar 1.0 SimpleProgressBar.qml
