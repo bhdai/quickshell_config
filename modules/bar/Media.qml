@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
-import "../mediaControls" as MediaControlsModule
+import qs.modules.mediaControls as MediaControlsModule
 
 MouseArea {
     id: root
