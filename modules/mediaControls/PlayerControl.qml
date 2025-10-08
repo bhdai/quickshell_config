@@ -6,21 +6,20 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
-import "." as MediaControls
 
 Item {
     id: playerController
     required property MprisPlayer player
 
-    property var artUrl: player?.trackArtUrl || ""
+    property var artUrl: player?.trackArtUrl
     property string artDownloadLocation: `${Quickshell.env("HOME")}/.cache/quickshell/media/coverart`
     property string artFileName: Qt.md5(artUrl) + ".jpg"
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
     property color artDominantColor: "#3d3d3d"
     property bool downloaded: false
     property real radius: 12
-    property real contentPadding: 13
-    property real artRounding: 8
+    property real contentPadding
+    property real artRounding
 
     // cleanup processes on destruction to prevent crashes during reload
     Component.onDestruction: {
@@ -76,7 +75,7 @@ Item {
     }
 
     // create adapted color scheme
-    MediaControls.AdaptedMaterialScheme {
+    AdaptedMaterialScheme {
         id: blendedColors
         sourceColor: artDominantColor
     }
@@ -144,7 +143,7 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                color: MediaControls.ColorUtils.transparentize(blendedColors.colLayer0, 0.3)
+                color: ColorUtils.transparentize(blendedColors.colLayer0, 0.3)
                 radius: playerController.radius
             }
         }
@@ -160,7 +159,7 @@ Item {
                 Layout.fillHeight: true
                 implicitWidth: height
                 radius: playerController.artRounding
-                color: MediaControls.ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
+                color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
 
                 layer.enabled: true
                 layer.effect: OpacityMask {
@@ -229,7 +228,7 @@ Item {
                     }
 
                     // play/pause button
-                    MediaControls.RippleButton {
+                    RippleButton {
                         id: playPauseButton
                         anchors.right: parent.right
                         anchors.bottom: sliderRow.top
@@ -250,7 +249,7 @@ Item {
                             }
                         }
 
-                        MediaControls.MaterialSymbol {
+                        MaterialSymbol {
                             anchors.centerIn: parent
                             iconSize: 28
                             fill: 1
@@ -272,16 +271,16 @@ Item {
                         spacing: 8
 
                         // previous button
-                        MediaControls.RippleButton {
+                        RippleButton {
                             implicitWidth: 32
                             implicitHeight: 32
                             buttonRadius: 16
-                            colBackground: MediaControls.ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
+                            colBackground: ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
                             colBackgroundHover: blendedColors.colSecondaryContainerHover
 
                             onClicked: playerController.player?.previous()
 
-                            MediaControls.MaterialSymbol {
+                            MaterialSymbol {
                                 anchors.centerIn: parent
                                 iconSize: 24
                                 fill: 1
@@ -377,16 +376,16 @@ Item {
                         }
 
                         // next button
-                        MediaControls.RippleButton {
+                        RippleButton {
                             implicitWidth: 32
                             implicitHeight: 32
                             buttonRadius: 16
-                            colBackground: MediaControls.ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
+                            colBackground: ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
                             colBackgroundHover: blendedColors.colSecondaryContainerHover
 
                             onClicked: playerController.player?.next()
 
-                            MediaControls.MaterialSymbol {
+                            MaterialSymbol {
                                 anchors.centerIn: parent
                                 iconSize: 24
                                 fill: 1
