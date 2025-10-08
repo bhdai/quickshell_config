@@ -89,7 +89,7 @@ MouseArea {
         rightMargin: 10
 
         RowLayout {
-            y: (parent.height - implicitHeight) / 2
+            anchors.verticalCenter: parent.verticalCenter
             spacing: 5
 
             // music note
