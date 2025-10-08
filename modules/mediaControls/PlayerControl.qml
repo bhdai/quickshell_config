@@ -54,7 +54,10 @@ Item {
         command: ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
-                playerController.downloaded = true;
+                // add small delay to ensure file system writes are complete
+                Qt.callLater(function () {
+                    playerController.downloaded = true;
+                }, 100);
             }
         }
     }
@@ -120,7 +123,7 @@ Item {
         }
 
         // blurred album art background
-        Image {
+        StyledImage {
             id: blurredArt
             anchors.fill: parent
             source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
@@ -129,7 +132,6 @@ Item {
             fillMode: Image.PreserveAspectCrop
             cache: false
             antialiasing: true
-            asynchronous: true
 
             layer.enabled: true
             layer.effect: MultiEffect {
@@ -169,14 +171,13 @@ Item {
                     }
                 }
 
-                Image {
+                StyledImage {
                     id: mediaArt
                     anchors.fill: parent
                     source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
                     fillMode: Image.PreserveAspectCrop
                     cache: false
                     antialiasing: true
-                    asynchronous: true
                 }
             }
 
@@ -238,7 +239,7 @@ Item {
                         implicitHeight: 44
                         onClicked: playerController.player.togglePlaying()
 
-                        buttonRadius: playerController.player?.isPlaying ? 8 : 22
+                        buttonRadius: playerController.player?.isPlaying ? 16 : 22
                         colBackground: playerController.player?.isPlaying ? blendedColors.colPrimary : blendedColors.colSecondaryContainer
                         colBackgroundHover: playerController.player?.isPlaying ? blendedColors.colPrimaryHover : blendedColors.colSecondaryContainerHover
 
@@ -305,8 +306,8 @@ Item {
                                     from: 0
                                     to: 1
                                     value: playerController.player?.position / playerController.player?.length || 0
-                                    
-                                    // Style the slider track
+
+                                    // style the slider track
                                     background: Rectangle {
                                         x: positionSlider.leftPadding
                                         y: positionSlider.topPadding + positionSlider.availableHeight / 2 - height / 2
@@ -316,7 +317,7 @@ Item {
                                         height: implicitHeight
                                         radius: 3
                                         color: blendedColors.colSecondaryContainer
-                                        
+
                                         Rectangle {
                                             width: positionSlider.visualPosition * parent.width
                                             height: parent.height
@@ -324,8 +325,8 @@ Item {
                                             color: blendedColors.colPrimary
                                         }
                                     }
-                                    
-                                    // Style the slider handle
+
+                                    // style the slider handle
                                     handle: Rectangle {
                                         x: positionSlider.leftPadding + positionSlider.visualPosition * (positionSlider.availableWidth - width)
                                         y: positionSlider.topPadding + positionSlider.availableHeight / 2 - height / 2
@@ -335,10 +336,10 @@ Item {
                                         color: positionSlider.pressed ? Qt.lighter(blendedColors.colPrimary, 1.2) : blendedColors.colPrimary
                                         border.color: Qt.darker(color, 1.1)
                                         border.width: 1
-                                        
+
                                         visible: positionSlider.hovered || positionSlider.pressed
                                     }
-                                    
+
                                     onMoved: {
                                         if (playerController.player?.canSeek) {
                                             playerController.player.position = value * playerController.player.length;
@@ -354,7 +355,7 @@ Item {
                                     from: 0
                                     to: 1
                                     value: playerController.player?.position / playerController.player?.length || 0
-                                    
+
                                     // Style the progress bar
                                     contentItem: Rectangle {
                                         implicitWidth: 200
@@ -363,7 +364,7 @@ Item {
                                         height: implicitHeight
                                         radius: 3
                                         color: blendedColors.colSecondaryContainer
-                                        
+
                                         Rectangle {
                                             width: positionProgressBar.visualPosition * parent.width
                                             height: parent.height
