@@ -62,7 +62,6 @@ Scope {
                     delegate: PlayerControl {
                         required property MprisPlayer modelData
                         player: modelData
-                        Layout.fillWidth: true
                         implicitWidth: root.popupWidth
                         implicitHeight: root.popupHeight
                         radius: root.popupRounding
