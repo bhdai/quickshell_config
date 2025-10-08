@@ -13,7 +13,7 @@ Item {
     required property MprisPlayer player
 
     property var artUrl: player?.trackArtUrl || ""
-    property string artDownloadLocation: `${Quickshell.env("HOME")}/.cache/quickshell/coverart`
+    property string artDownloadLocation: `${Quickshell.env("HOME")}/.cache/quickshell/media/coverart`
     property string artFileName: Qt.md5(artUrl) + ".jpg"
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
     property color artDominantColor: "#3d3d3d"
