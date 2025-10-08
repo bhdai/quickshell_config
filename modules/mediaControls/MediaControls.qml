@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Services.Mpris
-import "." as MediaControls
 
 Scope {
     id: root
@@ -60,8 +59,8 @@ Scope {
                 Repeater {
                     model: Mpris.players
 
-                    delegate: MediaControls.PlayerControl {
-                        required property var modelData
+                    delegate: PlayerControl {
+                        required property MprisPlayer modelData
                         player: modelData
                         Layout.fillWidth: true
                         implicitWidth: root.popupWidth
