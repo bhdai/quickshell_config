@@ -21,6 +21,34 @@ Item {
     property real contentPadding
     property real artRounding
 
+    component TrackChangeButton: RippleButton {
+        implicitWidth: 24
+        implicitHeight: 24
+        buttonRadius: 16
+
+        required property var iconName
+        colBackground: ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
+        colBackgroundHover: blendedColors.colSecondaryContainerHover
+        colRipple: blendedColors.colOnSecondaryContainer
+
+        contentItem: MaterialSymbol {
+            anchors.centerIn: parent
+            iconSize: 18
+            fill: 1
+            color: blendedColors.colOnSecondaryContainer
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            text: iconName
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
+            }
+        }
+    }
+
     // cleanup processes on destruction to prevent crashes during reload
     Component.onDestruction: {
         if (mkdirProc)
@@ -40,10 +68,11 @@ Item {
     onArtUrlChanged: {
         if (playerController.artUrl.length == 0) {
             playerController.artDominantColor = "#3d3d3d";
-            playerController.downloaded = false;
             return;
         }
         playerController.downloaded = false;
+        // console.log("PlayerControl: Art URL changed to", playerController.artUrl);
+        // console.log("Download cmd", coverArtDownloader.command.join(" "));
         coverArtDownloader.running = true;
     }
 
@@ -53,10 +82,7 @@ Item {
         command: ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
-                // add small delay to ensure file system writes are complete
-                Qt.callLater(function () {
-                    playerController.downloaded = true;
-                }, 100);
+                playerController.downloaded = true;
             }
         }
     }
@@ -67,11 +93,11 @@ Item {
         source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
         depth: 0 // Single dominant color
         rescaleSize: 1
-        onColorsChanged: {
-            if (colors && colors.length > 0) {
-                playerController.artDominantColor = colors[0];
-            }
-        }
+        // onColorsChanged: {
+        //     if (colors && colors.length > 0) {
+        //         playerController.artDominantColor = colors[0];
+        //     }
+        // }
     }
 
     // create adapted color scheme
@@ -131,6 +157,7 @@ Item {
             fillMode: Image.PreserveAspectCrop
             cache: false
             antialiasing: true
+            asynchronous: true
 
             layer.enabled: true
             layer.effect: MultiEffect {
@@ -183,7 +210,7 @@ Item {
             // info & controls
             ColumnLayout {
                 Layout.fillHeight: true
-                Layout.fillWidth: true
+                // Layout.fillWidth: true
                 spacing: 2
 
                 // track title
@@ -214,7 +241,7 @@ Item {
                 // controls section
                 Item {
                     Layout.fillWidth: true
-                    implicitHeight: trackTime.implicitHeight + sliderRow.implicitHeight + 10
+                    implicitHeight: trackTime.implicitHeight + sliderRow.implicitHeight
 
                     // time display
                     Text {
@@ -270,25 +297,9 @@ Item {
                         }
                         spacing: 8
 
-                        // previous button
-                        RippleButton {
-                            implicitWidth: 32
-                            implicitHeight: 32
-                            buttonRadius: 16
-                            colBackground: ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
-                            colBackgroundHover: blendedColors.colSecondaryContainerHover
-
+                        TrackChangeButton {
+                            iconName: "skip_previous"
                             onClicked: playerController.player?.previous()
-
-                            MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 24
-                                fill: 1
-                                color: blendedColors.colOnSecondaryContainer
-                                text: "skip_previous"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
                         }
 
                         // progress slider or bar
@@ -375,25 +386,9 @@ Item {
                             }
                         }
 
-                        // next button
-                        RippleButton {
-                            implicitWidth: 32
-                            implicitHeight: 32
-                            buttonRadius: 16
-                            colBackground: ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
-                            colBackgroundHover: blendedColors.colSecondaryContainerHover
-
+                        TrackChangeButton {
+                            iconName: "skip_next"
                             onClicked: playerController.player?.next()
-
-                            MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 24
-                                fill: 1
-                                color: blendedColors.colOnSecondaryContainer
-                                text: "skip_next"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
                         }
                     }
                 }
