@@ -57,24 +57,50 @@ Item {
         command: ["mkdir", "-p", artDownloadLocation]
     }
 
+    // timer to debounce art url changes and solve the property binding race condition
+    // this ensures that when we create the download command, all dependent properties
+    // like artFilePath have been updated to their new values
+    Timer {
+        id: artUrlDebouncer
+        interval: 50 // delay a bit to let the event loop settle
+        repeat: false
+        onTriggered: {
+            const url = playerController.artUrl;
+            if (url.length === 0) {
+                playerController.artDominantColor = "#3d3d3d";
+                return;
+            }
+
+            // console.log("PlayerControl: Debounced art URL is", url);
+            coverArtDownloader.command = ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${url}' -o '${artFilePath}'`];
+            // console.log("Download cmd", coverArtDownloader.command.join(" "));
+
+            coverArtDownloader.running = true;
+        }
+    }
+
     // download album art when URL changes
     onArtUrlChanged: {
-        if (playerController.artUrl.length == 0) {
-            playerController.artDominantColor = "#3d3d3d";
-            return;
-        }
+        // console.log("PlayerControl: Art URL signal received. New URL:", playerController.artUrl);
+
+        // immediately reset the downloaded state.
+        // this will clear the old album art from the ui and prevent "Cannot open" errors
         playerController.downloaded = false;
-        console.log("PlayerControl: Art URL changed to", playerController.artUrl);
-        console.log("Download cmd", coverArtDownloader.command.join(" "));
-        coverArtDownloader.running = true;
+
+        // restart the timer
+        artUrlDebouncer.restart();
     }
 
     Process {
         id: coverArtDownloader
-        property string targetFile: playerController.artUrl
-        command: ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
+
         onExited: (exitCode, exitStatus) => {
-            playerController.downloaded = true;
+            // Important: only set downloaded to true if the process succeeded or the file already exists.
+            if (exitCode === 0) {
+                playerController.downloaded = true;
+            } else {
+                console.warn("PlayerControl: Art download failed with exit code", exitCode);
+            }
         }
     }
 
