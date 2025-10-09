@@ -50,13 +50,6 @@ Item {
         }
     }
 
-    // ensure download directory exists
-    Process {
-        id: mkdirProc
-        running: true
-        command: ["mkdir", "-p", artDownloadLocation]
-    }
-
     // timer to debounce art url changes and solve the property binding race condition
     // this ensures that when we create the download command, all dependent properties
     // like artFilePath have been updated to their new values
@@ -72,7 +65,8 @@ Item {
             }
 
             // console.log("PlayerControl: Debounced art URL is", url);
-            coverArtDownloader.command = ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${url}' -o '${artFilePath}'`];
+            const commandString = `[ -f '${artFilePath}' ] || curl -sSL --create-dirs '${artUrl}' -o '${artFilePath}'`;
+            coverArtDownloader.command = ["bash", "-c", commandString];
             // console.log("Download cmd", coverArtDownloader.command.join(" "));
 
             coverArtDownloader.running = true;
