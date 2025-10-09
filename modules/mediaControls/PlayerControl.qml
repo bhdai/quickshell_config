@@ -6,6 +6,7 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
+import qs.modules.common.widgets
 
 Item {
     id: playerController
@@ -22,18 +23,18 @@ Item {
     property real artRounding
 
     component TrackChangeButton: RippleButton {
-        implicitWidth: 24
-        implicitHeight: 24
+        implicitWidth: 32
+        implicitHeight: 32
         buttonRadius: 16
 
         required property var iconName
         colBackground: ColorUtils.transparentize(blendedColors.colSecondaryContainer, 1)
         colBackgroundHover: blendedColors.colSecondaryContainerHover
-        colRipple: blendedColors.colOnSecondaryContainer
+        colRipple: blendedColors.colSecondaryContainerActive
 
         contentItem: MaterialSymbol {
             anchors.centerIn: parent
-            iconSize: 18
+            iconSize: 24
             fill: 1
             color: blendedColors.colOnSecondaryContainer
             horizontalAlignment: Text.AlignHCenter
@@ -47,14 +48,6 @@ Item {
                 }
             }
         }
-    }
-
-    // cleanup processes on destruction to prevent crashes during reload
-    Component.onDestruction: {
-        if (mkdirProc)
-            mkdirProc.running = false;
-        if (coverArtDownloader)
-            coverArtDownloader.running = false;
     }
 
     // ensure download directory exists
@@ -71,8 +64,8 @@ Item {
             return;
         }
         playerController.downloaded = false;
-        // console.log("PlayerControl: Art URL changed to", playerController.artUrl);
-        // console.log("Download cmd", coverArtDownloader.command.join(" "));
+        console.log("PlayerControl: Art URL changed to", playerController.artUrl);
+        console.log("Download cmd", coverArtDownloader.command.join(" "));
         coverArtDownloader.running = true;
     }
 
@@ -81,9 +74,7 @@ Item {
         property string targetFile: playerController.artUrl
         command: ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
         onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0) {
-                playerController.downloaded = true;
-            }
+            playerController.downloaded = true;
         }
     }
 
@@ -93,11 +84,11 @@ Item {
         source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
         depth: 0 // Single dominant color
         rescaleSize: 1
-        // onColorsChanged: {
-        //     if (colors && colors.length > 0) {
-        //         playerController.artDominantColor = colors[0];
-        //     }
-        // }
+        onColorsChanged: {
+            if (colors && colors.length > 0) {
+                playerController.artDominantColor = colors[0];
+            }
+        }
     }
 
     // create adapted color scheme
@@ -148,7 +139,7 @@ Item {
         }
 
         // blurred album art background
-        StyledImage {
+        Image {
             id: blurredArt
             anchors.fill: parent
             source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
@@ -200,10 +191,16 @@ Item {
                 StyledImage {
                     id: mediaArt
                     anchors.fill: parent
+                    property int size: parent.height
                     source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
                     fillMode: Image.PreserveAspectCrop
                     cache: false
                     antialiasing: true
+
+                    width: size
+                    height: size
+                    sourceSize.width: size
+                    sourceSize.height: size
                 }
             }
 
@@ -249,7 +246,7 @@ Item {
                         anchors.bottom: sliderRow.top
                         anchors.bottomMargin: 5
                         anchors.left: parent.left
-                        font.pixelSize: 11
+                        font.pixelSize: 13
                         color: blendedColors.colSubtext
                         text: `${formatTime(playerController.player?.position)} / ${formatTime(playerController.player?.length)}`
                     }
@@ -260,23 +257,24 @@ Item {
                         anchors.right: parent.right
                         anchors.bottom: sliderRow.top
                         anchors.bottomMargin: 5
-
-                        implicitWidth: 44
-                        implicitHeight: 44
+                        property real size: 44
+                        implicitWidth: size
+                        implicitHeight: size
                         onClicked: playerController.player.togglePlaying()
 
-                        buttonRadius: playerController.player?.isPlaying ? 16 : 22
+                        buttonRadius: playerController.player?.isPlaying ? 16 : size / 2
                         colBackground: playerController.player?.isPlaying ? blendedColors.colPrimary : blendedColors.colSecondaryContainer
                         colBackgroundHover: playerController.player?.isPlaying ? blendedColors.colPrimaryHover : blendedColors.colSecondaryContainerHover
+                        colRipple: playerController.player?.isPlaying ? blendedColors.colPrimaryActive : blendedColors.colSecondaryContainerActive
 
                         Behavior on buttonRadius {
                             NumberAnimation {
-                                duration: 200
+                                duration: 300
                                 easing.type: Easing.OutQuad
                             }
                         }
 
-                        MaterialSymbol {
+                        contentItem: MaterialSymbol {
                             anchors.centerIn: parent
                             iconSize: 28
                             fill: 1
@@ -284,6 +282,13 @@ Item {
                             text: playerController.player?.isPlaying ? "pause" : "play_arrow"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 300
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
                         }
                     }
 
@@ -295,7 +300,7 @@ Item {
                             left: parent.left
                             right: parent.right
                         }
-                        spacing: 8
+                        spacing: 2
 
                         TrackChangeButton {
                             iconName: "skip_previous"
@@ -303,85 +308,42 @@ Item {
                         }
 
                         // progress slider or bar
-                        Loader {
+                        Item {
+                            id: progressBarContainer
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 20
+                            implicitHeight: 24
 
-                            sourceComponent: playerController.player?.canSeek ? sliderComponent : progressBarComponent
-
-                            Component {
-                                id: sliderComponent
-                                Slider {
-                                    id: positionSlider
-                                    from: 0
-                                    to: 1
-                                    value: playerController.player?.position / playerController.player?.length || 0
-
-                                    // style the slider track
-                                    background: Rectangle {
-                                        x: positionSlider.leftPadding
-                                        y: positionSlider.topPadding + positionSlider.availableHeight / 2 - height / 2
-                                        implicitWidth: 200
-                                        implicitHeight: 6
-                                        width: positionSlider.availableWidth
-                                        height: implicitHeight
-                                        radius: 3
-                                        color: blendedColors.colSecondaryContainer
-
-                                        Rectangle {
-                                            width: positionSlider.visualPosition * parent.width
-                                            height: parent.height
-                                            radius: 3
-                                            color: blendedColors.colPrimary
-                                        }
-                                    }
-
-                                    // style the slider handle
-                                    handle: Rectangle {
-                                        x: positionSlider.leftPadding + positionSlider.visualPosition * (positionSlider.availableWidth - width)
-                                        y: positionSlider.topPadding + positionSlider.availableHeight / 2 - height / 2
-                                        implicitWidth: 16
-                                        implicitHeight: 16
-                                        radius: 8
-                                        color: positionSlider.pressed ? Qt.lighter(blendedColors.colPrimary, 1.2) : blendedColors.colPrimary
-                                        border.color: Qt.darker(color, 1.1)
-                                        border.width: 1
-
-                                        visible: positionSlider.hovered || positionSlider.pressed
-                                    }
-
+                            Loader {
+                                id: sliderLoader
+                                anchors.fill: parent
+                                active: playerController.player?.canSeek ?? false
+                                sourceComponent: StyledSlider {
+                                    configuration: StyledSlider.Configuration.Wavy
+                                    highlightColor: blendedColors.colPrimary
+                                    trackColor: blendedColors.colSecondaryContainer
+                                    handleColor: blendedColors.colPrimary
+                                    wavy: playerController.player?.isPlaying ?? false
+                                    value: playerController.player?.position / playerController.player?.length
                                     onMoved: {
-                                        if (playerController.player?.canSeek) {
-                                            playerController.player.position = value * playerController.player.length;
-                                        }
+                                        playerController.player.position = value * playerController.player.length;
                                     }
                                 }
                             }
 
-                            Component {
-                                id: progressBarComponent
-                                ProgressBar {
-                                    id: positionProgressBar
-                                    from: 0
-                                    to: 1
-                                    value: playerController.player?.position / playerController.player?.length || 0
-
-                                    // Style the progress bar
-                                    contentItem: Rectangle {
-                                        implicitWidth: 200
-                                        implicitHeight: 6
-                                        width: positionProgressBar.availableWidth
-                                        height: implicitHeight
-                                        radius: 3
-                                        color: blendedColors.colSecondaryContainer
-
-                                        Rectangle {
-                                            width: positionProgressBar.visualPosition * parent.width
-                                            height: parent.height
-                                            radius: 3
-                                            color: blendedColors.colPrimary
-                                        }
-                                    }
+                            Loader {
+                                id: progressBarLoader
+                                anchors {
+                                    verticalCenter: parent.verticalCenter
+                                    left: parent.left
+                                    right: parent.right
+                                }
+                                height: 24
+                                active: !(playerController.player?.canSeek ?? false)
+                                sourceComponent: StyledProgressBar {
+                                    wavy: playerController.player?.isPlaying ?? false
+                                    highlightColor: blendedColors.colPrimary
+                                    trackColor: blendedColors.colSecondaryContainer
+                                    value: playerController.player?.position / playerController.player?.length
                                 }
                             }
                         }
