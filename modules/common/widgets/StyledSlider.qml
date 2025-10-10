@@ -121,7 +121,7 @@ Slider {
                 color: root.highlightColor
                 amplitudeMultiplier: root.wavy ? 0.5 : 0
                 width: root.handleMargins + (root.visualPosition * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
-                height: root.trackWidth
+                height: root.trackWidth * 6
                 Connections {
                     target: root
                     function onValueChanged() {

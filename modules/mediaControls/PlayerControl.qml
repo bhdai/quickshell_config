@@ -334,7 +334,13 @@ Item {
                         Item {
                             id: progressBarContainer
                             Layout.fillWidth: true
-                            implicitHeight: playerController.progressBarHeight
+                            implicitHeight: {
+                                const baseHeight = Math.max(sliderLoader.implicitHeight, progressBarLoader.implicitHeight);
+                                if (sliderLoader.active && playerController.player?.isPlaying) {
+                                    return baseHeight * 4;
+                                }
+                                return baseHeight;
+                            }
 
                             Loader {
                                 id: sliderLoader
@@ -362,9 +368,9 @@ Item {
                                     left: parent.left
                                     right: parent.right
                                 }
-                                height: playerController.progressBarHeight
                                 active: !(playerController.player?.canSeek ?? false)
                                 sourceComponent: StyledProgressBar {
+                                    implicitHeight: valueBarHeight
                                     wavy: playerController.player?.isPlaying// ?? false
                                     highlightColor: blendedColors.colPrimary
                                     trackColor: blendedColors.colSecondaryContainer
