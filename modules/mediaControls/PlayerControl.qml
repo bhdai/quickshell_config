@@ -58,14 +58,17 @@ Item {
         interval: 50 // delay a bit to let the event loop settle
         repeat: false
         onTriggered: {
-            const url = playerController.artUrl;
-            if (url.length === 0) {
+            const rawUrl = playerController.artUrl;
+            if (rawUrl.length === 0) {
                 playerController.artDominantColor = "#3d3d3d";
                 return;
             }
 
-            // console.log("PlayerControl: Debounced art URL is", url);
-            const commandString = `[ -f '${artFilePath}' ] || curl -sSL --create-dirs '${artUrl}' -o '${artFilePath}'`;
+            const urlObject = new URL(rawUrl);
+            const cleanUrl = urlObject.origin + urlObject.pathname;
+
+            // console.log("PlayerControl: Debounced art URL is", cleanUrl);
+            const commandString = `[ -f '${artFilePath}' ] || curl -sSL -A "Mozilla/5.0" --create-dirs '${cleanUrl}' -o '${artFilePath}'`;
             coverArtDownloader.command = ["bash", "-c", commandString];
             // console.log("Download cmd", coverArtDownloader.command.join(" "));
 
