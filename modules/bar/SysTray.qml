@@ -5,25 +5,38 @@ import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import qs.modules.bar
 
-WrapperRectangle {
-    id: sysTrayWrapper
+MouseArea {
+    id: root
+    implicitWidth: backgroundRect.implicitWidth
+    implicitHeight: 30
+    hoverEnabled: true
 
-    color: "#444444"
-    radius: 15
+    WrapperRectangle {
+        id: backgroundRect
+        implicitHeight: 30
+        color: root.containsMouse ? "#555555" : "#444444"
+        radius: 15
 
-    leftMargin: 8
-    rightMargin: 8
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+                easing.type: Easing.OutQuad
+            }
+        }
 
-    RowLayout {
-        id: trayIconsLayout
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 0
+        leftMargin: 8
+        rightMargin: 8
 
-        Repeater {
+        RowLayout {
+            id: trayIconsLayout
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 0
 
-            model: SystemTray.items
+            Repeater {
+                model: SystemTray.items
 
-            delegate: SysTrayItem {}
+                delegate: SysTrayItem {}
+            }
         }
     }
 }
