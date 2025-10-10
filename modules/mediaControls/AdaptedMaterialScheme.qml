@@ -1,5 +1,4 @@
 import QtQuick
-import "." as MediaControls
 
 QtObject {
     id: root
@@ -18,20 +17,20 @@ QtObject {
     property color baseOnSecondaryContainer: "#ffffff"
 
     // adapted colors - blend with source color
-    property color colLayer0: MediaControls.ColorUtils.mix(baseLayer0, sourceColor, colorIsDark ? 0.6 : 0.5)
-    property color colLayer1: MediaControls.ColorUtils.mix(baseLayer1, sourceColor, 0.5)
-    property color colOnLayer0: MediaControls.ColorUtils.mix(baseOnLayer0, sourceColor, 0.5)
-    property color colOnLayer1: MediaControls.ColorUtils.mix(baseOnLayer1, sourceColor, 0.5)
-    property color colSubtext: MediaControls.ColorUtils.mix(baseSubtext, sourceColor, 0.5)
+    property color colLayer0: ColorUtils.mix(baseLayer0, sourceColor, colorIsDark ? 0.6 : 0.5)
+    property color colLayer1: ColorUtils.mix(baseLayer1, sourceColor, 0.5)
+    property color colOnLayer0: ColorUtils.mix(baseOnLayer0, sourceColor, 0.5)
+    property color colOnLayer1: ColorUtils.mix(baseOnLayer1, sourceColor, 0.5)
+    property color colSubtext: ColorUtils.mix(baseSubtext, sourceColor, 0.5)
 
-    property color colPrimary: MediaControls.ColorUtils.mix(basePrimary, sourceColor, 0.5)
-    property color colPrimaryHover: MediaControls.ColorUtils.lighten(colPrimary, 0.1)
-    property color colPrimaryActive: MediaControls.ColorUtils.lighten(colPrimary, 0.2)
+    property color colPrimary: ColorUtils.mix(ColorUtils.adaptToAccent(basePrimary, sourceColor), sourceColor, 0.5)
+    property color colPrimaryHover: ColorUtils.mix(ColorUtils.adaptToAccent(ColorUtils.lighten(basePrimary, 0.1), sourceColor), sourceColor, 0.3)
+    property color colPrimaryActive: ColorUtils.mix(ColorUtils.adaptToAccent(ColorUtils.lighten(basePrimary, 0.2), sourceColor), sourceColor, 0.3)
 
-    property color colSecondaryContainer: MediaControls.ColorUtils.mix(baseSecondaryContainer, sourceColor, 0.15)
-    property color colSecondaryContainerHover: MediaControls.ColorUtils.lighten(colSecondaryContainer, 0.1)
-    property color colSecondaryContainerActive: MediaControls.ColorUtils.lighten(colSecondaryContainer, 0.2)
+    property color colSecondaryContainer: ColorUtils.mix(baseSecondaryContainer, sourceColor, 0.15)
+    property color colSecondaryContainerHover: ColorUtils.lighten(colSecondaryContainer, 0.1)
+    property color colSecondaryContainerActive: ColorUtils.lighten(colSecondaryContainer, 0.2)
 
-    property color colOnPrimary: MediaControls.ColorUtils.mix(baseOnPrimary, sourceColor, 0.5)
-    property color colOnSecondaryContainer: MediaControls.ColorUtils.mix(baseOnSecondaryContainer, sourceColor, 0.5)
+    property color colOnPrimary: ColorUtils.mix(ColorUtils.adaptToAccent(baseOnPrimary, sourceColor), sourceColor, 0.5)
+    property color colOnSecondaryContainer: ColorUtils.mix(baseOnSecondaryContainer, sourceColor, 0.5)
 }

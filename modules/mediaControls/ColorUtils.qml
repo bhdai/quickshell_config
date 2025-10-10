@@ -23,4 +23,17 @@ QtObject {
     function darken(color, amount) {
         return Qt.darker(color, 1 + amount);
     }
+
+    // helper function to adapt color to accent hue/saturation while keeping lightness
+    function adaptToAccent(color1, color2) {
+        var c1 = Qt.color(color1);
+        var c2 = Qt.color(color2);
+        
+        var hue = c2.hslHue;
+        var sat = c2.hslSaturation;
+        var light = c1.hslLightness;
+        var alpha = c1.a;
+        
+        return Qt.hsla(hue, sat, light, alpha);
+    }
 }

@@ -27,15 +27,11 @@ Slider {
     property color dotColorHighlighted: "#FFFFFF"
     property real unsharpenRadius: 2
     property real trackWidth: configuration
-    property real trackRadius: trackWidth >= StyledSlider.Configuration.XL ? 21
-        : trackWidth >= StyledSlider.Configuration.L ? 12
-        : trackWidth >= StyledSlider.Configuration.M ? 9
-        : trackWidth >= StyledSlider.Configuration.S ? 6
-        : height / 2
+    property real trackRadius: trackWidth >= StyledSlider.Configuration.XL ? 21 : trackWidth >= StyledSlider.Configuration.L ? 12 : trackWidth >= StyledSlider.Configuration.M ? 9 : trackWidth >= StyledSlider.Configuration.S ? 6 : height / 2
     property real handleHeight: (configuration === StyledSlider.Configuration.Wavy) ? 24 : Math.max(33, trackWidth + 9)
     property real handleWidth: root.pressed ? handlePressedWidth : handleDefaultWidth
     property real handleMargins: 4
-    property real trackDotSize: 3
+    property real trackDotSize: 4
     property string tooltipContent: `${Math.round(value * 100)}%`
     property bool wavy: configuration === StyledSlider.Configuration.Wavy
     property bool animateWave: true
@@ -83,15 +79,15 @@ Slider {
 
     MouseArea {
         anchors.fill: parent
-        onPressed: (mouse) => mouse.accepted = false
-        cursorShape: root.pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor 
+        onPressed: mouse => mouse.accepted = false
+        cursorShape: root.pressed ? Qt.ClosedHandCursor : Qt.PointingHandCursor
     }
 
     background: Item {
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
         implicitHeight: trackWidth
-        
+
         // Fill left
         Loader {
             anchors {
@@ -128,16 +124,20 @@ Slider {
                 height: root.trackWidth
                 Connections {
                     target: root
-                    function onValueChanged() { wavyFill.requestPaint(); }
-                    function onHighlightColorChanged() { wavyFill.requestPaint(); }
+                    function onValueChanged() {
+                        wavyFill.requestPaint();
+                    }
+                    function onHighlightColorChanged() {
+                        wavyFill.requestPaint();
+                    }
                 }
                 FrameAnimation {
                     running: root.animateWave
                     onTriggered: {
-                        wavyFill.requestPaint()
+                        wavyFill.requestPaint();
                     }
                 }
-            }   
+            }
         }
 
         // Fill right

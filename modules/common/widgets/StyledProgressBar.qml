@@ -28,7 +28,7 @@ ProgressBar {
             easing.type: Easing.OutQuad
         }
     }
-    
+
     background: Item {
         implicitHeight: valueBarHeight
         implicitWidth: valueBarWidth
@@ -55,13 +55,17 @@ ProgressBar {
                 fullLength: root.width
                 Connections {
                     target: root
-                    function onValueChanged() { wavyFill.requestPaint(); }
-                    function onHighlightColorChanged() { wavyFill.requestPaint(); }
+                    function onValueChanged() {
+                        wavyFill.requestPaint();
+                    }
+                    function onHighlightColorChanged() {
+                        wavyFill.requestPaint();
+                    }
                 }
                 FrameAnimation {
                     running: root.animateWave
                     onTriggered: {
-                        wavyFill.requestPaint()
+                        wavyFill.requestPaint();
                     }
                 }
             }
@@ -77,7 +81,7 @@ ProgressBar {
                 color: root.highlightColor
             }
         }
-        
+
         Rectangle {
             anchors.right: parent.right
             width: (1 - root.visualPosition) * parent.width - valueBarGap
@@ -85,7 +89,7 @@ ProgressBar {
             radius: height / 2
             color: root.trackColor
         }
-        
+
         Rectangle {
             anchors.right: parent.right
             width: valueBarGap

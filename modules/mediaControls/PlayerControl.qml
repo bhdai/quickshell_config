@@ -16,11 +16,15 @@ Item {
     property string artDownloadLocation: `${Quickshell.env("HOME")}/.cache/quickshell/media/coverart`
     property string artFileName: Qt.md5(artUrl) + ".jpg"
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
-    property color artDominantColor: "#3d3d3d"
+    property color artDominantColor: ColorUtils.mix((colorQuantizer?.colors[0] ?? basePrimary), baseSecondaryContainer, 0.8) || baseSecondaryContainer
     property bool downloaded: false
     property real radius: 12
     property real contentPadding
     property real artRounding
+    property int progressBarHeight: 24
+
+    property color basePrimary: "#90caf9"
+    property color baseSecondaryContainer: "#3d3d3d"
 
     component TrackChangeButton: RippleButton {
         implicitWidth: 32
@@ -107,11 +111,6 @@ Item {
         source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
         depth: 0 // Single dominant color
         rescaleSize: 1
-        onColorsChanged: {
-            if (colors && colors.length > 0) {
-                playerController.artDominantColor = colors[0];
-            }
-        }
     }
 
     // create adapted color scheme
@@ -272,6 +271,7 @@ Item {
                         font.pixelSize: 13
                         color: blendedColors.colSubtext
                         text: `${formatTime(playerController.player?.position)} / ${formatTime(playerController.player?.length)}`
+                        elide: Text.ElideRight
                     }
 
                     // play/pause button
@@ -334,7 +334,7 @@ Item {
                         Item {
                             id: progressBarContainer
                             Layout.fillWidth: true
-                            implicitHeight: 24
+                            implicitHeight: playerController.progressBarHeight
 
                             Loader {
                                 id: sliderLoader
@@ -345,6 +345,8 @@ Item {
                                     highlightColor: blendedColors.colPrimary
                                     trackColor: blendedColors.colSecondaryContainer
                                     handleColor: blendedColors.colPrimary
+                                    dotColor: blendedColors.colOnSecondaryContainer
+                                    dotColorHighlighted: blendedColors.colOnPrimary
                                     wavy: playerController.player?.isPlaying ?? false
                                     value: playerController.player?.position / playerController.player?.length
                                     onMoved: {
@@ -360,10 +362,10 @@ Item {
                                     left: parent.left
                                     right: parent.right
                                 }
-                                height: 24
+                                height: playerController.progressBarHeight
                                 active: !(playerController.player?.canSeek ?? false)
                                 sourceComponent: StyledProgressBar {
-                                    wavy: playerController.player?.isPlaying ?? false
+                                    wavy: playerController.player?.isPlaying// ?? false
                                     highlightColor: blendedColors.colPrimary
                                     trackColor: blendedColors.colSecondaryContainer
                                     value: playerController.player?.position / playerController.player?.length
