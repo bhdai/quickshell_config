@@ -16,6 +16,18 @@ Scope {
     property real popupRounding: 12
     property real artRounding: 8
 
+    readonly property var filteredPlayers: Mpris.players.values.filter(player => isRealPlayer(player))
+
+    function isRealPlayer(player) {
+        return (
+            // filter out native browser buses as plasma-integration is installed
+            !player.dbusName.startsWith('org.mpris.MediaPlayer2.firefox') && !player.dbusName.startsWith('org.mpris.MediaPlayer2.chromium') &&
+            // filter out playerctld duplicates
+            !player.dbusName?.startsWith('org.mpris.MediaPlayer2.playerctld') &&
+            // filter out non-instance mpd bus
+            !(player.dbusName?.endsWith('.mpd') && !player.dbusName.endsWith('MediaPlayer2.mpd')));
+    }
+
     Loader {
         id: mediaControlsLoader
         active: root.isOpen
@@ -57,7 +69,9 @@ Scope {
                 spacing: 10
 
                 Repeater {
-                    model: Mpris.players
+                    model: ScriptModel {
+                        values: root.filteredPlayers
+                    }
 
                     delegate: PlayerControl {
                         required property MprisPlayer modelData
@@ -72,7 +86,7 @@ Scope {
 
                 // no players placeholder
                 Rectangle {
-                    visible: Mpris.players.values.length === 0
+                    visible: root.filteredPlayers.length === 0
                     Layout.fillWidth: true
                     implicitHeight: 100
                     color: "#2d2d2d"
