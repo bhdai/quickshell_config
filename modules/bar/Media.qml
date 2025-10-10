@@ -117,8 +117,9 @@ MouseArea {
             // separator
             Rectangle {
                 width: 1
-                height: parent.height * 0.6
-                color: "#aaaaaa"
+                implicitHeight: parent.height * 0.6
+                color: "white"
+                opacity: 0.5
                 visible: titleText.text && artistText.text
                 Layout.alignment: Qt.AlignVCenter
             }
