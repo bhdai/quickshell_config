@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
+import qs.modules.services
 
 WrapperRectangle {
     Layout.alignment: Qt.AlignVCenter
