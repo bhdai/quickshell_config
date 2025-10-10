@@ -1,8 +1,17 @@
 import QtQuick
 
-// Notification component (placeholder)
-Text {
-    text: ""
-    color: "white"
-    font.pixelSize: 12
+Rectangle {
+    color: "#444444"
+    width: 35
+    height: 30
+    radius: 15
+
+    // notification component (placeholder)
+    Text {
+        id: notifText
+        text: ""
+        color: "white"
+        font.pixelSize: 12
+        anchors.centerIn: parent
+    }
 }

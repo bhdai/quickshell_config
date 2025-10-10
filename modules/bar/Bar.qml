@@ -71,14 +71,10 @@ Scope {
             RowLayout {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 15
+                spacing: 8
 
                 Notification {}
-                Text {
-                    text: Time.time
-                    color: "white"
-                    font.pixelSize: 14
-                }
+                TimeWidget {}
             }
 
             // right section
