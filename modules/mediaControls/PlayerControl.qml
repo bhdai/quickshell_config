@@ -23,8 +23,8 @@ Item {
     property real artRounding
     property int progressBarHeight: 24
 
-    property color basePrimary: "#90caf9"
-    property color baseSecondaryContainer: "#3d3d3d"
+    property color basePrimary: "#E5B6F2"
+    property color baseSecondaryContainer: "#534457"
 
     component TrackChangeButton: RippleButton {
         implicitWidth: 32
@@ -229,7 +229,6 @@ Item {
             // info & controls
             ColumnLayout {
                 Layout.fillHeight: true
-                // Layout.fillWidth: true
                 spacing: 2
 
                 // track title
@@ -323,7 +322,7 @@ Item {
                             left: parent.left
                             right: parent.right
                         }
-                        spacing: 2
+                        // spacing: 2
 
                         TrackChangeButton {
                             iconName: "skip_previous"
