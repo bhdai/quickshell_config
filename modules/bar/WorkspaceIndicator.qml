@@ -21,6 +21,8 @@ Item {
 
     readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
 
+    readonly property string mainColor: "#51A4E7"
+
     readonly property real targetX: {
         if (dotsRepeater.count === 0 || targetIndex < 0 || targetIndex >= dotsRepeater.count) {
             return 0 - (activeIndicatorWidth / 2);
@@ -102,7 +104,7 @@ Item {
 
                     color: {
                         if (workspaceMouseArea.containsMouse)
-                            return "#5aa5f6";
+                            return mainColor;
                         return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? "#ffffff" : "#77767b";
                     }
 
@@ -140,7 +142,7 @@ Item {
         height: activeSize
         width: activeIndicatorWidth
         radius: height / 2
-        color: "#5aa5f6"
+        color: mainColor
         enabled: false
 
         x: targetX

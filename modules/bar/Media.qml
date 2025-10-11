@@ -75,7 +75,7 @@ MouseArea {
     WrapperRectangle {
         id: backgroundRect
         implicitHeight: 30
-        color: root.containsMouse ? "#555555" : "#444444"
+        color: mediaControls.isOpen ? "#51A4E7" : (root.containsMouse ? "#555555" : "#444444")
         radius: 15
 
         Behavior on color {
@@ -95,16 +95,23 @@ MouseArea {
             // music note
             Text {
                 text: "󰎇"
-                color: "#ffffff"
+                color: mediaControls.isOpen ? "#000000" : "#ffffff"
                 font.pixelSize: 16
                 Layout.alignment: Qt.AlignVCenter
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                        easing.type: Easing.OutQuad
+                    }
+                }
             }
 
             // track title
             Text {
                 id: titleText
                 text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
-                color: "#ffffff"
+                color: mediaControls.isOpen ? "#000000" : "#ffffff"
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
@@ -112,23 +119,37 @@ MouseArea {
                 Layout.alignment: Qt.AlignVCenter
 
                 Layout.maximumWidth: 200
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                        easing.type: Easing.OutQuad
+                    }
+                }
             }
 
             // separator
             Rectangle {
                 width: 1
                 implicitHeight: parent.height * 0.6
-                color: "white"
+                color: mediaControls.isOpen ? "#000000" : "white"
                 opacity: 0.5
                 visible: titleText.text && artistText.text
                 Layout.alignment: Qt.AlignVCenter
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                        easing.type: Easing.OutQuad
+                    }
+                }
             }
 
             // track artist
             Text {
                 id: artistText
                 text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
-                color: "#aaaaaa"
+                color: mediaControls.isOpen ? "#222222" : "#d0d0d0"
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
@@ -136,6 +157,13 @@ MouseArea {
                 Layout.alignment: Qt.AlignVCenter
 
                 Layout.maximumWidth: 100
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                        easing.type: Easing.OutQuad
+                    }
+                }
             }
         }
     }
