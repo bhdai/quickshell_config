@@ -68,11 +68,16 @@ Item {
                 return;
             }
 
-            const urlObject = new URL(rawUrl);
-            const cleanUrl = urlObject.origin + urlObject.pathname;
+            // console.log("PlayerControl: Debounced art URL is", rawUrl);
+            const commandString = `
+              [ -f '${artFilePath}' ] || (
+                curl -sSL -A "Mozilla/5.0" --create-dirs '${rawUrl}' -o '${artFilePath}' &&
+                if file --mime-type '${artFilePath}' | grep -q 'image/webp'; then
+                  magick '${artFilePath}' '${artFilePath}'
+                fi
+              )
+            `;
 
-            // console.log("PlayerControl: Debounced art URL is", cleanUrl);
-            const commandString = `[ -f '${artFilePath}' ] || curl -sSL -A "Mozilla/5.0" --create-dirs '${cleanUrl}' -o '${artFilePath}'`;
             coverArtDownloader.command = ["bash", "-c", commandString];
             // console.log("Download cmd", coverArtDownloader.command.join(" "));
 
@@ -176,7 +181,7 @@ Item {
             layer.effect: MultiEffect {
                 source: blurredArt
                 blurEnabled: true
-                blur: 1.0
+                blur: 0.5
                 blurMax: 100
                 saturation: 0.2
             }
