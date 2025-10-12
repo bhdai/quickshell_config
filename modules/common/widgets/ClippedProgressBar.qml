@@ -15,10 +15,12 @@ Item {
     property real value: 0
     property bool showNob: false
     property bool nobFilled: false
+    property real gap: 1 // gap between bar and nob
+    property real nobWidth: 3
 
     property font font: Qt.font({
         pixelSize: 15,
-        weight: text.length > 2 ? Font.Medium : Font.DemiBold
+        weight: Font.DemiBold
     })
 
     default property Item textMask: Item {
@@ -35,7 +37,7 @@ Item {
     implicitWidth: valueBarWidth + (showNob ? 5 : 0)
     implicitHeight: valueBarHeight
 
-    // Main battery body
+    // battery body
     Item {
         id: batteryBody
         width: valueBarWidth
@@ -55,8 +57,7 @@ Item {
                     bottom: parent.bottom
                     left: parent.left
                 }
-                // Fill extends beyond body to reach nob area
-                width: Math.min(parent.width + (showNob ? 7 : 0), (parent.width + (showNob ? 7 : 0)) * root.value)
+                width: parent.width * root.value
                 height: parent.height
                 color: root.highlightColor
                 radius: 2
@@ -85,16 +86,16 @@ Item {
         }
     }
 
-    // Battery nob (terminal)
+    // nob
     Rectangle {
         id: batteryNob
         visible: showNob
         anchors {
             left: batteryBody.right
-            leftMargin: 1
+            leftMargin: root.gap
             verticalCenter: batteryBody.verticalCenter
         }
-        width: 2
+        width: root.nobWidth
         height: batteryBody.height * 0.4
         radius: 1.5
         color: nobFilled ? root.highlightColor : root.trackColor

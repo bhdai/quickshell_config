@@ -1,9 +1,8 @@
-// BatteryIndicator.qml
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
-import qs.modules.services // assuming your Battery API lives here
+import qs.modules.services
 import qs.modules.common.widgets
 
 MouseArea {
@@ -12,6 +11,7 @@ MouseArea {
     readonly property real percentage: Battery.percentage
     readonly property bool isCharging: Battery.isCharging
     readonly property bool isCritical: Battery.isCritical
+    property real boltSize: 16
 
     readonly property color fillColor: Battery.isCharging ? "#1BCA4B" : (Battery.isCritical ? "#F60B00" : "#FFFFFF")
     readonly property color trackColor: ColorUtils.transparentize("#FFFFFF", 0.5) ?? "#F1D3F9"
@@ -33,14 +33,21 @@ MouseArea {
     }
 
     // bolt icon replaces nob when charging
-    MaterialSymbol {
+    Item {
         id: boltIcon
         anchors.left: batteryProgress.right
-        anchors.leftMargin: 1
+        anchors.leftMargin: -6
         anchors.verticalCenter: batteryProgress.verticalCenter
-        iconSize: 13
-        fill: 1
-        text: "bolt"
+        width: root.boltSize
+        height: root.boltSize
         visible: isCharging && percentage < 1
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            iconSize: parent.width
+            fill: 1
+            text: "bolt"
+            color: "white"
+        }
     }
 }
