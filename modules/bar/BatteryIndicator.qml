@@ -14,9 +14,9 @@ MouseArea {
     readonly property bool isCritical: Battery.isCritical
 
     readonly property color fillColor: Battery.isCharging ? "#1BCA4B" : (Battery.isCritical ? "#F60B00" : "#FFFFFF")
-    readonly property color trackColor: ColorUtils.transparentize(fillColor, 0.5) ?? "#F1D3F9"
+    readonly property color trackColor: ColorUtils.transparentize("#FFFFFF", 0.5) ?? "#F1D3F9"
 
-    implicitWidth: 30
+    implicitWidth: batteryProgress.implicitWidth + (isCharging && percentage < 1 ? boltIcon.width + 2 : 0)
     implicitHeight: 18
 
     ClippedProgressBar {
@@ -28,15 +28,17 @@ MouseArea {
         highlightColor: root.fillColor
         trackColor: root.trackColor
         text: Math.round(percentage * 100)
+        showNob: !isCharging || percentage >= 1
+        nobFilled: percentage >= 1
     }
 
-    // bolt icon shown outside, not overlapping text
+    // bolt icon replaces nob when charging
     MaterialSymbol {
         id: boltIcon
         anchors.left: batteryProgress.right
-        anchors.leftMargin: 4
+        anchors.leftMargin: 1
         anchors.verticalCenter: batteryProgress.verticalCenter
-        iconSize: Appearance.font.pixelSize.smaller
+        iconSize: 13
         fill: 1
         text: "bolt"
         visible: isCharging && percentage < 1
