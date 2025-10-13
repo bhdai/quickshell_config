@@ -1,4 +1,3 @@
-// ClippedProgressBar.qml
 import QtQuick
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
@@ -6,11 +5,11 @@ import Qt5Compat.GraphicalEffects
 Item {
     id: root
     property bool vertical: false
-    property real valueBarWidth: 30
-    property real valueBarHeight: 18
+    property real valueBarWidth: 28
+    property real valueBarHeight: 16
     property color highlightColor: "#FFFFFF"
     property color trackColor: "#F1D3F9"
-    property real radius: 6
+    property real radius: 5
     property string text
     property real value: 0
     property bool showNob: false
@@ -60,7 +59,7 @@ Item {
                 width: parent.width * root.value
                 height: parent.height
                 color: root.highlightColor
-                radius: 2
+                radius: 0
             }
         }
 
