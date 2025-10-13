@@ -7,13 +7,14 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 Item {
     id: playerController
     required property MprisPlayer player
 
     property var artUrl: player?.trackArtUrl
-    property string artDownloadLocation: `${Quickshell.env("HOME")}/.cache/quickshell/media/coverart`
+    property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl) + ".jpg"
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
     property color artDominantColor: ColorUtils.mix((colorQuantizer?.colors[0] ?? basePrimary), baseSecondaryContainer, 0.8) || baseSecondaryContainer
