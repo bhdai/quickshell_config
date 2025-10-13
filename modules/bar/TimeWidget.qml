@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
-import qs.modules.services
+import qs.services
+import qs.modules.common
 
 WrapperRectangle {
     Layout.alignment: Qt.AlignVCenter
 
     implicitHeight: 30
-    color: "#444444"
+    color: Colors.surface
     radius: 15
 
     leftMargin: 10

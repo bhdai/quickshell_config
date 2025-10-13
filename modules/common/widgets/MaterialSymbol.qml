@@ -1,4 +1,5 @@
 import QtQuick
+import qs.modules.common
 
 Text {
     id: root
@@ -19,5 +20,5 @@ Text {
         }
     }
 
-    color: "#ffffff"
+    color: Colors.text
 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Mpris
+import qs.modules.common
 
 PopupWindow {
     id: root
@@ -30,9 +31,9 @@ PopupWindow {
         width: contentColumn.implicitWidth + 24
         height: contentColumn.implicitHeight + 16
 
-        color: "#222222"
+        color: Colors.background
         radius: 8
-        border.color: "#555555"
+        border.color: Colors.overlay0
         border.width: 1
 
         ColumnLayout {
@@ -47,14 +48,14 @@ PopupWindow {
 
                 Text {
                     text: "󰎇"
-                    color: "#ffffff"
+                    color: Colors.text
                     font.pixelSize: 16
                     Layout.alignment: Qt.AlignVCenter
                 }
 
                 Text {
                     text: "Media"
-                    color: "#ffffff"
+                    color: Colors.text
                     font.pixelSize: 13
                     font.weight: Font.Medium
                     Layout.alignment: Qt.AlignVCenter
@@ -64,7 +65,7 @@ PopupWindow {
             // track title
             Text {
                 text: activePlayer ? cleanTitleFunc(activePlayer.trackTitle) : "Unknown Title"
-                color: "#ffffff"
+                color: Colors.text
                 font.pixelSize: 12
                 Layout.alignment: Qt.AlignLeft
                 Layout.maximumWidth: 300
@@ -74,7 +75,7 @@ PopupWindow {
             // artist
             Text {
                 text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
-                color: "#aaaaaa"
+                color: Colors.subtext1
                 font.pixelSize: 11
                 Layout.alignment: Qt.AlignLeft
                 Layout.maximumWidth: 300

@@ -4,6 +4,7 @@ import Quickshell.Services.UPower
 import Quickshell.Services.Pipewire
 import QtQuick
 import QtQuick.Layouts
+import qs.modules.common
 
 Scope {
     id: bar
@@ -36,7 +37,7 @@ Scope {
                 right: true
             }
 
-            color: "#2d2d2d"
+            color: Colors.background
             implicitHeight: 40
 
             // left section
@@ -52,13 +53,13 @@ Scope {
                     width: 35
                     height: 30
                     radius: 15
-                    color: "#444444"
+                    color: Colors.surface
                     Layout.alignment: Qt.AlignVCenter
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰣇"
-                        color: "#0e94d2"
+                        color: Colors.archBlue
                         font.bold: true
                         font.pixelSize: 20
                     }
@@ -73,7 +74,6 @@ Scope {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 8
 
-                Notification {}
                 TimeWidget {}
             }
 
@@ -87,7 +87,8 @@ Scope {
                 Media {}
 
                 SysTray {}
-                SystemInfo {}
+                StatusIcons {}
+                BatteryIndicator {}
                 PowerButton {}
             }
 

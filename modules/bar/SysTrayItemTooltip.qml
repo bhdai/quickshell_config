@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
+import qs.modules.common
 
 PopupWindow {
     id: root
@@ -28,9 +29,9 @@ PopupWindow {
         width: tooltipText.implicitWidth + 16
         height: tooltipText.implicitHeight + 8
 
-        color: "#222222"
+        color: Colors.background
         radius: 8
-        border.color: "#555555"
+        border.color: Colors.overlay0
         border.width: 1
 
         Text {

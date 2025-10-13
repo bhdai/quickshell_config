@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import qs.modules.bar
+import qs.modules.common
 
 MouseArea {
     id: root
@@ -14,7 +15,7 @@ MouseArea {
     WrapperRectangle {
         id: backgroundRect
         implicitHeight: 30
-        color: root.containsMouse ? "#555555" : "#444444"
+        color: root.containsMouse ? Colors.surfaceHover : Colors.surface
         radius: 15
 
         Behavior on color {

@@ -3,7 +3,8 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
-import qs.modules.mediaControls as MediaControlsModule
+import qs.modules.mediaControls
+import qs.modules.common
 
 MouseArea {
     id: root
@@ -75,7 +76,7 @@ MouseArea {
     WrapperRectangle {
         id: backgroundRect
         implicitHeight: 30
-        color: mediaControls.isOpen ? "#51A4E7" : (root.containsMouse ? "#555555" : "#444444")
+        color: mediaControls.isOpen ? Colors.accent : (root.containsMouse ? Colors.surfaceHover : Colors.surface)
         radius: 15
 
         Behavior on color {
@@ -95,7 +96,7 @@ MouseArea {
             // music note
             Text {
                 text: "󰎇"
-                color: mediaControls.isOpen ? "#000000" : "#ffffff"
+                color: mediaControls.isOpen ? Colors.base : Colors.text
                 font.pixelSize: 16
                 Layout.alignment: Qt.AlignVCenter
 
@@ -111,7 +112,7 @@ MouseArea {
             Text {
                 id: titleText
                 text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
-                color: mediaControls.isOpen ? "#000000" : "#ffffff"
+                color: mediaControls.isOpen ? Colors.base : Colors.text
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
@@ -132,7 +133,7 @@ MouseArea {
             Rectangle {
                 width: 1
                 implicitHeight: parent.height * 0.6
-                color: mediaControls.isOpen ? "#000000" : "white"
+                color: mediaControls.isOpen ? Colors.base : Colors.text
                 opacity: 0.5
                 visible: titleText.text && artistText.text
                 Layout.alignment: Qt.AlignVCenter
@@ -149,7 +150,7 @@ MouseArea {
             Text {
                 id: artistText
                 text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
-                color: mediaControls.isOpen ? "#222222" : "#d0d0d0"
+                color: mediaControls.isOpen ? Colors.subtext2 : Colors.subtext0
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
@@ -195,7 +196,7 @@ MouseArea {
     }
 
     // media controls popup
-    MediaControlsModule.MediaControls {
+    MediaControls {
         id: mediaControls
         anchorItem: root
     }

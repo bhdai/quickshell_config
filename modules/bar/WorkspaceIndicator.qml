@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import qs.modules.common
 
 Item {
     id: workspaceIndicatorRoot
@@ -21,7 +22,7 @@ Item {
 
     readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
 
-    readonly property string mainColor: "#51A4E7"
+    readonly property string mainColor: Colors.accent
 
     readonly property real targetX: {
         if (dotsRepeater.count === 0 || targetIndex < 0 || targetIndex >= dotsRepeater.count) {
@@ -69,7 +70,7 @@ Item {
     WrapperRectangle {
         id: background
         anchors.fill: parent
-        color: "#444444"
+        color: Colors.surface
         radius: 20
         margin: 5
     }
@@ -105,7 +106,7 @@ Item {
                     color: {
                         if (workspaceMouseArea.containsMouse)
                             return mainColor;
-                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? "#ffffff" : "#77767b";
+                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? "white" : Colors.emptyWorkspace;
                     }
 
                     Behavior on height {

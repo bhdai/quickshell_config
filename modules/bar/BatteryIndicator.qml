@@ -2,8 +2,10 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
-import qs.modules.services
+import qs.services
 import qs.modules.common.widgets
+import qs.modules.common.functions
+import qs.modules.common
 
 MouseArea {
     id: root
@@ -11,12 +13,12 @@ MouseArea {
     readonly property real percentage: Battery.percentage
     readonly property bool isCharging: Battery.isCharging
     readonly property bool isCritical: Battery.isCritical
-    property real boltSize: 16
+    property real boltSize: 14
 
-    readonly property color fillColor: Battery.isCharging ? "#1BCA4B" : (Battery.isCritical ? "#F60B00" : "#FFFFFF")
-    readonly property color trackColor: ColorUtils.transparentize("#FFFFFF", 0.5) ?? "#F1D3F9"
+    readonly property color fillColor: Battery.isCharging ? Colors.batteryCharging : (Battery.isCritical ? Colors.batteryCritical : "white")
+    readonly property color trackColor: ColorUtils.transparentize("white", 0.5) ?? "#F1D3F9"
 
-    implicitWidth: batteryProgress.implicitWidth + (isCharging && percentage < 1 ? boltIcon.width + 2 : 0)
+    implicitWidth: batteryProgress.implicitWidth
     implicitHeight: 18
 
     ClippedProgressBar {
@@ -36,7 +38,7 @@ MouseArea {
     Item {
         id: boltIcon
         anchors.left: batteryProgress.right
-        anchors.leftMargin: -6
+        anchors.leftMargin: -5
         anchors.verticalCenter: batteryProgress.verticalCenter
         width: root.boltSize
         height: root.boltSize

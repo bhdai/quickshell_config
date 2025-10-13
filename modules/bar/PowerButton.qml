@@ -1,16 +1,18 @@
 import QtQuick
+import qs.modules.common.widgets
 
 // Power button component with dropdown menu
 Rectangle {
-    implicitWidth: 20
-    implicitHeight: 20
-    color: "red"
+    implicitWidth: 30
+    implicitHeight: 30
     radius: 4
+    color: "transparent"
 
-    Text {
+    MaterialSymbol {
         anchors.centerIn: parent
-        text: ""
-        color: "white"
-        font.pixelSize: 10
+        text: "power_settings_new"
+        iconSize: 20
+        fill: 1
+        color: "red"
     }
 }

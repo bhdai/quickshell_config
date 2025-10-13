@@ -3,6 +3,7 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import qs.modules.common
 
 MouseArea {
     id: root
@@ -18,7 +19,7 @@ MouseArea {
 
     WrapperRectangle {
         id: backgroundRect
-        color: root.containsMouse ? "#555555" : "#444444"
+        color: root.containsMouse ? Colors.surfaceHover : Colors.surface
         radius: 20
         margin: 5
 
@@ -48,7 +49,7 @@ MouseArea {
 
             Text {
                 text: isWinActiveOnWs ? (activeWin.title || "Untitled Window") : "Desktop"
-                color: "white"
+                color: Colors.text
                 font.pixelSize: 12
                 elide: Text.ElideRight
                 Layout.maximumWidth: 300
