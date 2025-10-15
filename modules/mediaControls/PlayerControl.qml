@@ -352,6 +352,7 @@ Item {
                                 anchors.fill: parent
                                 active: playerController.player?.canSeek ?? false
                                 sourceComponent: StyledSlider {
+                                    showTooltip: false
                                     configuration: StyledSlider.Configuration.Wavy
                                     highlightColor: blendedColors.colPrimary
                                     trackColor: blendedColors.colSecondaryContainer
