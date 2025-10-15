@@ -33,6 +33,7 @@ Slider {
     property real handleMargins: 4
     property real trackDotSize: 4
     property string tooltipContent: `${Math.round(value * 100)}%`
+    property bool showTooltip: true
     property bool wavy: configuration === StyledSlider.Configuration.Wavy
     property bool animateWave: true
     property real waveAmplitudeMultiplier: wavy ? 0.5 : 0
@@ -175,6 +176,26 @@ Slider {
         anchors.verticalCenter: parent.verticalCenter
         radius: width / 2
         color: root.handleColor
+
+        property bool hovered: handleMouseArea.containsMouse
+
+        MouseArea {
+            id: handleMouseArea
+            anchors.fill: parent
+            anchors.margins: -10
+            hoverEnabled: true
+            onPressed: mouse => mouse.accepted = false
+        }
+
+        ToolTip {
+            id: tooltip
+            visible: root.showTooltip && root.pressed && handle.hovered
+            text: root.tooltipContent
+            delay: 0
+            timeout: -1
+            y: -tooltip.height - 5
+            x: -tooltip.width / 2 + handle.width / 2
+        }
 
         Behavior on implicitWidth {
             NumberAnimation {

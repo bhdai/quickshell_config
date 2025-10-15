@@ -6,12 +6,14 @@ import Quickshell
 Singleton {
     readonly property color background: "#151516"
     readonly property color surface: "#2A2A2B"
+    readonly property color surface1: "#202021"
     readonly property color surfaceHover: "#444444"
 
     readonly property color text: "#FFFFFF"
     readonly property color subtext0: "#d0d0d0"
     readonly property color subtext1: "#aaaaaa"
     readonly property color subtext2: "#222222"
+    readonly property color subtext3: "#C6C6C6"
 
     readonly property color archBlue: "#0F94D2"
     readonly property color accent: "#51A4E7"

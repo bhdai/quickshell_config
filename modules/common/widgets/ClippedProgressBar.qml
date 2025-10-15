@@ -15,7 +15,7 @@ Item {
     property bool showNob: false
     property bool nobFilled: false
     property real gap: 1 // gap between bar and nob
-    property real nobWidth: 3
+    property real nobWidth: 2
 
     property font font: Qt.font({
         pixelSize: 15,
@@ -95,8 +95,8 @@ Item {
             verticalCenter: batteryBody.verticalCenter
         }
         width: root.nobWidth
-        height: batteryBody.height * 0.4
-        radius: 1.5
+        height: batteryBody.height * 0.5
+        radius: 1
         color: nobFilled ? root.highlightColor : root.trackColor
     }
 }
