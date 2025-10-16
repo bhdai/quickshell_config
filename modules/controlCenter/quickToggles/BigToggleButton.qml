@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Widgets
 import qs.modules.common.widgets
 import qs.modules.common.functions
@@ -8,7 +9,7 @@ import qs.modules.common
 WrapperMouseArea {
     id: root
 
-    property alias icon: symbol.text
+    property alias icon: symbol.source
     property alias title: titleText.text
     property alias subtitle: subtitleText.text
     property bool toggled: false
@@ -33,11 +34,20 @@ WrapperMouseArea {
             anchors.rightMargin: 15
             spacing: 10
 
-            MaterialSymbol {
+            CustomIcon {
                 id: symbol
-                iconSize: 24
+                // source: icon
+                width: 24
+                height: 24
+                colorize: true
                 color: root.toggled ? Colors.base : Colors.text
             }
+
+            // MaterialSymbol {
+            //     id: symbol
+            //     iconSize: 24
+            //     color: root.toggled ? Colors.base : Colors.text
+            // }
 
             ColumnLayout {
                 spacing: 2

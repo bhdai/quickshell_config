@@ -11,7 +11,7 @@ Singleton {
     property bool ready: Pipewire.defaultAudioSink?.ready ?? false
     property PwNode sink: Pipewire.defaultAudioSink
     property PwNode source: Pipewire.defaultAudioSource
-    property string materialSymbol: ready ? (sink.audio.muted ? "volume_off" : (sink.audio.volume > 0.7 ? "volume_up" : sink.audio.volume > 0.3 ? "volume_down" : sink.audio.volume > 0.0 ? "volume_mute" : "volume_off")) : "volume_off"
+    property string symbol: ready ? (sink.audio.muted ? "audio-volume-muted-symbolic" : (sink.audio.volume > 0.7 ? "audio-volume-high-symbolic" : sink.audio.volume > 0.3 ? "audio-volume-medium-symbolic" : sink.audio.volume > 0.0 ? "audio-volume-low-symbolic" : "audio-volume-muted-symbolic")) : "audio-volume-muted-symbolic"
     readonly property bool sinkProtectionEnabled: false
 
     signal sinkProtectionTriggered(string reason)

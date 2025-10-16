@@ -4,7 +4,7 @@ import Quickshell
 
 SliderControl {
     id: root
-    icon: "light_mode"
+    icon: "display-brightness-symbolic"
 
     from: 0.0
     to: 1.0

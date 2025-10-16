@@ -5,7 +5,7 @@ import Quickshell.Io
 import qs.services
 
 BigToggleButton {
-    icon: Network.materialSymbol
+    icon: Network.symbol
     title: "Connected"
     subtitle: Network.networkName
 }

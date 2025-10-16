@@ -9,7 +9,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 BigToggleButton {
-    icon: BluetoothStatus.connected ? "bluetooth_connected" : "bluetooth"
+    icon: BluetoothStatus.connected ? "bluetooth-active-symbolic" : BluetoothStatus.enabled ? "bluetooth-disconnected-symbolic" : "bluetooth-disabled-symbolic"
     title: "Connected"
     subtitle: "Device Name"
 }

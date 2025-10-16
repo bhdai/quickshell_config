@@ -20,7 +20,23 @@ Singleton {
 
     property string networkName: ""
     property int networkStrength
-    property string materialSymbol: ethernet ? "lan" : wifiEnabled ? (Network.networkStrength > 80 ? "android_wifi_4_bar" : Network.networkStrength > 60 ? "android_wifi_3_bar" : Network.networkStrength > 40 ? "wifi_2_bar" : Network.networkStrength > 20 ? "wifi_1_bar" : "signal_wifi_0_bar") : "android_wifi_4_bar_off"
+    property string symbol: {
+        if (ethernet)
+            return "network-wired-symbolic";
+        if (!wifiEnabled)
+            return "network-wireless-disabled-symbolic";
+
+        if (wifiEnabled && !active) {
+            return "network-wireless-offline-symbolic";
+        }
+
+        const strength = Network.networkStrength;
+        if (strength > 66)
+            return "network-wireless-signal-good-symbolic";
+        if (strength > 33)
+            return "network-wireless-signal-ok-symbolic";
+        return "network-wireless-signal-weak-symbolic";
+    }
 
     function enableWifi(enabled = true): void {
         const cmd = enabled ? "on" : "off";
