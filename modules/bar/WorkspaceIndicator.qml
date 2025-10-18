@@ -106,7 +106,7 @@ Item {
                     color: {
                         if (workspaceMouseArea.containsMouse)
                             return mainColor;
-                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? "white" : Colors.emptyWorkspace;
+                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? Colors.text : Colors.emptyWorkspace;
                     }
 
                     Behavior on height {

@@ -20,14 +20,14 @@ WrapperRectangle {
 
         Text {
             text: Time.hoursMinutes
-            color: "white"
+            color: Colors.text
             font.pixelSize: 12
             Layout.alignment: Qt.AlignVCenter
         }
 
         Rectangle {
             width: 1
-            color: "white"
+            color: Colors.text
             opacity: 0.5
 
             implicitHeight: parent.height * 0.6
@@ -40,13 +40,13 @@ WrapperRectangle {
 
             Text {
                 text: Time.dayOfWeek
-                color: "white"
+                color: Colors.text
                 font.pixelSize: 12
                 Layout.alignment: Qt.AlignVCenter
             }
             Text {
                 text: Time.dateMonth
-                color: "white"
+                color: Colors.text
                 font.pixelSize: 12
                 Layout.alignment: Qt.AlignVCenter
             }

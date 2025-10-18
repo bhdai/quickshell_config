@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
+import Quickshell
 import qs.services
 import qs.modules.common.widgets
 import qs.modules.controlCenter
@@ -21,7 +22,7 @@ WrapperMouseArea {
         id: backgroundRect
 
         readonly property int iconSize: 20
-        readonly property string iconColor: controlCenter.isOpen ? "black" : "white"
+        readonly property string iconColor: controlCenter.isOpen ? Colors.background : Colors.text
 
         implicitHeight: 30
         color: controlCenter.isOpen ? Colors.accent : (root.containsMouse ? Colors.surfaceHover : Colors.surface)
@@ -34,23 +35,27 @@ WrapperMouseArea {
             spacing: 8
             anchors.verticalCenter: parent.verticalCenter
 
-            MaterialSymbol {
-                text: Audio.materialSymbol
-                iconSize: backgroundRect.iconSize
-                fill: 1
+            CustomIcon {
+                source: Audio.symbol
+                width: backgroundRect.iconSize
+                height: backgroundRect.iconSize
+                colorize: true
                 color: backgroundRect.iconColor
             }
 
-            MaterialSymbol {
-                text: Network.materialSymbol
-                iconSize: backgroundRect.iconSize
-                fill: 1
+            CustomIcon {
+                source: Network.symbol
+                width: backgroundRect.iconSize
+                height: backgroundRect.iconSize
+                colorize: true
                 color: backgroundRect.iconColor
             }
 
-            MaterialSymbol {
-                text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
-                iconSize: backgroundRect.iconSize
+            CustomIcon {
+                source: BluetoothStatus.connected ? "bluetooth-active-symbolic" : BluetoothStatus.enabled ? "bluetooth-disconnected-symbolic" : "bluetooth-disabled-symbolic"
+                width: backgroundRect.iconSize
+                height: backgroundRect.iconSize
+                colorize: true
                 color: backgroundRect.iconColor
             }
         }

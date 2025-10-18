@@ -112,7 +112,7 @@ MouseArea {
             Text {
                 id: titleText
                 text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
-                color: mediaControls.isOpen ? Colors.base : Colors.text
+                color: mediaControls.isOpen ? Colors.base : "white"
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
