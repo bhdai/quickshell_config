@@ -141,6 +141,7 @@ Singleton {
         wifiStatusProcess.running = true;
         updateNetworkName.running = true;
         updateNetworkStrength.running = true;
+        getNetworks.running = true;
     }
 
     Process {
