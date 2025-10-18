@@ -7,7 +7,12 @@ import qs.services
 ListView {
     id: notifList
     Layout.fillWidth: true
-    Layout.fillHeight: true
+
+    implicitHeight: Math.min(contentHeight, maxPanelHeight - headerAndMarginHeight)
+
+    // set explicit height to respect the allocated space from parent
+    height: implicitHeight
+
     clip: true
     spacing: 6
 
@@ -24,11 +29,8 @@ ListView {
     property real headerAndMarginHeight: 0
     property real maxPanelHeight: 400
 
-    property real panelHeight: Math.min(contentHeight + headerAndMarginHeight, maxPanelHeight)
-
     maximumFlickVelocity: 3500
     boundsBehavior: Flickable.DragOverBounds
-    // boundsBehavior: Flickable.StopAtBounds
 
     delegate: NotificationItem {
         width: notifList.width
@@ -37,7 +39,7 @@ ListView {
 
     interactive: true
 
-    // Behavior for smooth scrolling animation
+    // behavior for smooth scrolling animation
     Behavior on contentY {
         NumberAnimation {
             id: scrollAnim
@@ -47,14 +49,14 @@ ListView {
         }
     }
 
-    // Keep target synced when not animating
+    // keep target synced when not animating
     onContentYChanged: {
         if (!scrollAnim.running) {
             scrollTargetY = contentY;
         }
     }
 
-    // Custom MouseArea to handle wheel events with momentum
+    // custom MouseArea to handle wheel events with momentum
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.NoButton

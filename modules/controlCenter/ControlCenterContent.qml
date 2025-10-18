@@ -13,18 +13,20 @@ ColumnLayout {
 
     implicitWidth: 420
 
+    property real availableHeight: 780 // default fallback
+
     property int radius: 20
-    property real controlPanelHeight: 250
     property int margins: 15
     property int notificationCount: Notifications.list.length
-    readonly property real maxNotificationHeight: parent.height - controlPannel.height - root.spacing - anchors.margins
+
+    readonly property real maxNotificationHeight: availableHeight - controlPannel.height - spacing - margins * 2
+
     property alias topWindow: controlPannel
     property alias bottomWindow: notificationsPannel
 
     Rectangle {
         id: controlPannel
 
-        // height: root.controlPanelHeight
         height: mainLayout.implicitHeight + root.margins * 2
 
         radius: root.radius
@@ -33,7 +35,6 @@ ColumnLayout {
 
         ColumnLayout {
             id: mainLayout
-            // anchors.fill: parent
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
@@ -83,28 +84,32 @@ ColumnLayout {
 
         Layout.fillWidth: true
 
-        implicitHeight: list.panelHeight
+        implicitHeight: Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxNotificationHeight)
+        height: implicitHeight
 
         visible: root.notificationCount > 0
 
         Behavior on implicitHeight {
             NumberAnimation {
-                duration: 200
+                duration: 100
                 easing.type: Easing.InOutQuad
             }
         }
 
         ColumnLayout {
-            anchors.fill: parent
+            id: notifColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: root.margins
             spacing: 5
 
             NotificationHeader {
                 id: notifHeader
-                Layout.alignment: Qt.AlignVCenter
             }
 
             Rectangle {
+                id: separator
                 implicitHeight: 1
                 Layout.fillWidth: true
                 color: Colors.text
@@ -113,7 +118,8 @@ ColumnLayout {
 
             NotificationList {
                 id: list
-                headerAndMarginHeight: notifHeader.implicitHeight + root.margins * 2 + 12
+                // calculate the non-scrollable overhead
+                headerAndMarginHeight: notifHeader.implicitHeight + root.margins * 2 + separator.implicitHeight + (notifColumn.spacing * 2)
                 maxPanelHeight: root.maxNotificationHeight
             }
         }

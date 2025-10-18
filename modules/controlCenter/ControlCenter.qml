@@ -7,8 +7,8 @@ Scope {
     id: root
 
     property bool isOpen: false
-    property int panelWidth: 430
-    property int panelHeight: 800
+    property int desiredPanelWidth: 430
+    property int desiredPanelHeight: 800
 
     Loader {
         id: controlCenterLoader
@@ -19,8 +19,9 @@ Scope {
             visible: root.isOpen
 
             exclusiveZone: 0
-            implicitWidth: root.panelWidth
-            implicitHeight: root.panelHeight
+            implicitWidth: root.desiredPanelWidth
+            implicitHeight: root.desiredPanelHeight
+
             WlrLayershell.namespace: "quickshell:controlCenter"
             color: "transparent"
 
@@ -44,6 +45,8 @@ Scope {
                 id: content
                 anchors.fill: parent
                 anchors.margins: 10
+
+                availableHeight: parent.height - anchors.margins * 2
             }
 
             mask: Region {
