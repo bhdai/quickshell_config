@@ -11,9 +11,11 @@ ListView {
     clip: true
     spacing: 6
 
-    model: Notifications.list
+    model: ScriptModel {
+        values: Notifications.listArray
+    }
 
-    property real touchpadScrollFactor: 250
+    property real touchpadScrollFactor: 150
     property real mouseScrollFactor: 50
     property real mouseScrollDeltaThreshold: 120
     property real scrollTargetY: 0

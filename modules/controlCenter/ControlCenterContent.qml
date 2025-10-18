@@ -83,9 +83,16 @@ ColumnLayout {
 
         Layout.fillWidth: true
 
-        height: list.panelHeight
+        implicitHeight: list.panelHeight
 
         visible: root.notificationCount > 0
+
+        Behavior on implicitHeight {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.InOutQuad
+            }
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -98,10 +105,10 @@ ColumnLayout {
             }
 
             Rectangle {
-                height: 1
+                implicitHeight: 1
                 Layout.fillWidth: true
                 color: Colors.text
-                opacity: 0.2
+                opacity: 0.3
             }
 
             NotificationList {

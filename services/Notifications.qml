@@ -87,6 +87,7 @@ Singleton {
     property list<Notif> list: []
     property var popupList: list.filter(notif => notif.popup)
     property bool popupInhibited: false || silent
+    property var listArray: list.map(notif => notif)
     Component {
         id: notifComponent
         Notif {}
