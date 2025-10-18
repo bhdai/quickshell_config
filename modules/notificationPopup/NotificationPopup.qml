@@ -31,7 +31,7 @@ Rectangle {
 
         onClicked: {
             // close on click (always, whether there are actions or not)
-            Notifications.discardNotification(root.notif.notificationId);
+            Notifications.hideNotificationPopup(root.notif.notificationId);
         }
     }
 
@@ -100,6 +100,22 @@ Rectangle {
                 font.pointSize: 9
                 Component.onCompleted: {
                     timeDisplay.text = Time.hoursMinutes;
+                }
+            }
+
+            Item {
+                id: closeButtonContainer
+                property real iconSize: 15
+                implicitWidth: iconSize
+                implicitHeight: iconSize
+                CustomIcon {
+                    id: closeIcon
+                    source: "window-close-symbolic"
+                    anchors.centerIn: parent
+                    width: closeButtonContainer.iconSize
+                    height: closeButtonContainer.iconSize
+                    colorize: true
+                    color: Colors.powerButton
                 }
             }
         }
@@ -184,9 +200,9 @@ Rectangle {
                         asynchronous: true
                         visible: source !== ""
 
-                        Component.onCompleted: {
-                            console.log("Notification image source:", notificationImage.source);
-                        }
+                        // Component.onCompleted: {
+                        //     console.log("Notification image source:", notificationImage.source);
+                        // }
                     }
                 }
             }
@@ -255,14 +271,13 @@ Rectangle {
                     text: "Send"
                     enabled: replyField.text.length > 0
                     onClicked: {
-                        root.notif.notification.sendInlineReply(replyField.text)
+                        root.notif.notification.sendInlineReply(replyField.text);
                         if (!root.notif.notification.resident) {
-                            Notifications.discardNotification(root.notif.notificationId)
+                            Notifications.discardNotification(root.notif.notificationId);
                         }
                     }
                 }
             }
         }
-
     }
 }
