@@ -7,7 +7,7 @@ Scope {
     id: root
 
     property bool isOpen: false
-    property int panelWidth: 420
+    property int panelWidth: 430
     property int panelHeight: 800
 
     Loader {
@@ -44,6 +44,15 @@ Scope {
                 id: content
                 anchors.fill: parent
                 anchors.margins: 10
+            }
+
+            mask: Region {
+                Region {
+                    item: content.topWindow
+                }
+                Region {
+                    item: content.bottomWindow
+                }
             }
         }
     }
