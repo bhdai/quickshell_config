@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import qs.modules.common.widgets
 
 Slider {
     id: root
@@ -39,6 +40,17 @@ Slider {
     property real waveAmplitudeMultiplier: wavy ? 0.5 : 0
     property real waveFrequency: 6
     property real waveFps: 60
+
+    // Inset icon API
+    property string insetIconSource: ""
+    // default single-color for backward compat; override Active/Inactive to customize
+    property color insetIconColor: handleColor
+    property color insetIconColorActive: insetIconColor
+    property color insetIconColorInactive: insetIconColor
+    property real insetIconSize: Math.min(24, trackWidth - 12)
+    property bool enableInsetIcon: true
+    property real insetIconPadding: 6
+    readonly property bool insetIconVisible: enableInsetIcon && insetIconSource !== "" && configuration >= StyledSlider.Configuration.M
 
     leftPadding: handleMargins
     rightPadding: handleMargins
@@ -154,6 +166,30 @@ Slider {
             bottomRightRadius: root.trackRadius
             topLeftRadius: root.unsharpenRadius
             bottomLeftRadius: root.unsharpenRadius
+        }
+
+        // Inset icon inside the track
+        Item {
+            id: insetIconContainer
+            anchors.fill: parent
+
+            readonly property real leftWidth: root.handleMargins + (root.visualPosition * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
+            readonly property real rightWidth: root.handleMargins + ((1 - root.visualPosition) * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
+            readonly property real requiredWidth: root.insetIconSize + 2 * root.insetIconPadding
+            readonly property bool placeOnLeft: leftWidth >= requiredWidth || rightWidth < requiredWidth
+            visible: root.insetIconVisible && (leftWidth >= requiredWidth || rightWidth >= requiredWidth)
+
+            CustomIcon {
+                id: insetIcon
+                width: root.insetIconSize
+                height: width
+                colorize: true
+                color: insetIconContainer.placeOnLeft ? root.insetIconColorActive : root.insetIconColorInactive
+                source: root.insetIconSource
+                anchors.verticalCenter: parent.verticalCenter
+                // Place at the start of the respective segment
+                x: insetIconContainer.placeOnLeft ? (root.insetIconPadding) : ((parent.width - insetIconContainer.rightWidth) + root.insetIconPadding)
+            }
         }
 
         // Stop indicators
