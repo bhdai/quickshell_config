@@ -41,17 +41,17 @@ Singleton {
             running: wrapper.popup && wrapper.timeout > 0 && !isPaused
 
             onTriggered: {
-                wrapper.timeLeft -= interval
+                wrapper.timeLeft -= interval;
                 if (wrapper.timeLeft <= 0) {
-                    wrapper.timeLeft = 0
-                    root.timeoutNotification(wrapper.notificationId)
-                    stop()
+                    wrapper.timeLeft = 0;
+                    root.timeoutNotification(wrapper.notificationId);
+                    stop();
                 }
             }
         }
 
         function setPaused(paused) {
-            internalTimer.isPaused = paused
+            internalTimer.isPaused = paused;
         }
 
         onNotificationChanged: {
@@ -77,8 +77,6 @@ Singleton {
     function notifToString(notif) {
         return JSON.stringify(notifToJSON(notif), null, 2);
     }
-
-
 
     function stringifyList(list) {
         return JSON.stringify(list.map(notif => notifToJSON(notif)), null, 2);
@@ -123,13 +121,13 @@ Singleton {
                 "notification": notification,
                 "time": Date.now()
             });
-            root.list = [...root.list, newNotifObject];
+            root.list = [newNotifObject, ...root.list];
 
             // Popup
             if (!root.popupInhibited) {
                 newNotifObject.popup = true;
                 if (notification.expireTimeout != 0) {
-                    newNotifObject.timeout = notification.expireTimeout < 0 ? 3000 : notification.expireTimeout
+                    newNotifObject.timeout = notification.expireTimeout < 0 ? 5000 : notification.expireTimeout;
                 }
             }
 
@@ -164,7 +162,12 @@ Singleton {
         root.discardAll();
     }
 
-
+    function hideNotificationPopup(id) {
+        const index = root.list.findIndex(notif => notif.notificationId === id);
+        if (index !== -1) {
+            root.list[index].popup = false;
+        }
+    }
 
     function timeoutNotification(id) {
         const index = root.list.findIndex(notif => notif.notificationId === id);
