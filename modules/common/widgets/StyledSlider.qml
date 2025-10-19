@@ -14,7 +14,7 @@ Slider {
         S = 18,
         M = 30,
         L = 42,
-        XL = 72
+        XL = 62
     }
 
     property var configuration: StyledSlider.Configuration.S
@@ -28,7 +28,7 @@ Slider {
     property color dotColorHighlighted: "#FFFFFF"
     property real unsharpenRadius: 2
     property real trackWidth: configuration
-    property real trackRadius: trackWidth >= StyledSlider.Configuration.XL ? 21 : trackWidth >= StyledSlider.Configuration.L ? 12 : trackWidth >= StyledSlider.Configuration.M ? 9 : trackWidth >= StyledSlider.Configuration.S ? 6 : height / 2
+    property real trackRadius: trackWidth >= StyledSlider.Configuration.XL ? 16 : trackWidth >= StyledSlider.Configuration.L ? 12 : trackWidth >= StyledSlider.Configuration.M ? 9 : trackWidth >= StyledSlider.Configuration.S ? 6 : height / 2
     property real handleHeight: (configuration === StyledSlider.Configuration.Wavy) ? 24 : Math.max(33, trackWidth + 9)
     property real handleWidth: root.pressed ? handlePressedWidth : handleDefaultWidth
     property real handleMargins: 4
@@ -219,7 +219,7 @@ Slider {
         radius: width / 2
         color: root.handleColor
 
-        property bool hovered: handleMouseArea.containsMouse
+        // property bool hovered: handleMouseArea.containsMouse
 
         MouseArea {
             id: handleMouseArea
@@ -231,7 +231,7 @@ Slider {
 
         ToolTip {
             id: tooltip
-            visible: root.showTooltip && root.pressed && handle.hovered
+            visible: root.showTooltip && root.pressed //&& handle.hovered
             text: root.tooltipContent
             delay: 0
             timeout: -1
