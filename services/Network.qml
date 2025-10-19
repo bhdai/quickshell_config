@@ -17,25 +17,32 @@ Singleton {
     property WifiAccessPoint wifiConnectTarget
     readonly property list<WifiAccessPoint> wifiNetworks: []
     readonly property WifiAccessPoint active: wifiNetworks.find(n => n.active) ?? null
+    property string wifiStatus: "disconnected"
 
     property string networkName: ""
     property int networkStrength
     property string symbol: {
         if (ethernet)
             return "network-wired-symbolic";
-        if (!wifiEnabled)
-            return "network-wireless-disabled-symbolic";
-
-        if (wifiEnabled && !active) {
-            return "network-wireless-offline-symbolic";
-        }
 
         const strength = Network.networkStrength;
-        if (strength > 66)
-            return "network-wireless-signal-good-symbolic";
-        if (strength > 33)
-            return "network-wireless-signal-ok-symbolic";
-        return "network-wireless-signal-weak-symbolic";
+        if (root.wifiEnabled) {
+            switch (root.wifiStatus) {
+            case "connected":
+                if (strength > 66)
+                    return "network-wireless-signal-good-symbolic";
+                if (strength > 33)
+                    return "network-wireless-signal-ok-symbolic";
+                return "network-wireless-signal-weak-symbolic";
+            case "connecting":
+                return "network-wireless-acquiring-symbolic";
+            case "disconnected":
+                return "network-wireless-signal-none-symbolic";
+            default:
+                return "network-wireless-offline-symbolic";
+            }
+        }
+        return "network-wireless-disabled-symbolic";
     }
 
     function enableWifi(enabled = true): void {
@@ -141,7 +148,6 @@ Singleton {
         wifiStatusProcess.running = true;
         updateNetworkName.running = true;
         updateNetworkStrength.running = true;
-        getNetworks.running = true;
     }
 
     Process {
@@ -156,7 +162,7 @@ Singleton {
     Process {
         id: updateConnectionType
         property string buffer
-        command: ["sh", "-c", "nmcli -t -f NAME,TYPE,DEVICE c show --active"]
+        command: ["sh", "-c", "nmcli -t -f TYPE,STATE d status && nmcli -t -f CONNECTIVITY g"]
         running: true
         function startCheck() {
             buffer = "";
@@ -169,14 +175,32 @@ Singleton {
         }
         onExited: (exitCode, exitStatus) => {
             const lines = updateConnectionType.buffer.trim().split('\n');
+            const connectivity = lines.pop(); // none, limited, full
             let hasEthernet = false;
             let hasWifi = false;
+            let wifiStatus = "disconnected";
             lines.forEach(line => {
-                if (line.includes("ethernet"))
+                if (line.includes("ethernet") && line.includes("connected"))
                     hasEthernet = true;
-                else if (line.includes("wireless"))
-                    hasWifi = true;
+                else if (line.includes("wifi:")) {
+                    if (line.includes("disconnected")) {
+                        wifiStatus = "disconnected";
+                    } else if (line.includes("connected")) {
+                        hasWifi = true;
+                        wifiStatus = "connected";
+
+                        if (connectivity === "limited") {
+                            hasWifi = false;
+                            wifiStatus = "limited";
+                        }
+                    } else if (line.includes("connecting")) {
+                        wifiStatus = "connecting";
+                    } else if (line.includes("unavailable")) {
+                        wifiStatus = "disabled";
+                    }
+                }
             });
+            root.wifiStatus = wifiStatus;
             root.ethernet = hasEthernet;
             root.wifi = hasWifi;
         }

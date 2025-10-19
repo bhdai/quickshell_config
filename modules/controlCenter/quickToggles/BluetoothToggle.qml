@@ -9,7 +9,20 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 BigToggleButton {
-    icon: BluetoothStatus.connected ? "bluetooth-active-symbolic" : BluetoothStatus.enabled ? "bluetooth-disconnected-symbolic" : "bluetooth-disabled-symbolic"
-    title: "Connected"
-    subtitle: "Device Name"
+    readonly property BluetoothAdapter currentAdapter: Bluetooth.defaultAdapter
+
+    icon: BluetoothStatus.symbol
+    toggled: BluetoothStatus.enabled
+    title: {
+        if (!toggled)
+            return "Disabled";
+        if (BluetoothStatus.isTransitioning)
+            return "Connecting...";
+        return BluetoothStatus.connected ? "Connected" : "Disconnected";
+    }
+    subtitle: BluetoothStatus.firstActiveDevice ? BluetoothStatus.firstActiveDevice.name : "No connected device"
+
+    onClicked: {
+        currentAdapter.enabled = !currentAdapter.enabled;
+    }
 }

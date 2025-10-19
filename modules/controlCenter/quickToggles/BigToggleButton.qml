@@ -36,18 +36,11 @@ WrapperMouseArea {
 
             CustomIcon {
                 id: symbol
-                // source: icon
                 width: 24
                 height: 24
                 colorize: true
-                color: root.toggled ? Colors.base : Colors.text
+                color: root.toggled ? Colors.background : Colors.text
             }
-
-            // MaterialSymbol {
-            //     id: symbol
-            //     iconSize: 24
-            //     color: root.toggled ? Colors.base : Colors.text
-            // }
 
             ColumnLayout {
                 spacing: 2
@@ -64,6 +57,7 @@ WrapperMouseArea {
                     id: subtitleText
                     color: root.toggled ? Colors.base : Colors.subtext0
                     font.pixelSize: 12
+                    visible: toggled
                 }
             }
         }
