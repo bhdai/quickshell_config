@@ -4,37 +4,39 @@ import QtQuick
 import QtQuick.Layouts
 
 /**
- * A container that supports GroupButton children for bounciness.
- * See https://m3.material.io/components/button-groups/overview
+ * A container that displays buttons with equal widths and bouncy interactions.
  */
 Rectangle {
     id: root
     default property alias data: rowLayout.data
-    property alias uniformCellSizes: rowLayout.uniformCellSizes
     property real spacing: 5
     property real padding: 0
-    property int clickIndex: rowLayout.clickIndex
+    property int clickIndex: -1  // Index of currently pressed button
 
-    property real contentWidth: {
-        let total = 0;
+    property int visibleChildCount: {
+        let count = 0;
         for (let i = 0; i < rowLayout.children.length; ++i) {
-            const child = rowLayout.children[i];
-            if (!child.visible)
-                continue;
-            total += child.baseWidth ?? child.implicitWidth ?? child.width;
+            if (rowLayout.children[i].visible)
+                count++;
         }
-        return total + rowLayout.spacing * (rowLayout.children.length - 1);
+        return count;
     }
 
-    topLeftRadius: rowLayout.children.length > 0 ? (rowLayout.children[0].radius + padding) : 12
-    bottomLeftRadius: topLeftRadius
-    topRightRadius: rowLayout.children.length > 0 ? (rowLayout.children[rowLayout.children.length - 1].radius + padding) : 12
-    bottomRightRadius: topRightRadius
+    // Base equal width for each button when not pressed
+    property real baseButtonWidth: {
+        if (visibleChildCount === 0)
+            return 0;
+        const availableWidth = root.width - (padding * 2) - (spacing * (visibleChildCount - 1));
+        return availableWidth / visibleChildCount;
+    }
+
+    topLeftRadius: 12
+    bottomLeftRadius: 12
+    topRightRadius: 12
+    bottomRightRadius: 12
 
     color: "transparent"
-    width: root.contentWidth + padding * 2
-    implicitHeight: rowLayout.implicitHeight + padding * 2
-    implicitWidth: root.contentWidth + padding * 2
+    implicitHeight: 50 + padding * 2
 
     children: [
         RowLayout {
@@ -42,7 +44,39 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: root.padding
             spacing: root.spacing
-            property int clickIndex: -1
+
+            // Set Layout.fillWidth based on proximity to clicked button
+            onChildrenChanged: {
+                updateChildrenLayout();
+            }
         }
     ]
+
+    onClickIndexChanged: {
+        updateChildrenLayout();
+    }
+
+    function updateChildrenLayout() {
+        for (let i = 0; i < rowLayout.children.length; ++i) {
+            const child = rowLayout.children[i];
+            if (!child.visible)
+                continue;
+
+            // Check if this child is the clicked one or adjacent to it
+            const isClicked = (i === clickIndex);
+            const isAdjacent = (i === clickIndex - 1 || i === clickIndex + 1);
+
+            if (clickIndex === -1) {
+                // No button pressed - all equal width
+                child.Layout.fillWidth = true;
+            } else if (isClicked || isAdjacent) {
+                // Clicked button and adjacent buttons use fillWidth for animation
+                child.Layout.fillWidth = true;
+            } else {
+                // Other buttons maintain their base width
+                child.Layout.fillWidth = false;
+                child.Layout.preferredWidth = baseButtonWidth;
+            }
+        }
+    }
 }

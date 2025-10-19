@@ -7,10 +7,11 @@ GroupButton {
     property string buttonIcon
     baseWidth: 50
     baseHeight: 50
-    clickedWidth: baseWidth + 20
+    clickedWidth: baseWidth + 8
     toggled: false
     buttonRadius: 15
     buttonRadiusPressed: 12
+    bounce: true
 
     contentItem: MaterialSymbol {
         anchors.centerIn: parent
