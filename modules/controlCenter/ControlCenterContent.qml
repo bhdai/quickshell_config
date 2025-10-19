@@ -55,7 +55,8 @@ ColumnLayout {
             }
 
             ButtonGroup {
-                Layout.alignment: Qt.AlignHCenter
+                // Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: true
                 spacing: 10
 
                 PowerProfile {}
