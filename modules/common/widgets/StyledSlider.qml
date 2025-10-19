@@ -169,26 +169,32 @@ Slider {
         }
 
         // Inset icon inside the track
-        Item {
-            id: insetIconContainer
+        Loader {
+            id: insetIconLoader
             anchors.fill: parent
+            active: root.insetIconVisible
 
-            readonly property real leftWidth: root.handleMargins + (root.visualPosition * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
-            readonly property real rightWidth: root.handleMargins + ((1 - root.visualPosition) * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
-            readonly property real requiredWidth: root.insetIconSize + 2 * root.insetIconPadding
-            readonly property bool placeOnLeft: leftWidth >= requiredWidth || rightWidth < requiredWidth
-            visible: root.insetIconVisible && (leftWidth >= requiredWidth || rightWidth >= requiredWidth)
+            sourceComponent: Item {
+                id: insetIconContainer
+                anchors.fill: parent
 
-            CustomIcon {
-                id: insetIcon
-                width: root.insetIconSize
-                height: width
-                colorize: true
-                color: insetIconContainer.placeOnLeft ? root.insetIconColorActive : root.insetIconColorInactive
-                source: root.insetIconSource
-                anchors.verticalCenter: parent.verticalCenter
-                // Place at the start of the respective segment
-                x: insetIconContainer.placeOnLeft ? (root.insetIconPadding) : ((parent.width - insetIconContainer.rightWidth) + root.insetIconPadding)
+                readonly property real leftWidth: root.handleMargins + (root.visualPosition * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
+                readonly property real rightWidth: root.handleMargins + ((1 - root.visualPosition) * root.effectiveDraggingWidth) - (root.handleWidth / 2 + root.handleMargins)
+                readonly property real requiredWidth: root.insetIconSize + 2 * root.insetIconPadding
+                readonly property bool placeOnLeft: leftWidth >= requiredWidth || rightWidth < requiredWidth
+                visible: leftWidth >= requiredWidth || rightWidth >= requiredWidth
+
+                CustomIcon {
+                    id: insetIcon
+                    width: root.insetIconSize
+                    height: width
+                    colorize: true
+                    color: insetIconContainer.placeOnLeft ? root.insetIconColorActive : root.insetIconColorInactive
+                    source: root.insetIconSource
+                    anchors.verticalCenter: parent.verticalCenter
+                    // Place at the start of the respective segment
+                    x: insetIconContainer.placeOnLeft ? (root.insetIconPadding) : ((parent.width - insetIconContainer.rightWidth) + root.insetIconPadding)
+                }
             }
         }
 
