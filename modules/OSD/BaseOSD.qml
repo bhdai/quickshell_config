@@ -28,8 +28,6 @@ PanelWindow {
 
     anchors {
         bottom: true
-        // left: true
-        // right: true
     }
 
     // margins {
@@ -53,21 +51,21 @@ PanelWindow {
     }
 
     mask: Region {
-        item: slider
+        item: background
     }
 
     Item {
         anchors.fill: parent
 
         Rectangle {
-            // anchors.centerIn: parent
+            id: background
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.margins: 10
-            width: 260 // 360
-            height: 85
+            anchors.margins: 15
+            width: 260
+            height: slider.handleHeight + slider.anchors.margins
             radius: 21
-            color: "transparent"
+            color: Colors.background
 
             StyledSlider {
                 id: slider
