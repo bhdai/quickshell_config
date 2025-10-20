@@ -1,5 +1,6 @@
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 import Quickshell.Services.UPower
 import QtQuick
 
@@ -7,7 +8,7 @@ QuickToggleButton {
     id: root
 
     property string currentProfile: {
-        switch (PowerProfiles.profile) {
+        switch (PowerProfileService.profile) {
         case PowerProfile.PowerSaver:
             return "power-profile-power-saver-symbolic";
         case PowerProfile.Balanced:
@@ -45,23 +46,5 @@ QuickToggleButton {
 
     toggled: true
 
-    onClicked: cycleProfile()
-
-    function cycleProfile(): void {
-        switch (PowerProfiles.profile) {
-        case PowerProfile.PowerSaver:
-            PowerProfiles.profile = PowerProfile.Balanced;
-            break;
-        case PowerProfile.Balanced:
-            if (PowerProfiles.hasPerformanceProfile) {
-                PowerProfiles.profile = PowerProfile.Performance;
-            } else {
-                PowerProfiles.profile = PowerProfile.PowerSaver;
-            }
-            break;
-        case PowerProfile.Performance:
-            PowerProfiles.profile = PowerProfile.PowerSaver;
-            break;
-        }
-    }
+    onClicked: PowerProfileService.cycleProfile()
 }
