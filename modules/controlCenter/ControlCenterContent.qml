@@ -31,6 +31,8 @@ ColumnLayout {
 
         radius: root.radius
         color: Colors.background
+        border.width: 1
+        border.color: Colors.border
         Layout.fillWidth: true
 
         ColumnLayout {
@@ -91,6 +93,8 @@ ColumnLayout {
 
         implicitHeight: Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxNotificationHeight)
         height: implicitHeight
+        border.width: 1
+        border.color: Colors.border
 
         visible: root.notificationCount > 0
 

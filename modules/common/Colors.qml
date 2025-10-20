@@ -11,6 +11,7 @@ Singleton {
     readonly property color surface1: "#202021"
     readonly property color surfaceHover: "#262A2E"
     readonly property color surfaceContainerHighest: "#313539"
+    readonly property color border: "#242A2E"
 
     readonly property color text: "#C7C7C7"
     readonly property color subtext0: "#d0d0d0"

@@ -16,6 +16,8 @@ Rectangle {
     implicitHeight: mainLayout.implicitHeight + 10 // 5px padding on top/bottom
     radius: 15
     color: Colors.background
+    border.width: 1
+    border.color: Colors.border
 
     // pause timeout on hover
     MouseArea {
