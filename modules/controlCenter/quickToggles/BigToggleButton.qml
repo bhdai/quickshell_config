@@ -19,11 +19,17 @@ WrapperMouseArea {
     property real baseRadius: 12
     property real pressedRadius: 10
     property real baseWidth: 0
-    property real expandWidth: 8  // how much wider when pressed
+
+    // Position-aware expansion
+    property int indexInParent: 0
+    property int siblingCount: 2  // Default for typical use case
+    property bool isAtSide: indexInParent === 0 || indexInParent === (siblingCount - 1)
+    property real expandWidth: isAtSide ? 4 : 8  // Less expansion at edges
 
     implicitHeight: 60
     hoverEnabled: true
 
+    // Animate the width when pressed
     Layout.fillWidth: true
     Layout.preferredWidth: pressed && bounce ? baseWidth + expandWidth : baseWidth
 
@@ -73,6 +79,14 @@ WrapperMouseArea {
                 height: 24
                 colorize: true
                 color: root.toggled ? Colors.background : Colors.text
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 200
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+                    }
+                }
             }
 
             ColumnLayout {
@@ -84,6 +98,14 @@ WrapperMouseArea {
                     color: root.toggled ? Colors.base : Colors.text
                     font.pixelSize: 14
                     font.bold: true
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+                        }
+                    }
                 }
 
                 Text {
@@ -91,6 +113,14 @@ WrapperMouseArea {
                     color: root.toggled ? Colors.base : Colors.subtext0
                     font.pixelSize: 12
                     visible: toggled
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+                        }
+                    }
                 }
             }
         }

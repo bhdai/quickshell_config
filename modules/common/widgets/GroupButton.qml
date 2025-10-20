@@ -22,13 +22,22 @@ Button {
     property bool bounce: true
     property real baseWidth: contentItem.implicitWidth + horizontalPadding * 2
     property real baseHeight: contentItem.implicitHeight + verticalPadding * 2
-    property real clickedWidth: baseWidth + 20
-    property real clickedHeight: baseHeight
     property var parentGroup: root.parent
+    property int indexInParent: {
+        if (!parentGroup || !parentGroup.children)
+            return 0;
+        return parentGroup.children.indexOf(root);
+    }
     property int clickIndex: parentGroup?.clickIndex ?? -1
+    property int visibleChildCount: parentGroup?.visibleChildCount ?? 1
 
-    Layout.fillWidth: (clickIndex - 1 <= parentGroup.children.indexOf(root) && parentGroup.children.indexOf(root) <= clickIndex + 1)
-    Layout.fillHeight: (clickIndex - 1 <= parentGroup.children.indexOf(root) && parentGroup.children.indexOf(root) <= clickIndex + 1)
+    // Position-aware expansion: buttons at edges expand less
+    property bool isAtSide: indexInParent === 0 || indexInParent === (visibleChildCount - 1)
+    property real clickedWidth: baseWidth + (isAtSide ? 10 : 20)
+    property real clickedHeight: baseHeight
+
+    Layout.fillWidth: (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
+    Layout.fillHeight: (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
     implicitWidth: (root.down && bounce) ? clickedWidth : baseWidth
     implicitHeight: (root.down && bounce) ? clickedHeight : baseHeight
 
@@ -52,11 +61,12 @@ Button {
         }
     }
 
+    // Advanced bouncy animation with expressiveFastSpatial curve
     Behavior on implicitWidth {
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial curve
+            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial
         }
     }
 
@@ -64,7 +74,7 @@ Button {
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial curve
+            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial
         }
     }
 
@@ -75,6 +85,7 @@ Button {
             easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]  // expressiveEffects curve
         }
     }
+
     Behavior on rightRadius {
         NumberAnimation {
             duration: 200
@@ -119,9 +130,11 @@ Button {
         }
 
         onPressAndHold: () => {
-            altAction();
-            root.down = false;
-            root.clicked = false;
+            if (root.altAction) {
+                root.altAction();
+                root.down = false;
+                root.clicked = false;
+            }
         }
     }
 

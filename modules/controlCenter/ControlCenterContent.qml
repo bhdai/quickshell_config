@@ -46,16 +46,21 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 10
 
+                // Calculate base width for each button (half of available width minus spacing)
                 property real buttonBaseWidth: (width - spacing) / 2
 
                 NetworkToggle {
                     Layout.fillWidth: true
                     baseWidth: bigToggleRow.buttonBaseWidth
+                    indexInParent: 0
+                    siblingCount: 2
                 }
 
                 BluetoothToggle {
                     Layout.fillWidth: true
                     baseWidth: bigToggleRow.buttonBaseWidth
+                    indexInParent: 1
+                    siblingCount: 2
                 }
             }
 
