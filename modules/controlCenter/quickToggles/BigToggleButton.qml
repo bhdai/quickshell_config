@@ -16,15 +16,11 @@ WrapperMouseArea {
     property color colToggleHover: ColorUtils.transparentize(Colors.accent, 0.2)
 
     property bool bounce: true
-    property real baseRadius: 12
+    property real baseRadius: 15
     property real pressedRadius: 10
     property real baseWidth: 0
 
-    // Position-aware expansion
-    property int indexInParent: 0
-    property int siblingCount: 2  // Default for typical use case
-    property bool isAtSide: indexInParent === 0 || indexInParent === (siblingCount - 1)
-    property real expandWidth: isAtSide ? 4 : 8  // Less expansion at edges
+    property real expandWidth: 8
 
     implicitHeight: 60
     hoverEnabled: true
