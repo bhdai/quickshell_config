@@ -5,8 +5,12 @@ import Quickshell.Io
 import qs.services
 
 BigToggleButton {
+    id: root
+
+    signal openWifiPanel
+
     icon: Network.symbol
-    toggled: Network.wifiStatus !== "disabled" // Network.wifiEnabled || Network.ethernet
+    toggled: Network.wifiStatus !== "disabled"
     title: toggled ? (Network.wifiStatus === "connected" ? "Connected" : (Network.wifiStatus === "connecting" ? "Connecting..." : "Disconnected")) : "Disable"
 
     subtitle: {
@@ -22,7 +26,12 @@ BigToggleButton {
             return Network.networkName + " (Captive portal)";
         return Network.networkName;
     }
-    onClicked: {
+
+    onLeftClicked: {
         Network.toggleWifi();
+    }
+
+    onRightClicked: {
+        root.openWifiPanel();
     }
 }

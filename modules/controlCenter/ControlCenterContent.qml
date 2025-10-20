@@ -6,6 +6,8 @@ import qs.modules.common.widgets
 import qs.services
 import "./quickToggles/"
 import "./notifications/"
+import "./wifiNetwork/"
+import "./bluetoothDevice/"
 
 ColumnLayout {
     id: root
@@ -19,10 +21,13 @@ ColumnLayout {
     property int margins: 15
     property int notificationCount: Notifications.list.length
 
-    readonly property real maxNotificationHeight: availableHeight - controlPannel.height - spacing - margins * 2
+    readonly property real maxNotificationHeight: availableHeight - controlPannel.height // - spacing // - margins * 2
 
     property alias topWindow: controlPannel
-    property alias bottomWindow: notificationsPannel
+    property alias bottomWindow: contentLoader
+
+    property bool wifiPanelOpen: false
+    property bool bluetoothPanelOpen: false
 
     Rectangle {
         id: controlPannel
@@ -53,11 +58,21 @@ ColumnLayout {
                 NetworkToggle {
                     Layout.fillWidth: true
                     baseWidth: bigToggleRow.buttonBaseWidth
+
+                    onOpenWifiPanel: {
+                        root.bluetoothPanelOpen = false;
+                        root.wifiPanelOpen = true;
+                    }
                 }
 
                 BluetoothToggle {
                     Layout.fillWidth: true
                     baseWidth: bigToggleRow.buttonBaseWidth
+
+                    onOpenBluetoothPanel: {
+                        root.wifiPanelOpen = false;
+                        root.bluetoothPanelOpen = true;
+                    }
                 }
             }
 
@@ -84,52 +99,85 @@ ColumnLayout {
         }
     }
 
-    Rectangle {
-        id: notificationsPannel
-        color: Colors.background
-        radius: root.radius
-
+    // Bottom container: WiFi panel, Bluetooth panel, or notifications
+    Loader {
+        id: contentLoader
         Layout.fillWidth: true
+        Layout.fillHeight: root.wifiPanelOpen || root.bluetoothPanelOpen
+        sourceComponent: {
+            if (root.wifiPanelOpen) return wifiPanelComponent;
+            if (root.bluetoothPanelOpen) return bluetoothPanelComponent;
+            return notificationPanelComponent;
+        }
+    }
 
-        implicitHeight: Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxNotificationHeight)
-        height: implicitHeight
-        border.width: 1
-        border.color: Colors.border
+    Component {
+        id: wifiPanelComponent
 
-        visible: root.notificationCount > 0
-
-        Behavior on implicitHeight {
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.InOutQuad
+        WiFiPanel {
+            onClosePanel: {
+                root.wifiPanelOpen = false;
             }
         }
+    }
 
-        ColumnLayout {
-            id: notifColumn
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: root.margins
-            spacing: 5
+    Component {
+        id: bluetoothPanelComponent
 
-            NotificationHeader {
-                id: notifHeader
+        BluetoothPanel {
+            onClosePanel: {
+                root.bluetoothPanelOpen = false;
+            }
+        }
+    }
+
+    Component {
+        id: notificationPanelComponent
+
+        Rectangle {
+            id: notificationsPannel
+            color: Colors.background
+            radius: root.radius
+
+            implicitHeight: Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxNotificationHeight)
+            height: implicitHeight
+            border.width: 1
+            border.color: Colors.border
+
+            visible: root.notificationCount > 0
+
+            Behavior on implicitHeight {
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
             }
 
-            Rectangle {
-                id: separator
-                implicitHeight: 1
-                Layout.fillWidth: true
-                color: Colors.text
-                opacity: 0.3
-            }
+            ColumnLayout {
+                id: notifColumn
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: root.margins
+                spacing: 5
 
-            NotificationList {
-                id: list
-                // calculate the non-scrollable overhead
-                headerAndMarginHeight: notifHeader.implicitHeight + root.margins * 2 + separator.implicitHeight + (notifColumn.spacing * 2)
-                maxPanelHeight: root.maxNotificationHeight
+                NotificationHeader {
+                    id: notifHeader
+                }
+
+                Rectangle {
+                    id: separator
+                    implicitHeight: 1
+                    Layout.fillWidth: true
+                    color: Colors.text
+                    opacity: 0.3
+                }
+
+                NotificationList {
+                    id: list
+                    headerAndMarginHeight: notifHeader.implicitHeight + root.margins * 2 + separator.implicitHeight + (notifColumn.spacing * 2)
+                    maxPanelHeight: root.maxNotificationHeight
+                }
             }
         }
     }

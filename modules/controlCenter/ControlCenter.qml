@@ -54,7 +54,7 @@ Scope {
                     item: content.topWindow
                 }
                 Region {
-                    item: content.bottomWindow
+                    item: content.bottomWindow.item
                 }
             }
         }

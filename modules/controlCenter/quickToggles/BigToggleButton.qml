@@ -22,8 +22,12 @@ WrapperMouseArea {
 
     property real expandWidth: 8
 
+    signal rightClicked
+    signal leftClicked
+
     implicitHeight: 60
     hoverEnabled: true
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
 
     // Animate the width when pressed
     Layout.fillWidth: true
@@ -37,8 +41,12 @@ WrapperMouseArea {
         }
     }
 
-    onClicked: {
-        root.toggled = !root.toggled;
+    onClicked: mouse => {
+        if (mouse.button === Qt.RightButton) {
+            root.rightClicked();
+        } else if (mouse.button === Qt.LeftButton) {
+            root.leftClicked();
+        }
     }
 
     Rectangle {
