@@ -6,17 +6,21 @@ import qs.modules.OSD
 import qs.services
 
 ShellRoot {
-    property bool enableNotifications: true
-
     property var brightness: Brightness
+    property var gameMode: GamingModeService
+
+    property bool enableNotificationPopup: true
+    property bool enableOSD: true
 
     Bar {}
 
     LazyLoader {
-        active: enableNotifications
-
+        active: enableNotificationPopup
         Popups {}
     }
 
-    OSD {}
+    LazyLoader {
+        active: enableOSD
+        OSD {}
+    }
 }

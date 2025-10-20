@@ -1,27 +1,26 @@
 import qs.modules.common
 import qs.modules.common.widgets
-import QtQuick
-import Quickshell.Io
 import Quickshell
+import Quickshell.Io
+import qs.services
+import QtQuick
 
 QuickToggleButton {
     id: root
-    toggled: false
-    visible: true
 
     contentItem: Item {
-        implicitWidth: 20
-        implicitHeight: 20
-        
+        implicitWidth: 24
+        implicitHeight: 24
+
         CustomIcon {
-            id: cloudflareIcon
-            source: 'cloudflare-dns-symbolic'
+            id: microphoneIcon
+            source: "notifications-disabled-symbolic"
 
             anchors.centerIn: parent
-            width: 20
-            height: 20
+            width: 24
+            height: 24
             colorize: true
-            color: root.toggled ? Colors.base : Colors.text
+            color: root.toggled ? Colors.background : Colors.text
 
             Behavior on color {
                 ColorAnimation {
@@ -33,11 +32,9 @@ QuickToggleButton {
         }
     }
 
+    toggled: Notifications.silent
+
     onClicked: {
-        if (toggled) {
-            root.toggled = false;
-        } else {
-            root.toggled = true;
-        }
+        Notifications.silent = !Notifications.silent;
     }
 }

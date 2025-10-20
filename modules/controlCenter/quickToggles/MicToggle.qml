@@ -1,11 +1,14 @@
 import qs.modules.common
 import qs.modules.common.widgets
 import QtQuick
+import Quickshell.Io
+import Quickshell
 import qs.services
 
 QuickToggleButton {
     id: root
-    toggled: Idle.inhibit
+    toggled: !Audio.source?.audio?.muted
+    visible: true
 
     contentItem: Item {
         implicitWidth: 24
@@ -13,7 +16,7 @@ QuickToggleButton {
 
         CustomIcon {
             id: microphoneIcon
-            source: "coffee-awake"
+            source: root.toggled ? 'audio-input-microphone-symbolic' : 'microphone-disabled-symbolic'
 
             anchors.centerIn: parent
             width: 24
@@ -32,6 +35,6 @@ QuickToggleButton {
     }
 
     onClicked: {
-        Idle.toggleInhibit();
+        Audio.source.audio.muted = !Audio.source.audio.muted;
     }
 }

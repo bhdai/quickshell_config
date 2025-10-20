@@ -63,8 +63,8 @@ ColumnLayout {
                 NightLight {}
                 IdleInhibitor {}
                 GameMode {}
-                EasyEffectsToggle {}
-                CloudflareWrap {}
+                SilentNotification {}
+                MicToggle {}
             }
 
             ColumnLayout {

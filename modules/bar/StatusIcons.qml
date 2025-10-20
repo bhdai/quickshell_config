@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
 import Quickshell
+import Quickshell.Services.UPower
 import qs.services
 import qs.modules.common.widgets
 import qs.modules.controlCenter
@@ -57,6 +58,84 @@ WrapperMouseArea {
                 height: backgroundRect.iconSize
                 colorize: true
                 color: backgroundRect.iconColor
+            }
+
+            CustomIcon {
+                source: {
+                    switch (PowerProfiles.profile) {
+                    case PowerProfile.PowerSaver:
+                        return "power-profile-power-saver-symbolic";
+                    case PowerProfile.Balanced:
+                        return "power-profile-balanced-symbolic";
+                    case PowerProfile.Performance:
+                        return "power-profile-performance-symbolic";
+                    default:
+                        return "power-profile-balanced-symbolic";
+                    }
+                }
+                width: backgroundRect.iconSize
+                height: backgroundRect.iconSize
+                colorize: true
+                color: backgroundRect.iconColor
+            }
+
+            CustomIcon {
+                source: Audio.source?.audio?.muted ? 'microphone-disabled-symbolic' : 'audio-input-microphone-symbolic'
+                width: backgroundRect.iconSize
+                height: backgroundRect.iconSize
+                colorize: true
+                color: backgroundRect.iconColor
+            }
+
+            Loader {
+                active: GamingModeService.isActive
+                visible: active
+                Layout.preferredWidth: active ? backgroundRect.iconSize : 0
+                Layout.preferredHeight: active ? backgroundRect.iconSize : 0
+                Layout.maximumWidth: active ? backgroundRect.iconSize : 0
+                Layout.maximumHeight: active ? backgroundRect.iconSize : 0
+
+                sourceComponent: CustomIcon {
+                    source: "game-mode"
+                    width: backgroundRect.iconSize
+                    height: backgroundRect.iconSize
+                    colorize: true
+                    color: backgroundRect.iconColor
+                }
+            }
+
+            Loader {
+                active: Idle.inhibit
+                visible: active
+                Layout.preferredWidth: active ? backgroundRect.iconSize : 0
+                Layout.preferredHeight: active ? backgroundRect.iconSize : 0
+                Layout.maximumWidth: active ? backgroundRect.iconSize : 0
+                Layout.maximumHeight: active ? backgroundRect.iconSize : 0
+
+                sourceComponent: CustomIcon {
+                    source: "coffee-awake"
+                    width: backgroundRect.iconSize
+                    height: backgroundRect.iconSize
+                    colorize: true
+                    color: backgroundRect.iconColor
+                }
+            }
+
+            Loader {
+                active: Notifications.silent
+                visible: active
+                Layout.preferredWidth: active ? backgroundRect.iconSize : 0
+                Layout.preferredHeight: active ? backgroundRect.iconSize : 0
+                Layout.maximumWidth: active ? backgroundRect.iconSize : 0
+                Layout.maximumHeight: active ? backgroundRect.iconSize : 0
+
+                sourceComponent: CustomIcon {
+                    source: "notifications-disabled-symbolic"
+                    width: backgroundRect.iconSize
+                    height: backgroundRect.iconSize
+                    colorize: true
+                    color: backgroundRect.iconColor
+                }
             }
         }
     }
