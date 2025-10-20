@@ -15,8 +15,25 @@ WrapperMouseArea {
     property bool toggled: false
     property color colToggleHover: ColorUtils.transparentize(Colors.accent, 0.2)
 
+    property bool bounce: true
+    property real baseRadius: 12
+    property real pressedRadius: 10
+    property real baseWidth: 0
+    property real expandWidth: 8  // how much wider when pressed
+
     implicitHeight: 60
     hoverEnabled: true
+
+    Layout.fillWidth: true
+    Layout.preferredWidth: pressed && bounce ? baseWidth + expandWidth : baseWidth
+
+    Behavior on Layout.preferredWidth {
+        NumberAnimation {
+            duration: 200
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial curve
+        }
+    }
 
     onClicked: {
         root.toggled = !root.toggled;
@@ -24,9 +41,25 @@ WrapperMouseArea {
 
     Rectangle {
         anchors.fill: parent
-        radius: 12
+        radius: pressed && bounce ? pressedRadius : baseRadius
 
         color: root.toggled ? (root.containsMouse ? root.colToggleHover : Colors.accent) : (root.containsMouse ? Colors.surfaceHover : Colors.surface1)
+
+        Behavior on radius {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]  // expressiveEffects curve
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+            }
+        }
 
         RowLayout {
             anchors.fill: parent

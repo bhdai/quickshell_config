@@ -42,15 +42,20 @@ ColumnLayout {
             spacing: 10
 
             RowLayout {
+                id: bigToggleRow
                 Layout.fillWidth: true
                 spacing: 10
 
+                property real buttonBaseWidth: (width - spacing) / 2
+
                 NetworkToggle {
                     Layout.fillWidth: true
+                    baseWidth: bigToggleRow.buttonBaseWidth
                 }
 
                 BluetoothToggle {
                     Layout.fillWidth: true
+                    baseWidth: bigToggleRow.buttonBaseWidth
                 }
             }
 
