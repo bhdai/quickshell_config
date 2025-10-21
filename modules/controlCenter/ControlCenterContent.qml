@@ -21,7 +21,7 @@ ColumnLayout {
     property int margins: 15
     property int notificationCount: Notifications.list.length
 
-    readonly property real maxNotificationHeight: availableHeight - controlPannel.height // - spacing // - margins * 2
+    readonly property real maxNotificationHeight: availableHeight - controlPannel.height - spacing // - margins * 2
 
     property alias topWindow: controlPannel
     property alias bottomWindow: contentLoader
@@ -100,13 +100,16 @@ ColumnLayout {
     }
 
     // Bottom container: WiFi panel, Bluetooth panel, or notifications
+
     Loader {
         id: contentLoader
         Layout.fillWidth: true
         Layout.fillHeight: root.wifiPanelOpen || root.bluetoothPanelOpen
         sourceComponent: {
-            if (root.wifiPanelOpen) return wifiPanelComponent;
-            if (root.bluetoothPanelOpen) return bluetoothPanelComponent;
+            if (root.wifiPanelOpen)
+                return wifiPanelComponent;
+            if (root.bluetoothPanelOpen)
+                return bluetoothPanelComponent;
             return notificationPanelComponent;
         }
     }
@@ -139,14 +142,30 @@ ColumnLayout {
             color: Colors.background
             radius: root.radius
 
+            property bool isInitialized: false
+
             implicitHeight: Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxNotificationHeight)
+
             height: implicitHeight
             border.width: 1
             border.color: Colors.border
-
             visible: root.notificationCount > 0
 
+            Component.onCompleted: {
+                initTimer.start();
+            }
+
+            Timer {
+                id: initTimer
+                interval: 1
+                repeat: false
+                onTriggered: {
+                    notificationsPannel.isInitialized = true;
+                }
+            }
+
             Behavior on implicitHeight {
+                enabled: isInitialized
                 NumberAnimation {
                     duration: 100
                     easing.type: Easing.InOutQuad
