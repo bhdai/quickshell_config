@@ -49,7 +49,8 @@ Item {
             Behavior on color {
                 ColorAnimation {
                     duration: 200
-                    easing.type: Easing.OutQuad
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
                 }
             }
         }
@@ -288,22 +289,14 @@ Item {
                         property real size: 44
                         implicitWidth: size
                         implicitHeight: size
-                        onClicked: playerController.player.togglePlaying()
+                        downAction: () => playerController.player.togglePlaying()
 
                         buttonRadius: playerController.player?.isPlaying ? 16 : size / 2
                         colBackground: playerController.player?.isPlaying ? blendedColors.colPrimary : blendedColors.colSecondaryContainer
                         colBackgroundHover: playerController.player?.isPlaying ? blendedColors.colPrimaryHover : blendedColors.colSecondaryContainerHover
                         colRipple: playerController.player?.isPlaying ? blendedColors.colPrimaryActive : blendedColors.colSecondaryContainerActive
 
-                        Behavior on buttonRadius {
-                            NumberAnimation {
-                                duration: 300
-                                easing.type: Easing.OutQuad
-                            }
-                        }
-
                         contentItem: MaterialSymbol {
-                            anchors.centerIn: parent
                             iconSize: 28
                             fill: 1
                             color: playerController.player?.isPlaying ? blendedColors.colOnPrimary : blendedColors.colOnSecondaryContainer
@@ -313,8 +306,9 @@ Item {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 300
-                                    easing.type: Easing.OutQuad
+                                    duration: 200
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
                                 }
                             }
                         }
