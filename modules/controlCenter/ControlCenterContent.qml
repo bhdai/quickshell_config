@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.services
+import Quickshell.Bluetooth
 import "./quickToggles/"
 import "./notifications/"
 import "./wifiNetwork/"
@@ -28,6 +29,11 @@ ColumnLayout {
 
     property bool wifiPanelOpen: false
     property bool bluetoothPanelOpen: false
+
+    onBluetoothPanelOpenChanged: {
+        if (!bluetoothPanelOpen)
+            Bluetooth.defaultAdapter.discovering = false;
+    }
 
     Rectangle {
         id: controlPannel
@@ -60,6 +66,8 @@ ColumnLayout {
                     baseWidth: bigToggleRow.buttonBaseWidth
 
                     onOpenWifiPanel: {
+                        Network.enableWifi();
+                        Network.rescanWifi();
                         root.bluetoothPanelOpen = false;
                         root.wifiPanelOpen = true;
                     }
@@ -70,6 +78,8 @@ ColumnLayout {
                     baseWidth: bigToggleRow.buttonBaseWidth
 
                     onOpenBluetoothPanel: {
+                        Bluetooth.defaultAdapter.enabled = true;
+                        Bluetooth.defaultAdapter.discovering = true;
                         root.wifiPanelOpen = false;
                         root.bluetoothPanelOpen = true;
                     }
