@@ -82,7 +82,7 @@ WrapperMouseArea {
                 width: 24
                 height: 24
                 colorize: true
-                color: root.toggled ? Colors.background : Colors.text
+                color: root.toggled ? Colors.m3onPrimaryFixed : Colors.text
 
                 Behavior on color {
                     ColorAnimation {
@@ -99,7 +99,7 @@ WrapperMouseArea {
 
                 Text {
                     id: titleText
-                    color: root.toggled ? Colors.base : Colors.text
+                    color: root.toggled ? Colors.m3onPrimaryFixed : Colors.text
                     font.pixelSize: 14
                     font.bold: true
 
@@ -114,7 +114,7 @@ WrapperMouseArea {
 
                 Text {
                     id: subtitleText
-                    color: root.toggled ? Colors.base : Colors.subtext0
+                    color: root.toggled ? Colors.m3onPrimary : Colors.subtext0
                     font.pixelSize: 12
                     visible: toggled
 

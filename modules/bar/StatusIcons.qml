@@ -23,7 +23,7 @@ WrapperMouseArea {
         id: backgroundRect
 
         readonly property int iconSize: 20
-        readonly property string iconColor: controlCenter.isOpen ? Colors.background : Colors.text
+        readonly property string iconColor: controlCenter.isOpen ? Colors.m3onPrimaryFixed : Colors.text
 
         implicitHeight: 30
         color: controlCenter.isOpen ? Colors.accent : (root.containsMouse ? Colors.surfaceHover : Colors.surface)

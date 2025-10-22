@@ -96,7 +96,7 @@ MouseArea {
             // music note
             Text {
                 text: "󰎇"
-                color: mediaControls.isOpen ? Colors.base : Colors.text
+                color: mediaControls.isOpen ? Colors.m3onPrimaryFixed : Colors.text
                 font.pixelSize: 16
                 Layout.alignment: Qt.AlignVCenter
 
@@ -112,7 +112,7 @@ MouseArea {
             Text {
                 id: titleText
                 text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
-                color: mediaControls.isOpen ? Colors.base : "white"
+                color: mediaControls.isOpen ? Colors.m3onPrimaryFixed : Colors.text
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
@@ -133,7 +133,7 @@ MouseArea {
             Rectangle {
                 width: 1
                 implicitHeight: parent.height * 0.6
-                color: mediaControls.isOpen ? Colors.base : Colors.text
+                color: mediaControls.isOpen ? Colors.m3onPrimary : Colors.text
                 opacity: 0.5
                 visible: titleText.text && artistText.text
                 Layout.alignment: Qt.AlignVCenter
@@ -150,7 +150,7 @@ MouseArea {
             Text {
                 id: artistText
                 text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
-                color: mediaControls.isOpen ? Colors.subtext2 : Colors.subtext0
+                color: mediaControls.isOpen ? Colors.m3onPrimary : Colors.text
                 font.pixelSize: 12
 
                 elide: Text.ElideRight

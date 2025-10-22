@@ -81,7 +81,7 @@ PanelWindow {
                 dotColorHighlighted: Colors.accent
                 handleMargins: 6
 
-                insetIconColorActive: Colors.background
+                insetIconColorActive: Colors.m3onPrimaryFixed
                 insetIconColorInactive: Colors.text
                 insetIconPadding: 10
                 enableInsetIcon: true

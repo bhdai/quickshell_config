@@ -29,7 +29,7 @@ Item {
         handleMargins: 6
 
         // inset icon setup for M+ sizes
-        insetIconColorActive: Colors.background
+        insetIconColorActive: Colors.m3onPrimaryFixed
         insetIconColorInactive: Colors.text
         enableInsetIcon: true
 
