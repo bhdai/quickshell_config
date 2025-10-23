@@ -117,6 +117,8 @@ WrapperMouseArea {
                     color: root.toggled ? Colors.m3onPrimary : Colors.subtext0
                     font.pixelSize: 12
                     visible: toggled
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
 
                     Behavior on color {
                         ColorAnimation {
