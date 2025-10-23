@@ -162,14 +162,16 @@ RippleButton {
             RowLayout {
                 RippleButton {
                     id: networkPortalButton
+                    Layout.fillWidth: true
                     implicitHeight: 36
-                    implicitWidth: 80
+                    implicitWidth: networkPortalText.implicitWidth + padding * 2
                     padding: 14
 
                     contentItem: Text {
+                        id: networkPortalText
                         anchors.fill: parent
-                        anchors.leftMargin: cancelButton.padding
-                        anchors.rightMargin: cancelButton.padding
+                        anchors.leftMargin: networkPortalButton.padding
+                        anchors.rightMargin: networkPortalButton.padding
                         text: "Open network portal"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
