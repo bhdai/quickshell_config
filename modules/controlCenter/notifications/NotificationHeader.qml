@@ -19,6 +19,7 @@ RowLayout {
     Text {
         text: "Notifications"
         color: Colors.text
+        font.pixelSize: 18
         font.bold: true
         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
     }
