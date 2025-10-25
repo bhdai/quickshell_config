@@ -33,7 +33,10 @@ Singleton {
                     return "network-wireless-signal-good-symbolic";
                 if (strength > 33)
                     return "network-wireless-signal-ok-symbolic";
-                return "network-wireless-signal-weak-symbolic";
+                if (strength > 0)
+                    return "network-wireless-signal-weak-symbolic";
+                else
+                    return "network-wireless-signal-none-symbolic";
             case "connecting":
                 return "network-wireless-acquiring-symbolic";
             case "disconnected":
