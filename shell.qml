@@ -8,6 +8,7 @@ import qs.services
 ShellRoot {
     property var brightness: Brightness
     property var gameMode: GamingModeService
+    property var screenZoom: ScreenZoom
 
     property bool enableNotificationPopup: true
     property bool enableOSD: true
