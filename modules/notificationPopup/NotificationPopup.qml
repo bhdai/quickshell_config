@@ -19,24 +19,6 @@ Rectangle {
     border.width: 1
     border.color: Colors.border
 
-    // pause timeout on hover
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-
-        property bool isInside: containsMouse
-        onIsInsideChanged: {
-            if (root.notif) {
-                root.notif.setPaused(isInside);
-            }
-        }
-
-        onClicked: {
-            // close on click (always, whether there are actions or not)
-            Notifications.hideNotificationPopup(root.notif.notificationId);
-        }
-    }
-
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
@@ -280,6 +262,24 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    // pause timeout on hover
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+
+        property bool isInside: containsMouse
+        onIsInsideChanged: {
+            if (root.notif) {
+                root.notif.setPaused(isInside);
+            }
+        }
+
+        onClicked: {
+            // close on click (always, whether there are actions or not)
+            Notifications.hideNotificationPopup(root.notif.notificationId);
         }
     }
 }
