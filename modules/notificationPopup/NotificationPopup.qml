@@ -19,6 +19,29 @@ Rectangle {
     border.width: 1
     border.color: Colors.border
 
+    HoverHandler {
+        id: hoverHandler
+        onHoveredChanged: {
+            if (root.notif) {
+                if (hovered) {
+                    root.notif.timeLeft = root.notif.timeout
+                    root.notif.setPaused(true);
+                } else {
+                    root.notif.setPaused(false);
+                }
+            }
+        }
+    }
+
+    // pause timeout on hover
+    MouseArea {
+        anchors.fill: parent
+
+        onClicked: {
+            Notifications.hideNotificationPopup(root.notif.notificationId);
+        }
+    }
+
     ColumnLayout {
         id: mainLayout
         anchors.fill: parent
@@ -208,9 +231,11 @@ Rectangle {
                 Text {
                     text: root.notif ? root.notif.body : ""
                     wrapMode: Text.WordWrap
-                    textFormat: Text.RichText // to handle markup if any
+                    textFormat: Text.AutoText // to handle markup if any
                     color: Colors.text
                     Layout.fillWidth: true
+                    maximumLineCount: 20
+                    elide: Text.ElideRight
                 }
             }
         }
@@ -262,24 +287,6 @@ Rectangle {
                     }
                 }
             }
-        }
-    }
-
-    // pause timeout on hover
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-
-        property bool isInside: containsMouse
-        onIsInsideChanged: {
-            if (root.notif) {
-                root.notif.setPaused(isInside);
-            }
-        }
-
-        onClicked: {
-            // close on click (always, whether there are actions or not)
-            Notifications.hideNotificationPopup(root.notif.notificationId);
         }
     }
 }
