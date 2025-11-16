@@ -9,7 +9,7 @@ Item {
     id: workspaceIndicatorRoot
 
     readonly property int defaultWorkspaceCount: 5
-    readonly property int horizontalPadding: 5
+    readonly property int horizontalPadding: 8
     readonly property int pillSpacing: 5
 
     readonly property int activeSize: 20
