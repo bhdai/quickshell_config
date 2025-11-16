@@ -10,7 +10,7 @@ Item {
 
     readonly property int defaultWorkspaceCount: 5
     readonly property int horizontalPadding: 5
-    readonly property int pillSpacing: 1
+    readonly property int pillSpacing: 5
 
     readonly property int activeSize: 20
     readonly property int hasWindowsSize: 12
