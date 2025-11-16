@@ -9,6 +9,7 @@ ShellRoot {
     property var brightness: Brightness
     property var gameMode: GamingModeService
     property var screenZoom: ScreenZoom
+    property var powerProfile: PowerProfileService
 
     property bool enableNotificationPopup: true
     property bool enableOSD: true
