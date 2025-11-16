@@ -86,8 +86,28 @@ Item {
                     font.pointSize: 9
                     text: {
                         if (root.notif && root.notif.time) {
-                            var d = new Date(root.notif.time);
-                            return Qt.formatDateTime(d, "hh:mm");
+                            var notifTime = new Date(root.notif.time);
+                            var now = new Date();
+                            var diffMs = now - notifTime;
+                            var diffSecs = Math.floor(diffMs / 1000);
+                            var diffMins = Math.floor(diffSecs / 60);
+                            var diffHours = Math.floor(diffMins / 60);
+                            var diffDays = Math.floor(diffHours / 24);
+
+                            if (diffSecs < 60) {
+                                return "just now";
+                            } else if (diffMins < 60) {
+                                return diffMins + "m ago";
+                            } else if (diffHours < 24) {
+                                return diffHours + "h ago";
+                            } else if (diffDays === 1) {
+                                return "yesterday";
+                            } else if (diffDays < 7) {
+                                return diffDays + "d ago";
+                            } else {
+                                // for older notifications, show the date
+                                return Qt.formatDateTime(notifTime, "MMM d");
+                            }
                         }
                         return "";
                     }
