@@ -30,7 +30,18 @@ Singleton {
     // Cleanup on init
     Component.onCompleted: {
         Quickshell.execDetached(["mkdir", "-p", `${favicons}`]);
-        Quickshell.execDetached(["bash", "-c", `rm -rf '${coverArt}'; mkdir -p '${coverArt}'`]);
+        // Smart cache cleanup: remove files older than 7 days, keep cache under 50MB
+        Quickshell.execDetached(["bash", "-c", `
+            mkdir -p '${coverArt}' || exit 0
+            # Remove files not modified in 7 days
+            find '${coverArt}' -maxdepth 1 -type f -mtime +7 -delete 2>/dev/null || true
+            # If cache exceeds 50MB, remove oldest files keeping 20 most recent
+            cache_size=$(du -sm '${coverArt}' 2>/dev/null | cut -f1 || echo 0)
+            if [ "\${cache_size:-0}" -gt 50 ] 2>/dev/null; then
+                find '${coverArt}' -maxdepth 1 -type f -printf '%T@ %p\n' 2>/dev/null | \
+                    sort -n | head -n -20 | cut -d' ' -f2- | xargs -r rm -f 2>/dev/null || true
+            fi
+        `]);
         Quickshell.execDetached(["bash", "-c", `rm -rf '${latexOutput}'; mkdir -p '${latexOutput}'`]);
         Quickshell.execDetached(["bash", "-c", `rm -rf '${cliphistDecode}'; mkdir -p '${cliphistDecode}'`]);
     }
