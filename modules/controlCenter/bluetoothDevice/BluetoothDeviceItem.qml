@@ -4,6 +4,7 @@ import qs.modules.common.widgets
 import qs.services
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Bluetooth
 
 RippleButton {
     id: root
@@ -16,6 +17,7 @@ RippleButton {
     pointingHandCursor: !expanded
     implicitWidth: contentItem.implicitWidth + horizontalPadding * 2
     implicitHeight: contentItem.implicitHeight + verticalPadding * 2
+
     Behavior on implicitHeight {
         NumberAnimation {
             duration: 500
@@ -68,7 +70,7 @@ RippleButton {
 
             CustomIcon {
                 property string symbol: {
-                    const name = root.device?.icon;
+                    const name = root.device?.icon ?? "";
                     if (name.includes("headset"))
                         return "audio-headset-symbolic";
                     if (name.includes("headphones"))
@@ -143,6 +145,25 @@ RippleButton {
                 Layout.fillWidth: true
             }
             ActionButton {
+                // Show Pair button for unpaired devices
+                visible: !(root.device?.paired ?? false)
+                buttonText: root.device?.pairing ? "Pairing..." : "Pair"
+                enabled: !(root.device?.pairing ?? false)
+                colBackground: Colors.secondaryContainer
+                colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
+                colText: Colors.m3onSecondaryContainer
+
+                onClicked: {
+                    // Ensure adapter is pairable (some systems have this off by default)
+                    if (Bluetooth.defaultAdapter && !Bluetooth.defaultAdapter.pairable) {
+                        Bluetooth.defaultAdapter.pairable = true;
+                    }
+                    // Set trusted before pairing so the device is remembered
+                    root.device.trusted = true;
+                    root.device.pair();
+                }
+            }
+            ActionButton {
                 buttonText: root.device?.connected ? "Disconnect" : "Connect"
                 colBackground: Colors.primary
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
@@ -152,19 +173,12 @@ RippleButton {
                     if (root.device?.connected) {
                         root.device.disconnect();
                     } else {
-                        // If not paired, pair first then connect
-                        // Also set trusted=true so the device is remembered for future connections
-                        if (!root.device?.paired) {
-                            root.device.pair();
-                        }
-                        root.device.trusted = true;
                         root.device.connect();
                     }
                 }
             }
             ActionButton {
-                // Show Forget button if device is paired, bonded, or trusted
-                visible: (root.device?.paired || root.device?.bonded || root.device?.trusted) ?? false
+                visible: root.device?.paired ?? false
                 colBackground: Colors.colError
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
                 colRipple: Colors.onError
