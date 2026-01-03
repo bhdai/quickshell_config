@@ -152,12 +152,19 @@ RippleButton {
                     if (root.device?.connected) {
                         root.device.disconnect();
                     } else {
+                        // If not paired, pair first then connect
+                        // Also set trusted=true so the device is remembered for future connections
+                        if (!root.device?.paired) {
+                            root.device.pair();
+                        }
+                        root.device.trusted = true;
                         root.device.connect();
                     }
                 }
             }
             ActionButton {
-                visible: root.device?.paired ?? false
+                // Show Forget button if device is paired, bonded, or trusted
+                visible: (root.device?.paired || root.device?.bonded || root.device?.trusted) ?? false
                 colBackground: Colors.colError
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
                 colRipple: Colors.onError
