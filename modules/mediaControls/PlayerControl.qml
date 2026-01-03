@@ -15,8 +15,9 @@ Item {
 
     property var artUrl: player?.trackArtUrl
     property string artDownloadLocation: Directories.coverArt
-    property string artFileName: Qt.md5(artUrl) + ".jpg"
-    property string artFilePath: `${artDownloadLocation}/${artFileName}`
+    // Use MD5 hash as base filename - extension determined after download based on actual file content
+    property string artFileBase: Qt.md5(artUrl || "")
+    property string artFilePath: ""  // Set dynamically after download when extension is known
     property color artDominantColor: ColorUtils.mix((colorQuantizer?.colors[0] ?? basePrimary), baseSecondaryContainer, 0.8) || baseSecondaryContainer
     property bool downloaded: false
     property real radius: 12
@@ -61,7 +62,7 @@ Item {
     // like artFilePath have been updated to their new values
     Timer {
         id: artUrlDebouncer
-        interval: 50 // delay a bit to let the event loop settle
+        interval: 200 // delay to prevent duplicate downloads during rapid track changes
         repeat: false
         onTriggered: {
             const rawUrl = playerController.artUrl;
@@ -71,17 +72,47 @@ Item {
             }
 
             // console.log("PlayerControl: Debounced art URL is", rawUrl);
+            // Download to temp file, detect MIME type, convert WebP to JPEG if needed
+            const baseFile = `${artDownloadLocation}/${artFileBase}`;
             const commandString = `
-              [ -f '${artFilePath}' ] || (
-                curl -sSL -A "Mozilla/5.0" --create-dirs '${rawUrl}' -o '${artFilePath}' &&
-                if file --mime-type '${artFilePath}' | grep -q 'image/webp'; then
-                  magick '${artFilePath}' '${artFilePath}'
-                fi
-              )
+                # Check if file with any valid extension already exists
+                for ext in jpg jpeg png gif; do
+                    [ -f '${baseFile}'."$ext" ] && echo '${baseFile}'."$ext" && exit 0
+                done
+                # Download to temp file
+                tmpfile='${baseFile}.tmp'
+                curl -sSLf --max-time 10 -A "Mozilla/5.0" --create-dirs '${rawUrl}' -o "$tmpfile" || { rm -f "$tmpfile"; exit 1; }
+                # Detect MIME type from file content
+                mime=$(file -b --mime-type "$tmpfile" 2>/dev/null)
+                case "$mime" in
+                    image/webp)
+                        # Convert WebP to JPEG since Quickshell doesn't support WebP
+                        if command -v magick >/dev/null 2>&1; then
+                            magick "$tmpfile" '${baseFile}.jpg' && rm -f "$tmpfile"
+                            echo '${baseFile}.jpg'
+                        else
+                            # Fallback: rename as jpg and hope for the best
+                            mv "$tmpfile" '${baseFile}.jpg'
+                            echo '${baseFile}.jpg'
+                        fi
+                        ;;
+                    image/png)
+                        mv "$tmpfile" '${baseFile}.png'
+                        echo '${baseFile}.png'
+                        ;;
+                    image/gif)
+                        mv "$tmpfile" '${baseFile}.gif'
+                        echo '${baseFile}.gif'
+                        ;;
+                    *)
+                        mv "$tmpfile" '${baseFile}.jpg'
+                        echo '${baseFile}.jpg'
+                        ;;
+                esac
             `;
 
             coverArtDownloader.command = ["bash", "-c", commandString];
-            // console.log("Download cmd", coverArtDownloader.command.join(" "));
+            // console.log("Download cmd:", commandString);
 
             coverArtDownloader.running = true;
         }
@@ -91,9 +122,10 @@ Item {
     onArtUrlChanged: {
         // console.log("PlayerControl: Art URL signal received. New URL:", playerController.artUrl);
 
-        // immediately reset the downloaded state.
+        // immediately reset the downloaded state and file path
         // this will clear the old album art from the ui and prevent "Cannot open" errors
         playerController.downloaded = false;
+        playerController.artFilePath = "";
 
         // restart the timer
         artUrlDebouncer.restart();
@@ -102,9 +134,18 @@ Item {
     Process {
         id: coverArtDownloader
 
+        stdout: SplitParser {
+            onRead: data => {
+                const path = data.trim();
+                if (path.length > 0) {
+                    playerController.artFilePath = path;
+                }
+            }
+        }
+
         onExited: (exitCode, exitStatus) => {
-            // Important: only set downloaded to true if the process succeeded or the file already exists.
-            if (exitCode === 0) {
+            // Only set downloaded to true if the process succeeded and we have a valid path
+            if (exitCode === 0 && playerController.artFilePath.length > 0) {
                 playerController.downloaded = true;
             } else {
                 console.warn("PlayerControl: Art download failed with exit code", exitCode);
@@ -175,7 +216,7 @@ Item {
             sourceSize.width: background.width
             sourceSize.height: background.height
             fillMode: Image.PreserveAspectCrop
-            cache: false
+            cache: true
             antialiasing: true
             asynchronous: true
 
@@ -206,7 +247,8 @@ Item {
                 Layout.fillHeight: true
                 implicitWidth: height
                 radius: playerController.artRounding
-                color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
+                clip: true
+                color: "transparent"
 
                 layer.enabled: true
                 layer.effect: OpacityMask {
@@ -223,7 +265,7 @@ Item {
                     property int size: parent.height
                     source: playerController.downloaded ? Qt.resolvedUrl(artFilePath) : ""
                     fillMode: Image.PreserveAspectCrop
-                    cache: false
+                    cache: true
                     antialiasing: true
 
                     width: size
