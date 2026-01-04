@@ -19,7 +19,7 @@ Scope {
             visible: root.isOpen
 
             exclusiveZone: 0
-            implicitWidth: 800
+            implicitWidth: 900
             implicitHeight: Math.max(calendarWidget.implicitHeight, weatherWidget.implicitHeight) + 20
 
             WlrLayershell.namespace: "quickshell:datetime-popup"
@@ -59,7 +59,7 @@ Scope {
                     // Left panel - Calendar
                     CalendarWidget {
                         id: calendarWidget
-                        Layout.preferredWidth: 390
+                        Layout.preferredWidth: 350
                         Layout.alignment: Qt.AlignTop
                     }
 
@@ -76,7 +76,7 @@ Scope {
                     // Right panel - Weather
                     WeatherWidget {
                         id: weatherWidget
-                        Layout.preferredWidth: 390
+                        Layout.fillWidth: true
                         Layout.alignment: Qt.AlignTop
                     }
                 }

@@ -15,7 +15,7 @@ Rectangle {
     property var selectedDate: null
 
     color: "transparent"
-    implicitWidth: 380
+    implicitWidth: 350
     implicitHeight: contentLayout.implicitHeight + 32
 
     ColumnLayout {
@@ -43,7 +43,9 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
         }
 
-        Item { Layout.preferredHeight: 8 }
+        Item {
+            Layout.preferredHeight: 8
+        }
 
         // Calendar section
         Rectangle {

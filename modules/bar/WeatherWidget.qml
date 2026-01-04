@@ -10,273 +10,198 @@ Rectangle {
     id: root
 
     color: "transparent"
-    implicitWidth: 380
-    implicitHeight: contentLayout.implicitHeight + 32
+    implicitWidth: 600
+    // Height fits content
+    implicitHeight: contentLayout.implicitHeight + 40
+
+    function formatTemp(tempStr) {
+        if (!tempStr || tempStr === "--")
+            return "--";
+        // tempStr is like "20°C"
+        return parseInt(tempStr) + "°";
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr)
+            return "";
+        // timeStr is "15:00"
+        let parts = timeStr.split(":");
+        let hour = parseInt(parts[0]);
+        let ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12;
+        hour = hour ? hour : 12; // the hour '0' should be '12'
+        return hour + " " + ampm;
+    }
+
+    function formatCurrentTime() {
+        return Qt.formatDateTime(new Date(), "h AP"); // e.g. "12 PM"
+    }
 
     ColumnLayout {
         id: contentLayout
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: 16
-        spacing: 16
+        anchors.fill: parent
+        anchors.margins: 20
+        spacing: 20
 
-        // Current weather header
-        Rectangle {
+        // 1. Header Section: Condition + Location
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: currentWeatherContent.implicitHeight + 24
-            color: Colors.surface
-            radius: 12
+            spacing: 4
 
-            ColumnLayout {
-                id: currentWeatherContent
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
-
-                // Location and main temp
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 12
-
-                    MaterialSymbol {
-                        text: Weather.getWeatherIcon(Weather.currentData.weatherCode)
-                        iconSize: 48
-                        color: Colors.accent
-                    }
-
-                    ColumnLayout {
-                        spacing: 2
-
-                        Text {
-                            text: Weather.currentData.city
-                            font.pixelSize: 14
-                            font.weight: Font.Medium
-                            color: Colors.subtext0
-                        }
-
-                        Text {
-                            text: Weather.currentData.temp
-                            font.pixelSize: 36
-                            font.weight: Font.Light
-                            color: Colors.text
-                        }
-
-                        Text {
-                            text: Weather.currentData.condition
-                            font.pixelSize: 12
-                            color: Colors.subtext0
-                        }
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    ColumnLayout {
-                        spacing: 4
-                        Layout.alignment: Qt.AlignTop
-
-                        Text {
-                            text: "Feels like " + Weather.currentData.feelsLike
-                            font.pixelSize: 12
-                            color: Colors.subtext0
-                        }
-                    }
-                }
+            Text {
+                text: Weather.currentData.condition || "Loading..."
+                font.pixelSize: 24
+                font.weight: Font.Bold
+                color: Colors.text
+            }
+            Text {
+                text: Weather.currentData.city
+                font.pixelSize: 14
+                color: Colors.subtext0
             }
         }
 
-        // Hourly forecast
-        Rectangle {
+        // 2. Hourly Forecast Section
+        // Layout: "Now" (Large) + ScrollView/Row of others
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: hourlyContent.implicitHeight + 24
-            color: Colors.surface
-            radius: 12
+            spacing: 16
 
+            // "Now" Item (Emphasized)
             ColumnLayout {
-                id: hourlyContent
-                anchors.fill: parent
-                anchors.margins: 12
+                Layout.preferredWidth: (contentLayout.width) / 8
+                Layout.alignment: Qt.AlignBottom
                 spacing: 8
 
                 Text {
-                    text: "Hourly Forecast"
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
-                    color: Colors.subtext0
+                    text: root.formatCurrentTime()
+                    font.pixelSize: 13
+                    font.weight: Font.Bold
+                    color: Colors.text
+                    Layout.alignment: Qt.AlignHCenter
                 }
 
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 70
-                    clip: true
-                    ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-                    ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                CustomIcon {
+                    source: "weather/" + Weather.getWeatherIcon(Weather.currentData.weatherCode, Weather.currentData.isDay)
+                    width: 64
+                    height: 64
+                    Layout.alignment: Qt.AlignHCenter
+                }
 
-                    RowLayout {
-                        spacing: 16
-
-                        Repeater {
-                            model: Weather.hourlyForecast
-                            delegate: ColumnLayout {
-                                spacing: 4
-
-                                Text {
-                                    text: modelData.time
-                                    font.pixelSize: 11
-                                    color: Colors.subtext0
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-
-                                MaterialSymbol {
-                                    text: modelData.icon
-                                    iconSize: 24
-                                    color: Colors.text
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-
-                                Text {
-                                    text: modelData.temp
-                                    font.pixelSize: 12
-                                    font.weight: Font.Medium
-                                    color: Colors.text
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-                            }
-                        }
-                    }
+                Text {
+                    text: root.formatTemp(Weather.currentData.temp)
+                    font.pixelSize: 48
+                    font.weight: Font.Bold
+                    color: Colors.text
+                    Layout.alignment: Qt.AlignHCenter
                 }
             }
-        }
 
-        // Current stats (humidity, wind)
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: statsContent.implicitHeight + 24
-            color: Colors.surface
-            radius: 12
-
+            // The rest of the hours
             RowLayout {
-                id: statsContent
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 24
+                Layout.fillWidth: true
+                spacing: 0
 
-                // Humidity
-                RowLayout {
-                    spacing: 8
+                Repeater {
+                    model: Weather.hourlyForecast
+                    delegate: ColumnLayout {
+                        Layout.preferredWidth: (contentLayout.width) / 8
+                        Layout.alignment: Qt.AlignBottom
+                        spacing: 12
 
-                    MaterialSymbol {
-                        text: "humidity_percentage"
-                        iconSize: 24
-                        color: Colors.accent
-                    }
-
-                    ColumnLayout {
-                        spacing: 0
                         Text {
-                            text: "Humidity"
-                            font.pixelSize: 11
+                            text: root.formatTime(modelData.time)
+                            font.pixelSize: 12
                             color: Colors.subtext0
+                            Layout.alignment: Qt.AlignHCenter
                         }
+
+                        CustomIcon {
+                            source: "weather/" + modelData.icon
+                            width: 28
+                            height: 28
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
                         Text {
-                            text: Weather.currentData.humidity
-                            font.pixelSize: 14
+                            text: root.formatTemp(modelData.temp)
+                            font.pixelSize: 16
                             font.weight: Font.Medium
                             color: Colors.text
-                        }
-                    }
-                }
-
-                // Wind
-                RowLayout {
-                    spacing: 8
-
-                    MaterialSymbol {
-                        text: "air"
-                        iconSize: 24
-                        color: Colors.accent
-                    }
-
-                    ColumnLayout {
-                        spacing: 0
-                        Text {
-                            text: "Wind"
-                            font.pixelSize: 11
-                            color: Colors.subtext0
-                        }
-                        Text {
-                            text: Weather.currentData.wind + " " + Weather.currentData.windDir
-                            font.pixelSize: 14
-                            font.weight: Font.Medium
-                            color: Colors.text
+                            Layout.alignment: Qt.AlignHCenter
                         }
                     }
                 }
             }
         }
 
-        // Weekly forecast
+        // 3. Stats Row
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 16
+
+            Text {
+                text: "Humidity: " + Weather.currentData.humidity
+                font.pixelSize: 12
+                color: Colors.subtext0
+            }
+            Text {
+                text: "Wind: " + Weather.currentData.wind + " " + (Weather.currentData.windDir || "")
+                font.pixelSize: 12
+                color: Colors.subtext0
+            }
+            Item {
+                Layout.fillWidth: true
+            } // Spacer
+        }
+
+        // 4. Divider
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: weeklyContent.implicitHeight + 24
-            color: Colors.surface
-            radius: 12
+            height: 1
+            color: Colors.outline
+            opacity: 0.5
+        }
 
-            ColumnLayout {
-                id: weeklyContent
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
+        // 5. Weekly Forecast Section (Horizontal)
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 0
 
-                Text {
-                    text: "7-Day Forecast"
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
-                    color: Colors.subtext0
-                }
+            Repeater {
+                model: Weather.weeklyForecast
+                delegate: ColumnLayout {
+                    Layout.preferredWidth: (contentLayout.width) / 8
+                    spacing: 6
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 4
+                    Text {
+                        text: modelData.day
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                        color: Colors.text
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                    Repeater {
-                        model: Weather.weeklyForecast
-                        delegate: RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
+                    CustomIcon {
+                        source: "weather/" + modelData.icon
+                        width: 24
+                        height: 24
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                            Text {
-                                text: modelData.day
-                                font.pixelSize: 13
-                                color: Colors.text
-                                Layout.preferredWidth: 50
-                            }
+                    Text {
+                        text: root.formatTemp(modelData.high)
+                        font.pixelSize: 13
+                        font.weight: Font.Bold
+                        color: Colors.text
+                        Layout.alignment: Qt.AlignHCenter
+                    }
 
-                            MaterialSymbol {
-                                text: modelData.icon
-                                iconSize: 20
-                                color: Colors.text
-                            }
-
-                            Item { Layout.fillWidth: true }
-
-                            Text {
-                                text: modelData.high
-                                font.pixelSize: 13
-                                font.weight: Font.Medium
-                                color: Colors.text
-                                horizontalAlignment: Text.AlignRight
-                                Layout.preferredWidth: 35
-                            }
-
-                            Text {
-                                text: modelData.low
-                                font.pixelSize: 13
-                                color: Colors.subtext0
-                                horizontalAlignment: Text.AlignRight
-                                Layout.preferredWidth: 35
-                            }
-                        }
+                    Text {
+                        text: root.formatTemp(modelData.low)
+                        font.pixelSize: 12
+                        color: Colors.subtext0
+                        Layout.alignment: Qt.AlignHCenter
                     }
                 }
             }
