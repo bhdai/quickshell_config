@@ -27,6 +27,107 @@ Singleton {
 
     property var hourlyForecast: []
     property var weeklyForecast: []
+    property var rawHourlyData: null  // Store raw API hourly data for day selection
+    property var rawDailyData: null   // Store raw API daily data for reference
+    property int selectedDayIndex: 0  // 0 = today, 1 = tomorrow, etc.
+
+    // Get hourly forecast for a specific day index (0 = today, 1 = tomorrow, etc.)
+    // For today: shows current hour + next 7 hours (3-hour intervals)
+    // For other days: shows 8 hourly items starting from 12 AM (3-hour intervals)
+    function getHourlyForDay(dayIndex) {
+        if (!rawHourlyData || !rawDailyData)
+            return [];
+
+        const hourly = rawHourlyData;
+        const daily = rawDailyData;
+        const targetDate = daily.time[dayIndex]; // "2026-01-05"
+        const hourlyData = [];
+
+        if (dayIndex === 0) {
+            // Today: start from current hour, 8 items at 3-hour intervals
+            const now = new Date();
+            const currentHour = now.getHours();
+            let startIndex = 0;
+
+            for (let i = 0; i < hourly.time.length; i++) {
+                const tStr = hourly.time[i];
+                const d = new Date(tStr);
+                if (d.getDate() === now.getDate() && d.getHours() === currentHour) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            // Get 8 items starting from current hour at 3-hour intervals
+            for (let i = 0; i < 8; i++) {
+                const targetIndex = startIndex + (i * 3);
+                if (targetIndex >= hourly.time.length)
+                    break;
+
+                const timeStr = hourly.time[targetIndex];
+                const dateObj = new Date(timeStr);
+                const hour = dateObj.getHours();
+                const temp = Math.round(hourly.temperature_2m[targetIndex]);
+                const code = hourly.weather_code[targetIndex];
+                const isDay = hourly.is_day[targetIndex];
+
+                hourlyData.push({
+                    time: hour + ":00",
+                    temp: temp + "°",
+                    weatherCode: code,
+                    isDay: isDay,
+                    icon: getWeatherIcon(code, isDay)
+                });
+            }
+        } else {
+            // Other days: start from 12 AM (00:00), 8 items at 3-hour intervals
+            // Find first hour of target date
+            let startIndex = -1;
+            for (let i = 0; i < hourly.time.length; i++) {
+                if (hourly.time[i].startsWith(targetDate)) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            if (startIndex === -1)
+                return [];
+
+            // Get 8 items at 3-hour intervals: 0:00, 3:00, 6:00, 9:00, 12:00, 15:00, 18:00, 21:00
+            for (let i = 0; i < 8; i++) {
+                const targetIndex = startIndex + (i * 3);
+                if (targetIndex >= hourly.time.length)
+                    break;
+
+                const timeStr = hourly.time[targetIndex];
+                // Verify it's still the same day
+                if (!timeStr.startsWith(targetDate))
+                    break;
+
+                const dateObj = new Date(timeStr);
+                const hour = dateObj.getHours();
+                const temp = Math.round(hourly.temperature_2m[targetIndex]);
+                const code = hourly.weather_code[targetIndex];
+                const isDay = hourly.is_day[targetIndex];
+
+                hourlyData.push({
+                    time: hour + ":00",
+                    temp: temp + "°",
+                    weatherCode: code,
+                    isDay: isDay,
+                    icon: getWeatherIcon(code, isDay)
+                });
+            }
+        }
+
+        return hourlyData;
+    }
+
+    // Update hourly forecast when selected day changes
+    function selectDay(dayIndex) {
+        selectedDayIndex = dayIndex;
+        hourlyForecast = getHourlyForDay(dayIndex);
+    }
 
     // Map WMO weather codes (0-99) to text
     function getWmoDescription(code) {
@@ -142,9 +243,9 @@ Singleton {
     function getData() {
         // Open-Meteo URL
         // hourly: temp, weathercode, is_day
-        // daily: weathercode, max temp, min temp
+        // daily: weathercode, max temp, min temp, uv_index_max, precipitation_sum, precipitation_probability_max
         // current: temp, humidity, weathercode, windspeed, is_day
-        const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lng + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day" + "&hourly=temperature_2m,weather_code,is_day" + "&daily=weather_code,temperature_2m_max,temperature_2m_min" + "&timezone=auto&forecast_days=14";
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lng + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day" + "&hourly=temperature_2m,weather_code,is_day" + "&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,precipitation_probability_max" + "&timezone=auto&forecast_days=14";
 
         const command = "curl -s '" + url + "'";
         fetcher.command = ["bash", "-c", command];
@@ -167,66 +268,17 @@ Singleton {
                 city: root.city
             };
 
-            // Hourly Forecast
-            // api returns structure: hourly: { time: [...], temperature_2m: [...], ... }
+            // Store raw data for day selection feature
             const hourly = data.hourly;
-            const currentHourIso = new Date().toISOString().substring(0, 13); // "2024-01-01T12"
+            const daily = data.daily;
+            root.rawHourlyData = hourly;
+            root.rawDailyData = daily;
+            root.selectedDayIndex = 0; // Reset to today on data refresh
 
-            const hourlyData = [];
-            // Find start index (approximate, since API returns ISO strings)
-            let startIndex = 0;
-            const now = new Date();
-            const currentHour = now.getHours();
-
-            // Loop to find the index matching current hour (by simple string match for robustness)
-            for (let i = 0; i < hourly.time.length; i++) {
-                // time format: "2024-01-01T14:00"
-                const tStr = hourly.time[i];
-                // Extract hour part locally "T14:00" -> 14
-                const parts = tStr.split("T");
-                if (parts.length < 2)
-                    continue;
-
-                const dayStr = parts[0]; // "2024-01-01"
-                const hourPart = parseInt(parts[1].split(":")[0]);
-
-                // Compare with local 'now' components
-                // Note: date string comparison simplistic but sufficient for "today"
-                // Ideally construct date:
-                const d = new Date(tStr);
-
-                if (d.getDate() === now.getDate() && d.getHours() === currentHour) {
-                    startIndex = i;
-                    break;
-                }
-            }
-
-            // Get 7 items (Next 21 hours) to make total 8 (Current + 7)
-            for (let i = 0; i < 7; i++) {
-                const targetIndex = startIndex + ((i + 1) * 3);
-
-                if (targetIndex >= hourly.time.length)
-                    break;
-
-                const timeStr = hourly.time[targetIndex]; // "2024-01-01T14:00"
-                const dateObj = new Date(timeStr);
-                const hour = dateObj.getHours();
-                const temp = Math.round(hourly.temperature_2m[targetIndex]);
-                const code = hourly.weather_code[targetIndex];
-
-                const isDay = hourly.is_day[targetIndex];
-                hourlyData.push({
-                    time: hour + ":00",
-                    temp: temp + "°",
-                    weatherCode: code,
-                    isDay: isDay,
-                    icon: getWeatherIcon(code, isDay)
-                });
-            }
-            root.hourlyForecast = hourlyData;
+            // Hourly Forecast - use the new function for today
+            root.hourlyForecast = getHourlyForDay(0);
 
             // Daily Forecast (7 days)
-            const daily = data.daily;
             const dailyData = [];
 
             // Note: daily arrays aligned by index
@@ -240,6 +292,9 @@ Singleton {
                     day: dayName,
                     high: Math.round(daily.temperature_2m_max[i]) + "°",
                     low: Math.round(daily.temperature_2m_min[i]) + "°",
+                    uvIndex: daily.uv_index_max ? Math.round(daily.uv_index_max[i]) : 0,
+                    precipSum: daily.precipitation_sum ? daily.precipitation_sum[i].toFixed(1) : "0.0",
+                    precipProb: daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : 0,
                     weatherCode: daily.weather_code[i],
                     icon: getWeatherIcon(daily.weather_code[i], 1)
                 });

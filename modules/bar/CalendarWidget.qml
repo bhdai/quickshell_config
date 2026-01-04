@@ -24,13 +24,13 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.margins: 16
-        spacing: 16
+        spacing: 5
 
         // Large digital clock
         Text {
             text: Time.hoursMinutes
-            font.pixelSize: 64
-            font.weight: Font.Light
+            font.pixelSize: 50
+            font.weight: Font.Medium
             color: Colors.text
             Layout.alignment: Qt.AlignHCenter
         }
