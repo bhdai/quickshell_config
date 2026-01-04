@@ -222,7 +222,7 @@ Rectangle {
                 Text {
                     id: humidityText
                     anchors.centerIn: parent
-                    text: "Humidity: " + Weather.currentData.humidity
+                    text: "Humidity: " + (Weather.selectedDayIndex === 0 ? Weather.currentData.humidity : (Weather.weeklyForecast[Weather.selectedDayIndex]?.humidity ?? "--"))
                     font.pixelSize: 12
                     color: Colors.text
                 }
@@ -243,7 +243,7 @@ Rectangle {
                 Text {
                     id: windText
                     anchors.centerIn: parent
-                    text: "Wind: " + Weather.currentData.wind
+                    text: "Wind: " + (Weather.selectedDayIndex === 0 ? Weather.currentData.wind : (Weather.weeklyForecast[Weather.selectedDayIndex]?.wind ?? "--"))
                     font.pixelSize: 12
                     color: Colors.text
                 }

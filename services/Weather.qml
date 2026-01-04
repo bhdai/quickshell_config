@@ -279,10 +279,10 @@ Singleton {
 
     function getData() {
         // Open-Meteo URL
-        // hourly: temp, weathercode, is_day
-        // daily: weathercode, max temp, min temp, uv_index_max, precipitation_sum, precipitation_probability_max
+        // hourly: temp, weathercode, is_day, humidity
+        // daily: weathercode, max temp, min temp, uv_index_max, precipitation_sum, precipitation_probability_max, wind_speed_max
         // current: temp, humidity, weathercode, windspeed, is_day
-        const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lng + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day" + "&hourly=temperature_2m,weather_code,is_day" + "&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,precipitation_probability_max" + "&timezone=auto&forecast_days=14";
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lng + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,is_day" + "&hourly=temperature_2m,weather_code,is_day,relative_humidity_2m" + "&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max" + "&timezone=auto&forecast_days=14";
 
         const command = "curl -s '" + url + "'";
         fetcher.command = ["bash", "-c", command];
@@ -315,7 +315,7 @@ Singleton {
             // Hourly Forecast - use the new function for today
             root.hourlyForecast = getHourlyForDay(0);
 
-            // Daily Forecast (7 days)
+            // Daily Forecast (8 days including today)
             const dailyData = [];
 
             // Note: daily arrays aligned by index
@@ -325,6 +325,17 @@ Singleton {
                 const dateObj = new Date(dateStr);
                 const dayName = i === 0 ? "Today" : Qt.formatDateTime(dateObj, "ddd");
 
+                // Calculate average humidity for this day from hourly data
+                let avgHumidity = 0;
+                let humidityCount = 0;
+                for (let h = 0; h < hourly.time.length; h++) {
+                    if (hourly.time[h].startsWith(dateStr) && hourly.relative_humidity_2m) {
+                        avgHumidity += hourly.relative_humidity_2m[h];
+                        humidityCount++;
+                    }
+                }
+                avgHumidity = humidityCount > 0 ? Math.round(avgHumidity / humidityCount) : 0;
+
                 dailyData.push({
                     day: dayName,
                     high: Math.round(daily.temperature_2m_max[i]) + "°",
@@ -332,6 +343,8 @@ Singleton {
                     uvIndex: daily.uv_index_max ? Math.round(daily.uv_index_max[i]) : 0,
                     precipSum: daily.precipitation_sum ? daily.precipitation_sum[i].toFixed(1) : "0.0",
                     precipProb: daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : 0,
+                    wind: daily.wind_speed_10m_max ? Math.round(daily.wind_speed_10m_max[i]) + " km/h" : "--",
+                    humidity: avgHumidity + "%",
                     weatherCode: daily.weather_code[i],
                     condition: getWmoDescription(daily.weather_code[i]),
                     icon: getWeatherIcon(daily.weather_code[i], 1)
@@ -368,5 +381,24 @@ Singleton {
         running: true
         triggeredOnStart: true
         onTriggered: root.getData()
+    }
+
+    // Check every 30 seconds if the hour has changed to keep the "Today" forecast current
+    Timer {
+        interval: 30000
+        repeat: true
+        running: true
+        property int lastHour: new Date().getHours()
+        onTriggered: {
+            const now = new Date();
+            const h = now.getHours();
+            if (h !== lastHour) {
+                lastHour = h;
+                // Update display if we have data
+                if (root.rawHourlyData && root.rawDailyData) {
+                    root.selectDay(root.selectedDayIndex);
+                }
+            }
+        }
     }
 }
