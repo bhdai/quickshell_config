@@ -6,6 +6,7 @@ import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
+import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
@@ -25,8 +26,8 @@ Item {
     property real artRounding
     property int progressBarHeight: 24
 
-    property color basePrimary: "#E5B6F2"
-    property color baseSecondaryContainer: "#534457"
+    property color basePrimary: Colors.primary
+    property color baseSecondaryContainer: Colors.secondaryContainer
 
     component TrackChangeButton: RippleButton {
         implicitWidth: 32
