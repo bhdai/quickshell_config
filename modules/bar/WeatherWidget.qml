@@ -65,18 +65,29 @@ Rectangle {
 
     // Get UV level description
     function getUVDescription(uvIndex) {
-        if (uvIndex <= 2) return "Low";
-        if (uvIndex <= 5) return "Moderate";
-        if (uvIndex <= 7) return "High";
-        if (uvIndex <= 10) return "Very High";
+        if (uvIndex <= 2)
+            return "Low";
+        if (uvIndex <= 5)
+            return "Moderate";
+        if (uvIndex <= 7)
+            return "High";
+        if (uvIndex <= 10)
+            return "Very High";
         return "Extreme";
     }
 
     // Get precipitation info for selected day
     function getSelectedDayPrecip() {
         const forecast = Weather.weeklyForecast[Weather.selectedDayIndex];
-        if (!forecast) return { sum: "0.0", prob: 0 };
-        return { sum: forecast.precipSum, prob: forecast.precipProb };
+        if (!forecast)
+            return {
+                sum: "0.0",
+                prob: 0
+            };
+        return {
+            sum: forecast.precipSum,
+            prob: forecast.precipProb
+        };
     }
 
     ColumnLayout {

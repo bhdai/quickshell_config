@@ -135,31 +135,59 @@ Singleton {
         if (c === 0)
             return "Clear sky";
         if (c === 1)
-            return "Mainly clear";
+            return "Mostly clear";
         if (c === 2)
             return "Partly cloudy";
         if (c === 3)
             return "Overcast";
-        if (c === 45 || c === 48)
+        if (c === 45)
             return "Fog";
-        if (c >= 51 && c <= 55)
+        if (c === 48)
+            return "Rime fog";
+        if (c === 51)
+            return "Light drizzle";
+        if (c === 53)
             return "Drizzle";
-        if (c >= 56 && c <= 57)
-            return "Freezing Drizzle";
-        if (c >= 61 && c <= 65)
+        if (c === 55)
+            return "Dense drizzle";
+        if (c === 56)
+            return "Light freezing drizzle";
+        if (c === 57)
+            return "Freezing drizzle";
+        if (c === 61)
+            return "Light rain";
+        if (c === 63)
             return "Rain";
-        if (c >= 66 && c <= 67)
-            return "Freezing Rain";
-        if (c >= 71 && c <= 75)
-            return "Snow fall";
+        if (c === 65)
+            return "Heavy rain";
+        if (c === 66)
+            return "Light freezing rain";
+        if (c === 67)
+            return "Heavy freezing rain";
+        if (c === 71)
+            return "Light snow";
+        if (c === 73)
+            return "Snow";
+        if (c === 75)
+            return "Heavy snow";
         if (c === 77)
             return "Snow grains";
-        if (c >= 80 && c <= 82)
+        if (c === 80)
+            return "Light rain showers";
+        if (c === 81)
             return "Rain showers";
-        if (c >= 85 && c <= 86)
-            return "Snow showers";
-        if (c >= 95 && c <= 99)
+        if (c === 82)
+            return "Heavy rain showers";
+        if (c === 85)
+            return "Light snow showers";
+        if (c === 86)
+            return "Heavy snow showers";
+        if (c === 95)
             return "Thunderstorm";
+        if (c === 96)
+            return "Thunderstorm with hail";
+        if (c === 99)
+            return "Thunderstorm with heavy hail";
         return "Unknown";
     }
 
@@ -178,18 +206,24 @@ Singleton {
         // Partly cloudy
         if (c === 2)
             return day ? "partly_cloudy_day.svg" : "partly_cloudy_night.svg";
-        // Overcast
+        // Overcast (full cloud cover)
         if (c === 3)
             return "cloudy.svg";
-        // Fog
+        // Fog, mist, rime fog
         if (c === 45 || c === 48)
             return "haze_fog_dust_smoke.svg";
-        // Drizzle (light, moderate, dense)
-        if (c >= 51 && c <= 55)
+        // Drizzle - light
+        if (c === 51)
             return "drizzle.svg";
-        // Freezing drizzle
-        if (c === 56 || c === 57)
+        // Drizzle - moderate to dense
+        if (c >= 53 && c <= 55)
+            return day ? "scattered_showers_day.svg" : "scattered_showers_night.svg";
+        // Freezing drizzle - light
+        if (c === 56)
             return "icy.svg";
+        // Freezing drizzle - dense
+        if (c === 57)
+            return "mixed_rain_hail_sleet.svg";
         // Rain - slight
         if (c === 61)
             return day ? "scattered_showers_day.svg" : "scattered_showers_night.svg";
@@ -199,8 +233,11 @@ Singleton {
         // Rain - heavy
         if (c === 65)
             return "heavy_rain.svg";
-        // Freezing rain
-        if (c === 66 || c === 67)
+        // Freezing rain - light
+        if (c === 66)
+            return "mixed_rain_snow.svg";
+        // Freezing rain - heavy
+        if (c === 67)
             return "mixed_rain_hail_sleet.svg";
         // Snow - slight
         if (c === 71)
@@ -211,15 +248,15 @@ Singleton {
         // Snow - heavy
         if (c === 75)
             return "heavy_snow.svg";
-        // Snow grains
+        // Snow grains (small ice particles)
         if (c === 77)
-            return "sleet_hail.svg";
+            return "flurries.svg";
         // Rain showers - slight
         if (c === 80)
             return day ? "scattered_showers_day.svg" : "scattered_showers_night.svg";
         // Rain showers - moderate
         if (c === 81)
-            return "showers_rain.svg";
+            return day ? "scattered_showers_day.svg" : "scattered_showers_night.svg";
         // Rain showers - violent
         if (c === 82)
             return "heavy_rain.svg";
@@ -228,7 +265,7 @@ Singleton {
             return day ? "scattered_snow_showers_day.svg" : "scattered_snow_showers_night.svg";
         // Snow showers - heavy
         if (c === 86)
-            return "showers_snow.svg";
+            return "heavy_snow.svg";
         // Thunderstorm
         if (c === 95)
             return "isolated_thunderstorms.svg";
