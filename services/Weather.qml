@@ -296,6 +296,7 @@ Singleton {
                     precipSum: daily.precipitation_sum ? daily.precipitation_sum[i].toFixed(1) : "0.0",
                     precipProb: daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : 0,
                     weatherCode: daily.weather_code[i],
+                    condition: getWmoDescription(daily.weather_code[i]),
                     icon: getWeatherIcon(daily.weather_code[i], 1)
                 });
             }

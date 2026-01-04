@@ -105,18 +105,14 @@ Rectangle {
                     spacing: 12
 
                     Text {
-                        text: Weather.selectedDayIndex === 0 
-                            ? root.formatTemp(Weather.currentData.temp)
-                            : (Weather.hourlyForecast[0]?.temp ?? "--")
+                        text: Weather.selectedDayIndex === 0 ? root.formatTemp(Weather.currentData.temp) : (Weather.hourlyForecast[0]?.temp ?? "--")
                         font.pixelSize: 48
                         font.weight: Font.Bold
                         color: Colors.text
                     }
 
                     CustomIcon {
-                        source: "weather/" + (Weather.selectedDayIndex === 0 
-                            ? Weather.getWeatherIcon(Weather.currentData.weatherCode, Weather.currentData.isDay)
-                            : (Weather.hourlyForecast[0]?.icon ?? "cloudy.svg"))
+                        source: "weather/" + (Weather.selectedDayIndex === 0 ? Weather.getWeatherIcon(Weather.currentData.weatherCode, Weather.currentData.isDay) : (Weather.hourlyForecast[0]?.icon ?? "cloudy.svg"))
                         width: 60
                         height: 60
                         Layout.alignment: Qt.AlignVCenter
@@ -142,7 +138,7 @@ Rectangle {
                 spacing: 4
 
                 Text {
-                    text: Weather.currentData.condition || "Loading..."
+                    text: Weather.selectedDayIndex === 0 ? (Weather.currentData.condition || "Loading...") : (Weather.weeklyForecast[Weather.selectedDayIndex]?.condition ?? "Loading...")
                     font.pixelSize: 20
                     font.weight: Font.Bold
                     color: Colors.text
