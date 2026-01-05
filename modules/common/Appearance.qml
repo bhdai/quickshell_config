@@ -20,7 +20,7 @@ Singleton {
     // Material 3 color scheme (from matugen - source #95CDF7)
     property QtObject m3colors: QtObject {
         readonly property bool darkmode: true
-        
+
         // Primary
         readonly property color m3primary: "#95CDF7"
         readonly property color m3onPrimary: "#00344E"
@@ -31,7 +31,7 @@ Singleton {
         readonly property color m3primaryFixedDim: "#8BCBF5"
         readonly property color m3onPrimaryFixed: "#001E2F"
         readonly property color m3onPrimaryFixedVariant: "#004C6E"
-        
+
         // Secondary
         readonly property color m3secondary: "#B7C9D9"
         readonly property color m3onSecondary: "#22323F"
@@ -41,7 +41,7 @@ Singleton {
         readonly property color m3secondaryFixedDim: "#B7C9D9"
         readonly property color m3onSecondaryFixed: "#0C1D29"
         readonly property color m3onSecondaryFixedVariant: "#384956"
-        
+
         // Tertiary
         readonly property color m3tertiary: "#CEC0E8"
         readonly property color m3onTertiary: "#352B4B"
@@ -51,13 +51,13 @@ Singleton {
         readonly property color m3tertiaryFixedDim: "#D1C1E9"
         readonly property color m3onTertiaryFixed: "#201535"
         readonly property color m3onTertiaryFixedVariant: "#4C4163"
-        
+
         // Error
         readonly property color m3error: "#FFB4AB"
         readonly property color m3onError: "#690005"
         readonly property color m3errorContainer: "#93000A"
         readonly property color m3onErrorContainer: "#FFDAD6"
-        
+
         // Surface & Background
         readonly property color m3background: "#101417"
         readonly property color m3onBackground: "#E0E3E8"
@@ -74,11 +74,12 @@ Singleton {
         readonly property color m3onSurfaceVariant: "#C1C7CE"
         readonly property color m3inverseSurface: "#E0E3E8"
         readonly property color m3inverseOnSurface: "#2D3135"
-        
+
         // Outline
         readonly property color m3outline: "#8B9198"
-        readonly property color m3outlineVariant: "#41474D"
-        
+        // readonly property color m3outlineVariant: "#41474D"
+        readonly property color m3outlineVariant: "#313539"
+
         // Shadow & Scrim
         readonly property color m3shadow: "#000000"
         readonly property color m3scrim: "#000000"

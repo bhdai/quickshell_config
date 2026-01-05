@@ -35,6 +35,7 @@ RippleButton {
     property string bigText: entry?.iconType === LauncherSearchResult.IconType.Text ? entry?.iconName ?? "" : ""
     property string materialSymbol: entry?.iconType === LauncherSearchResult.IconType.Material ? entry?.iconName ?? "" : ""
     property string cliphistRawString: entry?.rawValue ?? ""
+    property bool isClipboardImage: cliphistRawString && Cliphist.entryIsImage(cliphistRawString)
 
     signal close
 
@@ -189,7 +190,7 @@ RippleButton {
             id: contentColumn
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 0
+            spacing: 4
 
             Text {
                 font.pixelSize: Appearance.font.pixelSize.smaller
@@ -226,7 +227,22 @@ RippleButton {
                     color: Appearance.m3colors.m3onSurface
                     horizontalAlignment: Text.AlignLeft
                     elide: Text.ElideRight
-                    text: root.displayContent
+                    text: root.isClipboardImage ? "[Image]" : root.displayContent
+                }
+            }
+            
+            // Clipboard image preview
+            Loader {
+                active: root.isClipboardImage
+                visible: root.isClipboardImage
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                
+                sourceComponent: CliphistImage {
+                    entry: root.cliphistRawString
+                    maxWidth: contentColumn.width
+                    maxHeight: 140
+                    blur: false
                 }
             }
         }
