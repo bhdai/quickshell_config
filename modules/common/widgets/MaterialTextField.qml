@@ -11,16 +11,16 @@ import QtQuick.Controls
 TextField {
     id: root
     Material.theme: Material.System
-    Material.accent: Colors.primary
-    Material.primary: Colors.primary
-    Material.background: Colors.surface
-    Material.foreground: Colors.text
+    Material.accent: Appearance.m3colors.m3primary
+    Material.primary: Appearance.m3colors.m3primary
+    Material.background: Appearance.colors.colLayer1
+    Material.foreground: Appearance.colors.colOnLayer0
     Material.containerStyle: Material.Outlined
     renderType: Text.QtRendering
 
-    selectedTextColor: Colors.m3onSecondaryContainer
-    selectionColor: Colors.secondaryContainer
-    placeholderTextColor: Colors.outline
+    selectedTextColor: Appearance.m3colors.m3onSecondaryContainer
+    selectionColor: Appearance.m3colors.m3secondaryContainer
+    placeholderTextColor: Appearance.m3colors.m3outline
     clip: true
 
     font {

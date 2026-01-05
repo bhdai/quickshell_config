@@ -23,9 +23,9 @@ RippleButton {
             easing.bezierCurve: [0.38, 1.21, 0.22, 1.00, 1, 1]
         }
     }
-    colBackground: Colors.background
-    colBackgroundHover: active ? colBackground : Colors.surfaceHover
-    colRipple: Colors.primary
+    colBackground: Appearance.m3colors.m3background
+    colBackgroundHover: active ? colBackground : Appearance.colors.colLayer2Hover
+    colRipple: Appearance.m3colors.m3primary
     buttonRadius: 0
 
     onClicked: {
@@ -58,12 +58,12 @@ RippleButton {
                 width: 20
                 height: 20
                 colorize: true
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
             }
 
             Text {
                 Layout.fillWidth: true
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 elide: Text.ElideRight
                 text: root.wifiNetwork?.ssid ?? "Unknown"
             }
@@ -74,7 +74,7 @@ RippleButton {
                 width: 20
                 height: 20
                 colorize: true
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
             }
         }
 
@@ -109,7 +109,7 @@ RippleButton {
                     implicitHeight: 36
                     implicitWidth: 80
                     padding: 14
-                    colBackground: ColorUtils.transparentize(Colors.background)
+                    colBackground: ColorUtils.transparentize(Appearance.m3colors.m3background)
                     buttonRadius: 9999
 
                     contentItem: Text {
@@ -120,7 +120,7 @@ RippleButton {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 12
-                        color: cancelButton.enabled ? Colors.text : Colors.background
+                        color: cancelButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
                     }
 
                     onClicked: {
@@ -133,7 +133,7 @@ RippleButton {
                     implicitHeight: 36
                     implicitWidth: 80
                     padding: 14
-                    colBackground: ColorUtils.transparentize(Colors.background)
+                    colBackground: ColorUtils.transparentize(Appearance.m3colors.m3background)
                     buttonRadius: 9999
 
                     contentItem: Text {
@@ -144,7 +144,7 @@ RippleButton {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 12
-                        color: connectButton.enabled ? Colors.text : Colors.background
+                        color: connectButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
                     }
 
                     onClicked: {
@@ -176,7 +176,7 @@ RippleButton {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: 15
-                        color: cancelButton.enabled ? Colors.text : Colors.background
+                        color: cancelButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
                     }
 
                     onClicked: {

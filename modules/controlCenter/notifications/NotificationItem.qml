@@ -19,7 +19,7 @@ Item {
         id: bg
         anchors.fill: parent
         radius: 8
-        color: Colors.surface
+        color: Appearance.colors.colLayer1
 
         ColumnLayout {
             id: mainLayout
@@ -60,7 +60,7 @@ Item {
                             text: "lightbulb"
                             fill: 1
                             iconSize: 20
-                            color: Colors.accent // Adjust as needed
+                            color: Appearance.colors.colPrimary // Adjust as needed
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -71,7 +71,7 @@ Item {
                     text: root.notif ? root.notif.appName : ""
                     Layout.leftMargin: 8
                     opacity: 0.8
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     font.pointSize: 10
                 }
 
@@ -82,7 +82,7 @@ Item {
                 Text {
                     id: timeDisplay
                     opacity: 0.7
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     font.pointSize: 9
                     text: {
                         if (root.notif && root.notif.time) {
@@ -129,7 +129,7 @@ Item {
                         width: closeButtonContainer.iconSize
                         height: closeButtonContainer.iconSize
                         colorize: true
-                        color: closeButtonContainer.pressed ? "red" : Colors.powerButton
+                        color: closeButtonContainer.pressed ? "red" : Appearance.colors.colPowerButton
                     }
                 }
             }
@@ -138,7 +138,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 1
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 opacity: 0.5
             }
 
@@ -214,7 +214,7 @@ Item {
                         font.bold: true
                         font.pixelSize: 14
                         wrapMode: Text.WordWrap
-                        color: Colors.text
+                        color: Appearance.colors.colOnLayer0
                         Layout.fillWidth: true
                     }
 
@@ -222,7 +222,7 @@ Item {
                         text: root.notif ? root.notif.body : ""
                         wrapMode: Text.WordWrap
                         textFormat: Text.RichText // to handle markup if any
-                        color: Colors.text
+                        color: Appearance.colors.colOnLayer0
                         Layout.fillWidth: true
                     }
                 }

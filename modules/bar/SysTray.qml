@@ -15,7 +15,7 @@ MouseArea {
     WrapperRectangle {
         id: backgroundRect
         implicitHeight: 30
-        color: root.containsMouse ? Colors.surfaceHover : Colors.surface
+        color: root.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer1
         radius: 15
 
         Behavior on color {

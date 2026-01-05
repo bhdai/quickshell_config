@@ -45,9 +45,9 @@ Scope {
                 id: contentContainer
                 anchors.fill: parent
                 anchors.margins: 10
-                color: Colors.background
+                color: Appearance.m3colors.m3background
                 radius: 16
-                border.color: Colors.border
+                border.color: Appearance.m3colors.m3outlineVariant
                 border.width: 1
 
                 RowLayout {
@@ -69,7 +69,7 @@ Scope {
                         Layout.preferredHeight: Math.max(calendarWidget.implicitHeight, weatherWidget.implicitHeight) - 32
                         Layout.alignment: Qt.AlignTop
                         Layout.topMargin: 16
-                        color: Colors.outline
+                        color: Appearance.m3colors.m3outline
                         opacity: 0.3
                     }
 

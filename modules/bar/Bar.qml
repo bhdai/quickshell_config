@@ -46,7 +46,7 @@ Scope {
 
             Rectangle {
                 anchors.fill: parent
-                color: Colors.background
+                color: Appearance.m3colors.m3background
 
                 // left section
                 RowLayout {
@@ -61,13 +61,13 @@ Scope {
                         width: 35
                         height: 30
                         radius: 15
-                        color: Colors.surface
+                        color: Appearance.colors.colLayer1
                         Layout.alignment: Qt.AlignVCenter
 
                         Text {
                             anchors.centerIn: parent
                             text: "󰣇"
-                            color: Colors.archBlue
+                            color: Appearance.colors.colArchBlue
                             font.bold: true
                             font.pixelSize: 20
                         }

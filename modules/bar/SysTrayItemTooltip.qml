@@ -29,9 +29,9 @@ PopupWindow {
         width: tooltipText.implicitWidth + 16
         height: tooltipText.implicitHeight + 8
 
-        color: Colors.background
+        color: Appearance.m3colors.m3background
         radius: 8
-        border.color: Colors.overlay0
+        border.color: Appearance.m3colors.m3outlineVariant
         border.width: 1
 
         Text {

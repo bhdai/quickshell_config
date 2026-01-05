@@ -23,12 +23,12 @@ Button {
     property var altAction // When right clicking
     property var middleClickAction // When middle clicking
 
-    property color colBackground: Colors.surface1 || "transparent"
-    property color colBackgroundHover: Colors.surfaceHover || "#E5DFED"
-    property color colRipple: Colors.accent || "#D6CEE2"
-    property color colBackgroundToggled: Colors.accent || "#65558F"
-    property color colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.3) || "#77699C"
-    property color colRippleToggled: Colors.accent || "#D6CEE2"
+    property color colBackground: Appearance.colors.colLayer2
+    property color colBackgroundHover: Appearance.colors.colLayer2Hover
+    property color colRipple: Appearance.colors.colPrimary
+    property color colBackgroundToggled: Appearance.colors.colPrimary
+    property color colBackgroundToggledHover: ColorUtils.transparentize(colBackgroundToggled, 0.3)
+    property color colRippleToggled: Appearance.colors.colPrimary
 
     opacity: root.enabled ? 1 : 0.4
     property color buttonColor: ColorUtils.transparentize(root.toggled ? (root.hovered ? colBackgroundToggledHover : colBackgroundToggled) : (root.hovered ? colBackgroundHover : colBackground), root.enabled ? 0 : 1)

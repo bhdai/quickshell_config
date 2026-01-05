@@ -32,7 +32,7 @@ QuickToggleButton {
             width: 24
             height: 24
             colorize: true
-            color: Colors.background
+            color: Appearance.m3colors.m3background
 
             Behavior on color {
                 ColorAnimation {

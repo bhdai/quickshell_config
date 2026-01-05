@@ -25,9 +25,9 @@ RippleButton {
             easing.bezierCurve: [0.38, 1.21, 0.22, 1.00, 1, 1]
         }
     }
-    colBackground: Colors.background
-    colBackgroundHover: Colors.surfaceHover
-    colRipple: Colors.primary
+    colBackground: Appearance.m3colors.m3background
+    colBackgroundHover: Appearance.colors.colLayer2Hover
+    colRipple: Appearance.m3colors.m3primary
     buttonRadius: 0
 
     onClicked: expanded = !expanded
@@ -40,7 +40,7 @@ RippleButton {
         implicitWidth: 80
         padding: 14
         buttonRadius: 9999
-        property color colText: actionButton.enabled ? Colors.text : Colors.background
+        property color colText: actionButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
 
         contentItem: Text {
             anchors.fill: parent
@@ -90,7 +90,7 @@ RippleButton {
                 width: 20
                 height: 20
                 colorize: true
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
             }
 
             ColumnLayout {
@@ -98,7 +98,7 @@ RippleButton {
                 Layout.fillWidth: true
                 Text {
                     Layout.fillWidth: true
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     elide: Text.ElideRight
                     text: root.device?.name || "Unknown device"
                 }
@@ -106,7 +106,7 @@ RippleButton {
                     visible: (root.device?.connected || root.device?.paired) ?? false
                     Layout.fillWidth: true
                     font.pixelSize: 12
-                    color: Colors.subtext1
+                    color: Appearance.colors.colSubtext
                     elide: Text.ElideRight
                     text: {
                         if (!root.device?.paired)
@@ -125,7 +125,7 @@ RippleButton {
                 width: 15
                 height: 15
                 colorize: true
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 rotation: root.expanded ? 180 : 0
 
                 Behavior on rotation {
@@ -149,9 +149,9 @@ RippleButton {
                 visible: !(root.device?.paired ?? false)
                 buttonText: root.device?.pairing ? "Pairing..." : "Pair"
                 enabled: !(root.device?.pairing ?? false)
-                colBackground: Colors.secondaryContainer
+                colBackground: Appearance.m3colors.m3secondaryContainer
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
-                colText: Colors.m3onSecondaryContainer
+                colText: Appearance.m3colors.m3onSecondaryContainer
 
                 onClicked: {
                     // Ensure adapter is pairable (some systems have this off by default)
@@ -165,9 +165,9 @@ RippleButton {
             }
             ActionButton {
                 buttonText: root.device?.connected ? "Disconnect" : "Connect"
-                colBackground: Colors.primary
+                colBackground: Appearance.m3colors.m3primary
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
-                colText: Colors.m3onPrimary
+                colText: Appearance.m3colors.m3onPrimary
 
                 onClicked: {
                     if (root.device?.connected) {
@@ -179,10 +179,10 @@ RippleButton {
             }
             ActionButton {
                 visible: root.device?.paired ?? false
-                colBackground: Colors.colError
+                colBackground: Appearance.colors.colError
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
-                colRipple: Colors.onError
-                colText: Colors.onError
+                colRipple: Appearance.m3colors.m3onError
+                colText: Appearance.m3colors.m3onError
 
                 buttonText: "Forget"
                 onClicked: {

@@ -21,16 +21,16 @@ Item {
         anchors.fill: parent
         configuration: StyledSlider.Configuration.M
 
-        highlightColor: Colors.accent
-        trackColor: Colors.surfaceContainerHighest
-        handleColor: Colors.accent
-        dotColor: Colors.surfaceContainerHighest
-        dotColorHighlighted: Colors.surfaceContainerHighest
+        highlightColor: Appearance.colors.colPrimary
+        trackColor: Appearance.colors.colLayer3
+        handleColor: Appearance.colors.colPrimary
+        dotColor: Appearance.colors.colLayer3
+        dotColorHighlighted: Appearance.colors.colLayer3
         handleMargins: 6
 
         // inset icon setup for M+ sizes
-        insetIconColorActive: Colors.m3onPrimaryFixed
-        insetIconColorInactive: Colors.text
+        insetIconColorActive: Appearance.m3colors.m3onPrimaryFixed
+        insetIconColorInactive: Appearance.colors.colOnLayer0
         enableInsetIcon: true
 
         // when the slider value change, emit the moved signal

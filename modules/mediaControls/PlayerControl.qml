@@ -26,8 +26,8 @@ Item {
     property real artRounding
     property int progressBarHeight: 24
 
-    property color basePrimary: Colors.primary
-    property color baseSecondaryContainer: Colors.secondaryContainer
+    property color basePrimary: Appearance.m3colors.m3primary
+    property color baseSecondaryContainer: Appearance.m3colors.m3secondaryContainer
 
     component TrackChangeButton: RippleButton {
         implicitWidth: 32

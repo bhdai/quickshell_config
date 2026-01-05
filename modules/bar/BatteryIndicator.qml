@@ -15,7 +15,7 @@ MouseArea {
     readonly property bool isCritical: Battery.isCritical
     property real boltSize: 14
 
-    readonly property color fillColor: Battery.isCharging ? Colors.batteryCharging : (Battery.isCritical ? Colors.batteryCritical : "white")
+    readonly property color fillColor: Battery.isCharging ? Appearance.colors.colBatteryCharging : (Battery.isCritical ? Appearance.colors.colBatteryCritical : "white")
     readonly property color trackColor: ColorUtils.transparentize("white", 0.5) ?? "#F1D3F9"
 
     implicitWidth: batteryProgress.implicitWidth

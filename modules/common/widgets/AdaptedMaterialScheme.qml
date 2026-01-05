@@ -10,16 +10,16 @@ QtObject {
     required property color sourceColor
     readonly property bool colorIsDark: sourceColor.hslLightness < 0.5
 
-    // Material 3 base colors (from Colors singleton - blue theme)
-    readonly property color m3background: Colors.background
-    readonly property color m3onBackground: Colors.text
-    readonly property color m3surfaceContainerLow: Colors.surface
-    readonly property color m3onSurfaceVariant: Colors.subtext0
-    readonly property color m3primary: Colors.primary
-    readonly property color m3onPrimary: Colors.m3onPrimary
-    readonly property color m3secondaryContainer: Colors.secondaryContainer
-    readonly property color m3onSecondaryContainer: Colors.m3onSecondaryContainer
-    readonly property color m3outline: Colors.outline
+    // Material 3 base colors (from Appearance singleton - blue theme)
+    readonly property color m3background: Appearance.m3colors.m3background
+    readonly property color m3onBackground: Appearance.colors.colOnLayer0
+    readonly property color m3surfaceContainerLow: Appearance.m3colors.m3surfaceContainerLow
+    readonly property color m3onSurfaceVariant: Appearance.colors.colSubtext
+    readonly property color m3primary: Appearance.m3colors.m3primary
+    readonly property color m3onPrimary: Appearance.m3colors.m3onPrimary
+    readonly property color m3secondaryContainer: Appearance.m3colors.m3secondaryContainer
+    readonly property color m3onSecondaryContainer: Appearance.m3colors.m3onSecondaryContainer
+    readonly property color m3outline: Appearance.m3colors.m3outline
 
     // Computed base colors from Material 3 scheme
     readonly property color baseLayer0: m3background
@@ -27,9 +27,9 @@ QtObject {
     readonly property color baseOnLayer0: m3onBackground
     readonly property color baseOnLayer1: m3onSurfaceVariant
     readonly property color basePrimary: m3primary
-    readonly property color basePrimaryHover: ColorUtils.mix(m3primary, Colors.surface, 0.87)
-    readonly property color basePrimaryActive: ColorUtils.mix(m3primary, Colors.surface, 0.7)
-    readonly property color baseSecondary: Colors.subtext0
+    readonly property color basePrimaryHover: ColorUtils.mix(m3primary, Appearance.colors.colLayer1, 0.87)
+    readonly property color basePrimaryActive: ColorUtils.mix(m3primary, Appearance.colors.colLayer1, 0.7)
+    readonly property color baseSecondary: Appearance.colors.colSubtext
     readonly property color baseSecondaryContainer: m3secondaryContainer
     readonly property color baseSecondaryContainerHover: ColorUtils.mix(m3secondaryContainer, m3onSecondaryContainer, 0.90)
     readonly property color baseSecondaryContainerActive: ColorUtils.mix(m3secondaryContainer, m3onSecondaryContainer, 0.54)

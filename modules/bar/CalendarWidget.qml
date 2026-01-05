@@ -31,7 +31,7 @@ Rectangle {
             text: Time.hoursMinutes
             font.pixelSize: 50
             font.weight: Font.Medium
-            color: Colors.text
+            color: Appearance.colors.colOnLayer0
             Layout.alignment: Qt.AlignHCenter
         }
 
@@ -39,7 +39,7 @@ Rectangle {
         Text {
             text: "Uptime: " + Time.uptime
             font.pixelSize: 14
-            color: Colors.subtext0
+            color: Appearance.colors.colSubtext
             Layout.alignment: Qt.AlignHCenter
         }
 
@@ -51,7 +51,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: calendarContent.implicitHeight + 24
-            color: Colors.surface
+            color: Appearance.colors.colLayer1
             radius: 12
 
             ColumnLayout {
@@ -86,7 +86,7 @@ Rectangle {
                         text: Qt.formatDate(root.viewingDate, "MMMM yyyy")
                         font.pixelSize: 16
                         font.weight: Font.Medium
-                        color: Colors.text
+                        color: Appearance.colors.colOnLayer0
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -120,7 +120,7 @@ Rectangle {
                             text: modelData.day
                             font.pixelSize: 12
                             font.weight: Font.Medium
-                            color: Colors.subtext0
+                            color: Appearance.colors.colSubtext
                             horizontalAlignment: Text.AlignHCenter
                             Layout.preferredWidth: 40
                         }
@@ -157,9 +157,9 @@ Rectangle {
                                     toggled: isToday
 
                                     colBackground: "transparent"
-                                    colBackgroundHover: Colors.surfaceHover
-                                    colBackgroundToggled: Colors.accent
-                                    colBackgroundToggledHover: Colors.accent
+                                    colBackgroundHover: Appearance.colors.colLayer2Hover
+                                    colBackgroundToggled: Appearance.colors.colPrimary
+                                    colBackgroundToggledHover: Appearance.colors.colPrimary
 
                                     onClicked: {
                                         // Future: handle date selection
@@ -169,7 +169,7 @@ Rectangle {
                                         text: dayButton.dayData.day
                                         font.pixelSize: 14
                                         font.weight: dayButton.isToday ? Font.Bold : Font.Normal
-                                        color: dayButton.isToday ? Colors.m3onPrimaryFixed : (dayButton.isOtherMonth ? Colors.subtext1 : Colors.text)
+                                        color: dayButton.isToday ? Appearance.m3colors.m3onPrimaryFixed : (dayButton.isOtherMonth ? Appearance.colors.colSubtext : Appearance.colors.colOnLayer0)
                                         horizontalAlignment: Text.AlignHCenter
                                         verticalAlignment: Text.AlignVCenter
                                     }
@@ -191,7 +191,7 @@ Rectangle {
                     contentItem: Text {
                         text: "Today"
                         font.pixelSize: 12
-                        color: Colors.text
+                        color: Appearance.colors.colOnLayer0
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

@@ -46,12 +46,12 @@ RippleButton {
 
     implicitHeight: rowLayout.implicitHeight + root.buttonVerticalPadding * 2
     implicitWidth: rowLayout.implicitWidth + root.buttonHorizontalPadding * 2
-    buttonRadius: LauncherAppearance.rounding.normal
-    colBackground: (root.down || root.keyboardDown) ? LauncherAppearance.colors.colPrimaryContainerActive : ((root.hovered || root.focus) ? LauncherAppearance.colors.colPrimaryContainer : ColorUtils.transparentize(LauncherAppearance.colors.colPrimaryContainer, 1))
-    colBackgroundHover: LauncherAppearance.colors.colPrimaryContainer
-    colRipple: LauncherAppearance.colors.colPrimaryContainerActive
+    buttonRadius: Appearance.rounding.normal
+    colBackground: (root.down || root.keyboardDown) ? Appearance.colors.colPrimaryContainerActive : ((root.hovered || root.focus) ? Appearance.colors.colPrimaryContainer : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 1))
+    colBackgroundHover: Appearance.colors.colPrimaryContainer
+    colRipple: Appearance.colors.colPrimaryContainerActive
 
-    property string highlightPrefix: `<u><font color="${LauncherAppearance.colors.colPrimary}">`
+    property string highlightPrefix: `<u><font color="${Appearance.colors.colPrimary}">`
     property string highlightSuffix: `</font></u>`
 
     function highlightContent(content, query) {
@@ -162,7 +162,7 @@ RippleButton {
                 width: 30
                 height: 30
                 colorize: true
-                color: LauncherAppearance.m3colors.m3onSurface
+                color: Appearance.m3colors.m3onSurface
             }
         }
 
@@ -171,7 +171,7 @@ RippleButton {
             MaterialSymbol {
                 text: root.materialSymbol
                 iconSize: 30
-                color: LauncherAppearance.m3colors.m3onSurface
+                color: Appearance.m3colors.m3onSurface
             }
         }
 
@@ -179,8 +179,8 @@ RippleButton {
             id: bigTextComponent
             Text {
                 text: root.bigText
-                font.pixelSize: LauncherAppearance.font.pixelSize.larger
-                color: LauncherAppearance.m3colors.m3onSurface
+                font.pixelSize: Appearance.font.pixelSize.larger
+                color: Appearance.m3colors.m3onSurface
             }
         }
 
@@ -192,8 +192,8 @@ RippleButton {
             spacing: 0
 
             Text {
-                font.pixelSize: LauncherAppearance.font.pixelSize.smaller
-                color: LauncherAppearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
                 visible: root.itemType && root.itemType !== "App"
                 text: root.itemType
             }
@@ -205,14 +205,14 @@ RippleButton {
                     sourceComponent: Rectangle {
                         implicitWidth: activeText.implicitHeight
                         implicitHeight: activeText.implicitHeight
-                        radius: LauncherAppearance.rounding.full
-                        color: LauncherAppearance.colors.colPrimary
+                        radius: Appearance.rounding.full
+                        color: Appearance.colors.colPrimary
                         MaterialSymbol {
                             id: activeText
                             anchors.centerIn: parent
                             text: "check"
-                            font.pixelSize: LauncherAppearance.font.pixelSize.normal
-                            color: LauncherAppearance.m3colors.m3onPrimary
+                            font.pixelSize: Appearance.font.pixelSize.normal
+                            color: Appearance.m3colors.m3onPrimary
                         }
                     }
                 }
@@ -221,9 +221,9 @@ RippleButton {
                     id: nameText
                     Layout.fillWidth: true
                     textFormat: Text.StyledText
-                    font.pixelSize: LauncherAppearance.font.pixelSize.small
-                    font.family: LauncherAppearance.font.family[root.fontType]
-                    color: LauncherAppearance.m3colors.m3onSurface
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.family: Appearance.font.family[root.fontType]
+                    color: Appearance.m3colors.m3onSurface
                     horizontalAlignment: Text.AlignLeft
                     elide: Text.ElideRight
                     text: root.displayContent
@@ -235,8 +235,8 @@ RippleButton {
         Text {
             Layout.fillWidth: false
             visible: root.hovered || root.focus
-            font.pixelSize: LauncherAppearance.font.pixelSize.normal
-            color: LauncherAppearance.colors.colOnPrimaryContainer
+            font.pixelSize: Appearance.font.pixelSize.normal
+            color: Appearance.colors.colOnPrimaryContainer
             horizontalAlignment: Text.AlignRight
             text: root.itemClickActionName
         }
@@ -260,8 +260,8 @@ RippleButton {
                     implicitHeight: 34
                     implicitWidth: 34
 
-                    colBackgroundHover: LauncherAppearance.colors.colSecondaryContainerHover
-                    colRipple: LauncherAppearance.colors.colSecondaryContainerActive
+                    colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                    colRipple: Appearance.colors.colSecondaryContainerActive
 
                     contentItem: Item {
                         anchors.centerIn: parent
@@ -275,7 +275,7 @@ RippleButton {
                                 height: 20
                                 colorize: true
                                 // Use powerButton color for Delete action, same as notification clear button
-                                color: actionButton.actionName === "Delete" ? Colors.powerButton : LauncherAppearance.m3colors.m3onSurface
+                                color: actionButton.actionName === "Delete" ? Appearance.colors.colPowerButton : Appearance.m3colors.m3onSurface
                             }
                         }
                         // MaterialSymbol for Material icons
@@ -284,8 +284,8 @@ RippleButton {
                             active: actionButton.actionIconType === LauncherSearchResult.IconType.Material || actionButton.actionIconName === ""
                             sourceComponent: MaterialSymbol {
                                 text: actionButton.actionIconName || "video_settings"
-                                font.pixelSize: LauncherAppearance.font.pixelSize.hugeass
-                                color: LauncherAppearance.m3colors.m3onSurface
+                                font.pixelSize: Appearance.font.pixelSize.hugeass
+                                color: Appearance.m3colors.m3onSurface
                             }
                         }
                         // IconImage for System icons

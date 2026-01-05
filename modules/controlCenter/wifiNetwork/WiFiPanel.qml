@@ -13,10 +13,10 @@ Rectangle {
 
     signal closePanel
 
-    color: Colors.background
+    color: Appearance.m3colors.m3background
     radius: 20
     border.width: 1
-    border.color: Colors.border
+    border.color: Appearance.m3colors.m3outlineVariant
 
     implicitHeight: 600
 
@@ -29,7 +29,7 @@ Rectangle {
         // Header
         Text {
             text: "Connect to Wi-Fi"
-            color: Colors.text
+            color: Appearance.colors.colOnLayer0
             font.pixelSize: 18
             font.bold: true
             Layout.fillWidth: true
@@ -38,7 +38,7 @@ Rectangle {
         Rectangle {
             implicitHeight: 1
             Layout.fillWidth: true
-            color: Colors.text
+            color: Appearance.colors.colOnLayer0
             opacity: 0.3
             visible: !Network.wifiScanning
             Layout.leftMargin: -wifiPanelLayout.anchors.margins
@@ -47,7 +47,7 @@ Rectangle {
 
         ProgressBar {
             indeterminate: true
-            Material.accent: Colors.primary
+            Material.accent: Appearance.m3colors.m3primary
             visible: Network.wifiScanning
             Layout.fillWidth: true
             Layout.topMargin: -8
@@ -88,7 +88,7 @@ Rectangle {
         Rectangle {
             implicitHeight: 1
             Layout.fillWidth: true
-            color: Colors.text
+            color: Appearance.colors.colOnLayer0
             opacity: 0.3
             Layout.leftMargin: -wifiPanelLayout.anchors.margins
             Layout.rightMargin: -wifiPanelLayout.anchors.margins
@@ -103,7 +103,7 @@ Rectangle {
                 implicitWidth: 80
                 padding: 14
                 buttonRadius: 9999
-                colBackground: Colors.background
+                colBackground: Appearance.m3colors.m3background
 
                 contentItem: Text {
                     anchors.fill: parent
@@ -114,7 +114,7 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 12
                     font.bold: true
-                    color: detailButton.enabled ? Colors.text : Colors.background
+                    color: detailButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
                 }
             }
 
@@ -128,7 +128,7 @@ Rectangle {
                 implicitWidth: 80
                 padding: 14
                 buttonRadius: 9999
-                colBackground: Colors.background
+                colBackground: Appearance.m3colors.m3background
 
                 contentItem: Text {
                     anchors.fill: parent
@@ -139,7 +139,7 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 12
                     font.bold: true
-                    color: doneButton.enabled ? Colors.text : Colors.background
+                    color: doneButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
                 }
 
                 onClicked: root.closePanel()

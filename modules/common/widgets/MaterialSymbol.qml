@@ -20,5 +20,5 @@ Text {
         }
     }
 
-    color: Colors.text
+    color: Appearance.colors.colOnLayer0
 }

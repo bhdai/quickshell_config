@@ -39,7 +39,7 @@ Item {
         // Handle empty workspace state - show "Desktop" text
         WrapperRectangle {
             visible: visibleWindows.length === 0
-            color: Colors.surface
+            color: Appearance.colors.colLayer1
             radius: 20
             margin: 5
             leftMargin: 10
@@ -47,7 +47,7 @@ Item {
 
             Text {
                 text: "Desktop"
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 font.pixelSize: 12
             }
         }
@@ -75,7 +75,7 @@ Item {
 
                 WrapperRectangle {
                     id: windowPill
-                    color: windowPillArea.containsMouse ? Colors.surfaceHover : Colors.surface
+                    color: windowPillArea.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer1
                     radius: 20
                     margin: 5
                     leftMargin: 8
@@ -109,7 +109,7 @@ Item {
                                 anchors.centerIn: parent
                                 visible: !windowPillArea.entry?.icon
                                 text: "󰖯"
-                                color: Colors.text
+                                color: Appearance.colors.colOnLayer0
                                 font.pixelSize: 18
                             }
                         }
@@ -118,7 +118,7 @@ Item {
                         Text {
                             visible: windowPillArea.isFocused
                             text: windowPillArea.window.title || "Untitled"
-                            color: Colors.text
+                            color: Appearance.colors.colOnLayer0
                             font.pixelSize: 12
                             elide: Text.ElideRight
                             // Dynamic width: 300px base, -30px per window, min 150px
@@ -166,7 +166,7 @@ Item {
                 id: overflowText
                 anchors.centerIn: parent
                 text: "+" + overflowCount
-                color: Colors.subtext1
+                color: Appearance.colors.colSubtext
                 font.pixelSize: 11
             }
 
@@ -198,16 +198,16 @@ Item {
                         id: overflowTooltipRect
                         width: overflowTooltipText.implicitWidth + 16
                         height: overflowTooltipText.implicitHeight + 12
-                        color: Colors.background
+                        color: Appearance.m3colors.m3background
                         radius: 6
-                        border.color: Colors.overlay0
+                        border.color: Appearance.m3colors.m3outlineVariant
                         border.width: 1
 
                         Text {
                             id: overflowTooltipText
                             anchors.centerIn: parent
                             text: overflowCount + " more window" + (overflowCount > 1 ? "s" : "")
-                            color: Colors.text
+                            color: Appearance.colors.colOnLayer0
                             font.pixelSize: 11
                         }
                     }

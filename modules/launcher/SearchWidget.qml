@@ -20,8 +20,8 @@ Item {
 
     signal close
 
-    implicitWidth: searchWidgetContent.implicitWidth + LauncherAppearance.sizes.elevationMargin * 2
-    implicitHeight: searchWidgetContent.implicitHeight + searchBar.verticalPadding * 2 + LauncherAppearance.sizes.elevationMargin * 2
+    implicitWidth: searchWidgetContent.implicitWidth + Appearance.sizes.elevationMargin * 2
+    implicitHeight: searchWidgetContent.implicitHeight + searchBar.verticalPadding * 2 + Appearance.sizes.elevationMargin * 2
 
     function focusFirstItem() {
         appResults.currentIndex = 0;
@@ -150,17 +150,17 @@ Item {
         anchors {
             top: parent.top
             horizontalCenter: parent.horizontalCenter
-            topMargin: LauncherAppearance.sizes.elevationMargin
+            topMargin: Appearance.sizes.elevationMargin
         }
         clip: true
         implicitWidth: columnLayout.implicitWidth
         implicitHeight: columnLayout.implicitHeight
         radius: searchBar.height / 2 + searchBar.verticalPadding
-        color: LauncherAppearance.colors.colBackgroundSurfaceContainer
+        color: Appearance.colors.colBackgroundSurfaceContainer
 
         Behavior on implicitHeight {
             enabled: root.showResults
-            animation: LauncherAppearance.animation.elementMove.numberAnimation.createObject(this)
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
         }
 
         ColumnLayout {
@@ -204,7 +204,7 @@ Item {
                 visible: root.showResults
                 Layout.fillWidth: true
                 height: 1
-                color: LauncherAppearance.colors.colOutlineVariant
+                color: Appearance.colors.colOutlineVariant
             }
 
             ListView {

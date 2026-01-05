@@ -22,7 +22,7 @@ Item {
 
     readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
 
-    readonly property string mainColor: Colors.accent
+    readonly property string mainColor: Appearance.colors.colPrimary
 
     readonly property real targetX: {
         if (dotsRepeater.count === 0 || targetIndex < 0 || targetIndex >= dotsRepeater.count) {
@@ -70,7 +70,7 @@ Item {
     WrapperRectangle {
         id: background
         anchors.fill: parent
-        color: Colors.surface
+        color: Appearance.colors.colLayer1
         radius: 20
         margin: 5
     }
@@ -106,7 +106,7 @@ Item {
                     color: {
                         if (workspaceMouseArea.containsMouse)
                             return mainColor;
-                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? Colors.text : Colors.emptyWorkspace;
+                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? Appearance.colors.colOnLayer0 : Appearance.colors.colEmptyWorkspace;
                     }
 
                     Behavior on height {

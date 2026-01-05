@@ -65,7 +65,7 @@ PanelWindow {
             width: 260
             height: slider.handleHeight + slider.anchors.margins
             radius: 21
-            color: Colors.background
+            color: Appearance.m3colors.m3background
 
             StyledSlider {
                 id: slider
@@ -74,15 +74,15 @@ PanelWindow {
 
                 configuration: StyledSlider.Configuration.XL
 
-                highlightColor: Colors.accent
-                trackColor: Colors.surfaceContainerHighest
-                handleColor: Colors.accent
-                dotColor: Colors.accent
-                dotColorHighlighted: Colors.accent
+                highlightColor: Appearance.colors.colPrimary
+                trackColor: Appearance.colors.colLayer3
+                handleColor: Appearance.colors.colPrimary
+                dotColor: Appearance.colors.colPrimary
+                dotColorHighlighted: Appearance.colors.colPrimary
                 handleMargins: 6
 
-                insetIconColorActive: Colors.m3onPrimaryFixed
-                insetIconColorInactive: Colors.text
+                insetIconColorActive: Appearance.m3colors.m3onPrimaryFixed
+                insetIconColorInactive: Appearance.colors.colOnLayer0
                 insetIconPadding: 10
                 enableInsetIcon: true
 

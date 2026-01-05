@@ -13,7 +13,7 @@ WrapperMouseArea {
     property alias title: titleText.text
     property alias subtitle: subtitleText.text
     property bool toggled: false
-    property color colToggleHover: ColorUtils.transparentize(Colors.accent, 0.2)
+    property color colToggleHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.2)
 
     property bool bounce: true
     property real baseRadius: 15
@@ -53,7 +53,7 @@ WrapperMouseArea {
         anchors.fill: parent
         radius: pressed && bounce ? pressedRadius : baseRadius
 
-        color: root.toggled ? (root.containsMouse ? root.colToggleHover : Colors.accent) : (root.containsMouse ? Colors.surfaceHover : Colors.surface1)
+        color: root.toggled ? (root.containsMouse ? root.colToggleHover : Appearance.colors.colPrimary) : (root.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2)
 
         Behavior on radius {
             NumberAnimation {
@@ -82,7 +82,7 @@ WrapperMouseArea {
                 width: 24
                 height: 24
                 colorize: true
-                color: root.toggled ? Colors.m3onPrimaryFixed : Colors.text
+                color: root.toggled ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
 
                 Behavior on color {
                     ColorAnimation {
@@ -99,7 +99,7 @@ WrapperMouseArea {
 
                 Text {
                     id: titleText
-                    color: root.toggled ? Colors.m3onPrimaryFixed : Colors.text
+                    color: root.toggled ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
                     font.pixelSize: 14
                     font.bold: true
 
@@ -114,7 +114,7 @@ WrapperMouseArea {
 
                 Text {
                     id: subtitleText
-                    color: root.toggled ? Colors.m3onPrimary : Colors.subtext0
+                    color: root.toggled ? Appearance.m3colors.m3onPrimary : Appearance.colors.colSubtext
                     font.pixelSize: 12
                     visible: toggled
                     elide: Text.ElideRight

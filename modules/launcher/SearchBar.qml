@@ -59,35 +59,35 @@ RowLayout {
             default:
                 return "system-search-symbolic.svg";
             }
-            width: LauncherAppearance.font.pixelSize.huge
-            height: LauncherAppearance.font.pixelSize.huge
+            width: Appearance.font.pixelSize.huge
+            height: Appearance.font.pixelSize.huge
             colorize: true
-            color: LauncherAppearance.m3colors.m3onSurface
+            color: Appearance.m3colors.m3onSurface
         }
     }
 
     Component {
         id: mathIconComponent
         MaterialSymbol {
-            iconSize: LauncherAppearance.font.pixelSize.huge
-            color: LauncherAppearance.m3colors.m3onSurface
+            iconSize: Appearance.font.pixelSize.huge
+            color: Appearance.m3colors.m3onSurface
             text: "calculate"
         }
     }
 
-    // Borderless text field like dots-hyprland's ToolbarTextField
+    // Borderless text field
     TextField {
         id: searchInput
         Layout.topMargin: 4
         Layout.bottomMargin: 4
         Layout.fillWidth: true
         implicitHeight: 40
-        font.pixelSize: LauncherAppearance.font.pixelSize.small
-        font.family: LauncherAppearance.font.family.main
+        font.pixelSize: Appearance.font.pixelSize.small
+        font.family: Appearance.font.family.main
         placeholderText: "Search apps, = calc, ; clipboard, : emoji"
-        placeholderTextColor: LauncherAppearance.colors.colSubtext
-        color: LauncherAppearance.m3colors.m3onSurface
-        implicitWidth: LauncherAppearance.sizes.searchWidth
+        placeholderTextColor: Appearance.colors.colSubtext
+        color: Appearance.m3colors.m3onSurface
+        implicitWidth: Appearance.sizes.searchWidth
 
         background: Rectangle {
             color: "transparent"

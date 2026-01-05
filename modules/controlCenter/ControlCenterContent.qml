@@ -41,9 +41,9 @@ ColumnLayout {
         height: mainLayout.implicitHeight + root.margins * 2
 
         radius: root.radius
-        color: Colors.background
+        color: Appearance.m3colors.m3background
         border.width: 1
-        border.color: Colors.border
+        border.color: Appearance.m3colors.m3outlineVariant
         Layout.fillWidth: true
 
         ColumnLayout {
@@ -149,7 +149,7 @@ ColumnLayout {
 
         Rectangle {
             id: notificationsPannel
-            color: Colors.background
+            color: Appearance.m3colors.m3background
             radius: root.radius
 
             property bool isInitialized: false
@@ -158,7 +158,7 @@ ColumnLayout {
 
             height: implicitHeight
             border.width: 1
-            border.color: Colors.border
+            border.color: Appearance.m3colors.m3outlineVariant
             visible: root.notificationCount > 0
 
             Component.onCompleted: {
@@ -198,7 +198,7 @@ ColumnLayout {
                     id: separator
                     implicitHeight: 1
                     Layout.fillWidth: true
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     opacity: 0.3
                 }
 

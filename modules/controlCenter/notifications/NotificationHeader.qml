@@ -12,13 +12,13 @@ RowLayout {
     MaterialSymbol {
         text: "notifications"
         iconSize: 20
-        color: Colors.text
+        color: Appearance.colors.colOnLayer0
         fill: 1
     }
 
     Text {
         text: "Notifications"
-        color: Colors.text
+        color: Appearance.colors.colOnLayer0
         font.pixelSize: 18
         font.bold: true
         Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
@@ -54,13 +54,13 @@ RowLayout {
                     width: 15
                     height: 15
                     colorize: true
-                    color: clearButton.pressed ? "#fa5252" : Colors.powerButton
+                    color: clearButton.pressed ? "#fa5252" : Appearance.colors.colPowerButton
                 }
 
                 Text {
                     text: "Clear"
                     font.bold: true
-                    color: clearButton.pressed ? "#fa5252" : Colors.powerButton
+                    color: clearButton.pressed ? "#fa5252" : Appearance.colors.colPowerButton
                 }
             }
         }

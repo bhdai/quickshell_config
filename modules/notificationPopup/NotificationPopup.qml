@@ -15,9 +15,9 @@ Rectangle {
     width: 400
     implicitHeight: mainLayout.implicitHeight + 10 // 5px padding on top/bottom
     radius: 15
-    color: Colors.background
+    color: Appearance.m3colors.m3background
     border.width: 1
-    border.color: Colors.border
+    border.color: Appearance.m3colors.m3outlineVariant
 
     HoverHandler {
         id: hoverHandler
@@ -81,7 +81,7 @@ Rectangle {
                         text: "lightbulb"
                         fill: 1
                         iconSize: 20
-                        color: Colors.accent // Adjust as needed
+                        color: Appearance.colors.colPrimary // Adjust as needed
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -92,7 +92,7 @@ Rectangle {
                 text: root.notif ? root.notif.appName : ""
                 Layout.leftMargin: 8
                 opacity: 0.8
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 font.pointSize: 10
             }
 
@@ -103,7 +103,7 @@ Rectangle {
             Text {
                 id: timeDisplay
                 opacity: 0.7
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 font.pointSize: 9
                 Component.onCompleted: {
                     timeDisplay.text = Time.hoursMinutes;
@@ -122,7 +122,7 @@ Rectangle {
                     width: closeButtonContainer.iconSize
                     height: closeButtonContainer.iconSize
                     colorize: true
-                    color: Colors.powerButton
+                    color: Appearance.colors.colPowerButton
                 }
             }
         }
@@ -131,7 +131,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: Colors.text
+            color: Appearance.colors.colOnLayer0
             opacity: 0.5
         }
 
@@ -142,7 +142,7 @@ Rectangle {
             Layout.bottomMargin: 5
             height: 3
             radius: 3
-            color: Colors.accent
+            color: Appearance.colors.colPrimary
 
             Behavior on width {
                 NumberAnimation {
@@ -224,7 +224,7 @@ Rectangle {
                     font.bold: true
                     font.pixelSize: 14
                     wrapMode: Text.WordWrap
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     Layout.fillWidth: true
                 }
 
@@ -232,7 +232,7 @@ Rectangle {
                     text: root.notif ? root.notif.body : ""
                     wrapMode: Text.WordWrap
                     textFormat: Text.AutoText // to handle markup if any
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     Layout.fillWidth: true
                     maximumLineCount: 20
                     elide: Text.ElideRight

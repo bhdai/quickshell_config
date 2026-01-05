@@ -14,6 +14,6 @@ Rectangle {
         text: "power_settings_new"
         iconSize: 20
         fill: 1
-        color: Colors.powerButton
+        color: Appearance.colors.colPowerButton
     }
 }

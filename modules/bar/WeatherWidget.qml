@@ -108,7 +108,7 @@ Rectangle {
                 Text {
                     text: root.getHeaderLabel()
                     font.pixelSize: 14
-                    color: Colors.subtext0
+                    color: Appearance.colors.colSubtext
                     font.weight: Font.Medium
                 }
 
@@ -119,7 +119,7 @@ Rectangle {
                         text: Weather.selectedDayIndex === 0 ? root.formatTemp(Weather.currentData.temp) : (Weather.hourlyForecast[0]?.temp ?? "--")
                         font.pixelSize: 48
                         font.weight: Font.Bold
-                        color: Colors.text
+                        color: Appearance.colors.colOnLayer0
                     }
 
                     CustomIcon {
@@ -133,7 +133,7 @@ Rectangle {
                 Text {
                     text: "High: " + root.getSelectedDayHigh() + " | Low: " + root.getSelectedDayLow()
                     font.pixelSize: 12
-                    color: Colors.subtext0
+                    color: Appearance.colors.colSubtext
                 }
             }
 
@@ -152,14 +152,14 @@ Rectangle {
                     text: Weather.selectedDayIndex === 0 ? (Weather.currentData.condition || "Loading...") : (Weather.weeklyForecast[Weather.selectedDayIndex]?.condition ?? "Loading...")
                     font.pixelSize: 20
                     font.weight: Font.Bold
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     horizontalAlignment: Text.AlignRight
                 }
 
                 Text {
                     text: Weather.currentData.city
                     font.pixelSize: 14
-                    color: Colors.subtext0
+                    color: Appearance.colors.colSubtext
                     horizontalAlignment: Text.AlignRight
                 }
             }
@@ -180,7 +180,7 @@ Rectangle {
                     Text {
                         text: root.formatTime(modelData.time)
                         font.pixelSize: 12
-                        color: Colors.subtext0
+                        color: Appearance.colors.colSubtext
                         Layout.alignment: Qt.AlignHCenter
                     }
 
@@ -195,7 +195,7 @@ Rectangle {
                         text: root.formatTemp(modelData.temp)
                         font.pixelSize: 16
                         font.weight: Font.Medium
-                        color: Colors.text
+                        color: Appearance.colors.colOnLayer0
                         Layout.alignment: Qt.AlignHCenter
                     }
                 }
@@ -214,7 +214,7 @@ Rectangle {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Colors.accent
+                    color: Appearance.colors.colPrimary
                     opacity: 0.15
                     radius: 6
                 }
@@ -224,7 +224,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "Humidity: " + (Weather.selectedDayIndex === 0 ? Weather.currentData.humidity : (Weather.weeklyForecast[Weather.selectedDayIndex]?.humidity ?? "--"))
                     font.pixelSize: 12
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                 }
             }
 
@@ -235,7 +235,7 @@ Rectangle {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Colors.accent
+                    color: Appearance.colors.colPrimary
                     opacity: 0.15
                     radius: 6
                 }
@@ -245,7 +245,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "Wind: " + (Weather.selectedDayIndex === 0 ? Weather.currentData.wind : (Weather.weeklyForecast[Weather.selectedDayIndex]?.wind ?? "--"))
                     font.pixelSize: 12
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                 }
             }
 
@@ -256,7 +256,7 @@ Rectangle {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Colors.accent
+                    color: Appearance.colors.colPrimary
                     opacity: 0.15
                     radius: 6
                 }
@@ -266,7 +266,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "UV: " + root.getSelectedDayUV() + " (" + root.getUVDescription(root.getSelectedDayUV()) + ")"
                     font.pixelSize: 12
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                 }
             }
 
@@ -277,7 +277,7 @@ Rectangle {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Colors.accent
+                    color: Appearance.colors.colPrimary
                     opacity: 0.15
                     radius: 6
                 }
@@ -288,7 +288,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: "Precip: " + precip.prob + "% (" + precip.sum + " mm)"
                     font.pixelSize: 12
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                 }
             }
 
@@ -301,7 +301,7 @@ Rectangle {
         // Rectangle {
         //     Layout.fillWidth: true
         //     height: 1
-        //     color: Colors.outline
+        //     color: Appearance.m3colors.m3outline
         //     opacity: 0.5
         // }
 
@@ -322,7 +322,7 @@ Rectangle {
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 2
-                        color: parent.isSelected ? Colors.accent : "transparent"
+                        color: parent.isSelected ? Appearance.colors.colPrimary : "transparent"
                         radius: 8
                         opacity: parent.isSelected ? 0.2 : 0
                     }
@@ -336,7 +336,7 @@ Rectangle {
                             text: modelData.day
                             font.pixelSize: 12
                             font.weight: Font.Bold
-                            color: parent.parent.isSelected ? Colors.accent : Colors.text
+                            color: parent.parent.isSelected ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                             Layout.alignment: Qt.AlignHCenter
                         }
 
@@ -351,14 +351,14 @@ Rectangle {
                             text: root.formatTemp(modelData.high)
                             font.pixelSize: 13
                             font.weight: Font.Bold
-                            color: Colors.text
+                            color: Appearance.colors.colOnLayer0
                             Layout.alignment: Qt.AlignHCenter
                         }
 
                         Text {
                             text: root.formatTemp(modelData.low)
                             font.pixelSize: 12
-                            color: Colors.subtext0
+                            color: Appearance.colors.colSubtext
                             Layout.alignment: Qt.AlignHCenter
                         }
                     }

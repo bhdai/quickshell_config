@@ -76,7 +76,7 @@ MouseArea {
     WrapperRectangle {
         id: backgroundRect
         implicitHeight: 30
-        color: mediaControls.isOpen ? Colors.accent : (root.containsMouse ? Colors.surfaceHover : Colors.surface)
+        color: mediaControls.isOpen ? Appearance.colors.colPrimary : (root.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer1)
         radius: 15
 
         Behavior on color {
@@ -96,7 +96,7 @@ MouseArea {
             // music note
             Text {
                 text: "󰎇"
-                color: mediaControls.isOpen ? Colors.m3onPrimaryFixed : Colors.text
+                color: mediaControls.isOpen ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
                 font.pixelSize: 16
                 Layout.alignment: Qt.AlignVCenter
 
@@ -112,7 +112,7 @@ MouseArea {
             Text {
                 id: titleText
                 text: activePlayer ? cleanTitle(activePlayer.trackTitle) : ""
-                color: mediaControls.isOpen ? Colors.m3onPrimaryFixed : Colors.text
+                color: mediaControls.isOpen ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
                 font.pixelSize: 12
 
                 elide: Text.ElideRight
@@ -133,7 +133,7 @@ MouseArea {
             Rectangle {
                 width: 1
                 implicitHeight: parent.height * 0.6
-                color: mediaControls.isOpen ? Colors.m3onPrimary : Colors.text
+                color: mediaControls.isOpen ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer0
                 opacity: 0.5
                 visible: titleText.text && artistText.text
                 Layout.alignment: Qt.AlignVCenter
@@ -150,7 +150,7 @@ MouseArea {
             Text {
                 id: artistText
                 text: activePlayer ? (activePlayer.trackArtist || "Unknown Artist") : ""
-                color: mediaControls.isOpen ? Colors.m3onPrimary : Colors.text
+                color: mediaControls.isOpen ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer0
                 font.pixelSize: 12
 
                 elide: Text.ElideRight

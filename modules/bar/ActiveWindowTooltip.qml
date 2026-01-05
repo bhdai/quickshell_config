@@ -30,9 +30,9 @@ PopupWindow {
         width: contentColumn.implicitWidth + 24
         height: contentColumn.implicitHeight + 16
 
-        color: Colors.background
+        color: Appearance.m3colors.m3background
         radius: 8
-        border.color: Colors.overlay0
+        border.color: Appearance.m3colors.m3outlineVariant
         border.width: 1
 
         ColumnLayout {
@@ -47,14 +47,14 @@ PopupWindow {
 
                 Text {
                     text: "󰖯"
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     font.pixelSize: 16
                     Layout.alignment: Qt.AlignVCenter
                 }
 
                 Text {
                     text: "Window"
-                    color: Colors.text
+                    color: Appearance.colors.colOnLayer0
                     font.pixelSize: 13
                     font.weight: Font.Medium
                     Layout.alignment: Qt.AlignVCenter
@@ -64,7 +64,7 @@ PopupWindow {
             // full window title
             Text {
                 text: activeWin ? (activeWin.title || "Untitled Window") : ""
-                color: Colors.text
+                color: Appearance.colors.colOnLayer0
                 font.pixelSize: 12
                 Layout.alignment: Qt.AlignLeft
                 Layout.maximumWidth: 400
