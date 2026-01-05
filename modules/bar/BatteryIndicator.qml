@@ -21,6 +21,12 @@ MouseArea {
     implicitWidth: batteryProgress.implicitWidth
     implicitHeight: 18
 
+    hoverEnabled: true
+
+    onContainsMouseChanged: {
+        batteryPopup.isOpen = containsMouse;
+    }
+
     ClippedProgressBar {
         id: batteryProgress
         anchors.centerIn: parent
@@ -51,5 +57,10 @@ MouseArea {
             text: "bolt"
             color: "white"
         }
+    }
+
+    BatteryPopup {
+        id: batteryPopup
+        anchorItem: root
     }
 }

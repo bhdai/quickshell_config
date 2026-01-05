@@ -26,6 +26,21 @@ Singleton {
     property real timeToEmpty: UPower.displayDevice.timeToEmpty
     property real timeToFull: UPower.displayDevice.timeToFull
 
+    // Battery health from UPower devices (returns 0 if not supported)
+    property real health: {
+        for (let i = 0; i < UPower.devices.values.length; i++) {
+            let device = UPower.devices.values[i];
+            if (device.isLaptopBattery && device.healthSupported) {
+                let hp = device.healthPercentage;
+                // Normalize: if < 1, it's a fraction (0-1); multiply by 100
+                // If 0, return small value to indicate unknown but supported
+                if (hp <= 0) return 0;
+                return hp < 1 ? hp * 100 : hp;
+            }
+        }
+        return 0; // No health-supported battery found
+    }
+
     onIsLowAndNotChargingChanged: {
         if (available && isLowAndNotCharging)
             Quickshell.execDetached(["notify-send", "Low battery", "Consider plugging in your device", "-u", "critical", "-a", "Shell"]);
