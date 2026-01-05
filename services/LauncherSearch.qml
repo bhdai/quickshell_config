@@ -25,7 +25,7 @@ Singleton {
     property string mathResult: ""
 
     // Result limit
-    readonly property int resultLimit: 10
+    readonly property int resultLimit: 20
 
     // Debounce timer for math calculations
     Timer {

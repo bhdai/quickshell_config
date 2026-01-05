@@ -211,13 +211,48 @@ Item {
                 id: appResults
                 visible: root.showResults
                 Layout.fillWidth: true
-                implicitHeight: Math.min(600, appResults.contentHeight + topMargin + bottomMargin)
+                implicitHeight: Math.min(500, appResults.contentHeight + topMargin + bottomMargin)
                 clip: true
                 topMargin: 10
                 bottomMargin: 10
                 spacing: 2
                 KeyNavigation.up: searchBar
                 highlightMoveDuration: 100
+                
+                // Enable mouse wheel scrolling and proper interaction
+                interactive: true
+                boundsBehavior: Flickable.StopAtBounds
+                flickableDirection: Flickable.VerticalFlick
+                
+                // Handle mouse wheel explicitly for overlay windows
+                WheelHandler {
+                    onWheel: event => {
+                        appResults.flick(0, event.angleDelta.y * 3)
+                        event.accepted = true
+                    }
+                }
+                
+                // ScrollBar for visual feedback - only visible when scrolling
+                ScrollBar.vertical: ScrollBar {
+                    id: scrollBar
+                    policy: ScrollBar.AsNeeded
+                    active: appResults.moving || hovered || pressed
+                    minimumSize: 0.1
+                    width: 2
+                    
+                    background: Item {} // Remove the track/line indicator
+                    
+                    contentItem: Rectangle {
+                        implicitWidth: 2
+                        implicitHeight: scrollBar.visualSize
+                        radius: 9999
+                        color: Appearance.colors.colPrimary
+                        opacity: scrollBar.active && scrollBar.size < 1.0 ? 0.8 : 0
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150 }
+                        }
+                    }
+                }
 
                 onFocusChanged: {
                     if (focus)
