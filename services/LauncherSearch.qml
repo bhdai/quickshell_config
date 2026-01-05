@@ -92,13 +92,13 @@ Singleton {
     property list<var> results: {
         // Empty query = show all apps
         if (root.query === "") {
-            return AppSearch.allApps.slice(0, root.resultLimit).map(entry => root.createAppResult(entry));
+            return AppSearch.allApps.map(entry => root.createAppResult(entry));
         }
 
         // Clipboard search
         if (root.query.startsWith(root.prefixClipboard)) {
             const searchString = StringUtils.cleanPrefix(root.query, root.prefixClipboard);
-            return Cliphist.fuzzyQuery(searchString).slice(0, root.resultLimit).map(entry => {
+            return Cliphist.fuzzyQuery(searchString).map(entry => {
                 const type = `#${entry.match(/^\s*(\S+)/)?.[1] || ""}`;
                 return resultComp.createObject(null, {
                     rawValue: entry,
@@ -132,7 +132,7 @@ Singleton {
         // Emoji search
         if (root.query.startsWith(root.prefixEmojis)) {
             const searchString = StringUtils.cleanPrefix(root.query, root.prefixEmojis);
-            return Emojis.fuzzyQuery(searchString).slice(0, root.resultLimit).map(entry => {
+            return Emojis.fuzzyQuery(searchString).map(entry => {
                 const emoji = entry.match(/^\s*(\S+)/)?.[1] || "";
                 return resultComp.createObject(null, {
                     rawValue: entry,
@@ -169,13 +169,13 @@ Singleton {
             }
 
             // Otherwise, also show app results
-            const appResults = AppSearch.fuzzyQuery(root.query).slice(0, root.resultLimit - 1).map(entry => root.createAppResult(entry));
+            const appResults = AppSearch.fuzzyQuery(root.query).map(entry => root.createAppResult(entry));
 
             return [mathResultObject, ...appResults];
         }
 
         // Default: app search
-        return AppSearch.fuzzyQuery(root.query).slice(0, root.resultLimit).map(entry => root.createAppResult(entry));
+        return AppSearch.fuzzyQuery(root.query).map(entry => root.createAppResult(entry));
     }
 
     Component {
