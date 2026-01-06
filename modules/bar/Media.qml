@@ -5,6 +5,7 @@ import Quickshell.Widgets
 import Quickshell.Services.Mpris
 import qs.modules.mediaControls
 import qs.modules.common
+import qs.modules.common.widgets
 
 MouseArea {
     id: root
@@ -71,6 +72,14 @@ MouseArea {
         }
     }
 
+    // Timer to update position while playing (Task 2)
+    Timer {
+        running: root.activePlayer?.playbackState === MprisPlaybackState.Playing
+        interval: 1000
+        repeat: true
+        onTriggered: root.activePlayer?.positionChanged()
+    }
+
     visible: !!activePlayer
 
     WrapperRectangle {
@@ -93,17 +102,47 @@ MouseArea {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 5
 
-            // music note
-            Text {
-                text: "󰎇"
-                color: mediaControls.isOpen ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
-                font.pixelSize: 16
+            // Circular progress with play/pause (Task 3-5)
+            MouseArea {
                 Layout.alignment: Qt.AlignVCenter
+                implicitWidth: circularProgress.implicitSize
+                implicitHeight: circularProgress.implicitSize
+                cursorShape: Qt.PointingHandCursor
+                onClicked: mouse => {
+                    mouse.accepted = true;
+                    if (root.activePlayer) {
+                        root.activePlayer.togglePlaying();
+                    }
+                }
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 150
-                        easing.type: Easing.OutQuad
+                ClippedFilledCircularProgress {
+                    id: circularProgress
+                    anchors.fill: parent
+                    implicitSize: 20
+                    lineWidth: 2
+                    value: root.activePlayer ? (root.activePlayer.position / root.activePlayer.length) : 0
+                    colPrimary: mediaControls.isOpen ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
+                    enableAnimation: false  // Disable animation for smooth 1-second updates
+
+                    Item {
+                        anchors.centerIn: parent
+                        width: circularProgress.implicitSize
+                        height: circularProgress.implicitSize
+
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            fill: 1
+                            text: root.activePlayer?.isPlaying ? "pause" : "music_note"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: mediaControls.isOpen ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                    easing.type: Easing.OutQuad
+                                }
+                            }
+                        }
                     }
                 }
             }
