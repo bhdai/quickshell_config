@@ -93,6 +93,7 @@ Scope {
                     spacing: 8
 
                     Media {}
+                    Resources {}
 
                     SysTray {}
                     StatusIcons {}
