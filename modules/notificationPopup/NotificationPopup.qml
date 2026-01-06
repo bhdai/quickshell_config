@@ -77,13 +77,10 @@ Rectangle {
                     id: materialSymbolLoader
                     anchors.fill: parent
                     active: root.notif && !root.notif.appIcon
-                    sourceComponent: MaterialSymbol {
-                        text: "lightbulb"
-                        fill: 1
-                        iconSize: 20
-                        color: Appearance.colors.colPrimary // Adjust as needed
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+                    sourceComponent: CustomIcon {
+                        source: "software-update-urgent-symbolic.svg"
+                        width: 20
+                        height: 20
                     }
                 }
             }
@@ -132,7 +129,7 @@ Rectangle {
             Layout.fillWidth: true
             height: 1
             color: Appearance.colors.colOnLayer0
-            opacity: 0.5
+            opacity: 0.2
         }
 
         // time out progress bar

@@ -53,17 +53,15 @@ Item {
 
                     // Show Material Symbol fallback if no app icon
                     Loader {
-                        id: materialSymbolLoader
+                        id: customIconLoader
                         anchors.fill: parent
                         active: root.notif && !root.notif.appIcon
-                        sourceComponent: MaterialSymbol {
-                            text: "lightbulb"
-                            fill: 1
-                            iconSize: 20
-                            color: Appearance.colors.colPrimary // Adjust as needed
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        sourceComponent: CustomIcon {
+                            source: "software-update-urgent-symbolic.svg"
+                            width: 20
+                            height: 20
                         }
+
                     }
                 }
 
@@ -139,7 +137,7 @@ Item {
                 Layout.fillWidth: true
                 height: 1
                 color: Appearance.colors.colOnLayer0
-                opacity: 0.5
+                opacity: 0.2
             }
 
             // content section
