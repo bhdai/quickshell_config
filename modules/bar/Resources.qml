@@ -61,10 +61,10 @@ Item {
         ClippedFilledCircularProgress {
             id: circularProgress
             anchors.fill: parent
-            implicitSize: 20
+            implicitSize: 22
             lineWidth: 2
             value: resourceItem.percentage
-            colPrimary: resourceItem.warning ? Appearance.colors.colError : Appearance.colors.colOnLayer1
+            colPrimary: resourceItem.warning ? Appearance.colors.colError : Appearance.colors.colOnLayer0
             enableAnimation: false
 
             Item {
@@ -76,7 +76,7 @@ Item {
                     anchors.centerIn: parent
                     fill: 1
                     text: resourceItem.iconName
-                    iconSize: Appearance.font.pixelSize.normal
+                    iconSize: Appearance.font.pixelSize.large
                     color: resourceItem.warning ? Appearance.colors.colError : Appearance.m3colors.m3onSecondaryContainer
 
                     Behavior on color {
