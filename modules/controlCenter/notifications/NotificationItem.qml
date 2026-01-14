@@ -12,6 +12,18 @@ Item {
     property var notif
     property bool collapsed: false
 
+    // Helper: Determine if image value is a real image (not an icon name/file)
+    function isRealImage(imageValue: string): bool {
+        if (!imageValue) return false;
+        // SVG files in icon directories are icons, not real images - should show in header
+        if (imageValue.endsWith(".svg") && imageValue.includes("/icons/")) return false;
+        if (imageValue.startsWith("image://qsimage/")) return true;
+        if (imageValue.startsWith("file://")) return true;
+        if (imageValue.startsWith("http://") || imageValue.startsWith("https://")) return true;
+        if (imageValue.includes("/")) return true;
+        return false;
+    }
+
     width: parent?.width ?? 300
     implicitHeight: mainLayout.implicitHeight + 10 // 10px padding on top/bottom
 
@@ -39,29 +51,53 @@ Item {
                     implicitWidth: 20
                     implicitHeight: 20
 
-                    // Show app icon if available
-                    Loader {
-                        id: appIconLoader
+                    // Show app icon if available and loads successfully
+                    IconImage {
+                        id: appIconImage
                         anchors.fill: parent
-                        active: root.notif && root.notif.appIcon
-                        sourceComponent: IconImage {
-                            source: Quickshell.iconPath(root.notif.appIcon, true)
-                            implicitSize: 20
-                            visible: source !== ""
+                        source: {
+                            if (!root.notif) return "";
+                            // Priority 1: appIcon from notification
+                            if (root.notif.appIcon) {
+                                let resolved = Quickshell.iconPath(root.notif.appIcon, true);
+                                if (resolved) return resolved;
+                            }
+                            // Priority 2: icon/svg in image field (not a real image like screenshot)
+                            if (root.notif.image && !root.isRealImage(root.notif.image)) {
+                                let imagePath = root.notif.image;
+                                // Handle SVG icon file paths directly (only from icon directories)
+                                if (imagePath.endsWith(".svg") && imagePath.includes("/icons/")) {
+                                    if (imagePath.startsWith("/")) {
+                                        return "file://" + imagePath;
+                                    }
+                                    return imagePath;
+                                }
+                                // Try icon name resolution
+                                let resolved = Quickshell.iconPath(imagePath, true);
+                                if (resolved) return resolved;
+                            }
+                            // Priority 3: use AppSearch.guessIcon for robust resolution
+                            if (root.notif.appName) {
+                                let guessed = AppSearch.guessIcon(root.notif.appName);
+                                // Reject generic fallback icons - we prefer our own fallback
+                                if (guessed && guessed !== "image-missing" && guessed !== "application-x-executable") {
+                                    return Quickshell.iconPath(guessed, true);
+                                }
+                            }
+                            return "";
                         }
+                        implicitSize: 20
+                        visible: status === Image.Ready
                     }
 
-                    // Show Material Symbol fallback if no app icon
-                    Loader {
-                        id: customIconLoader
+                    // Show fallback icon if app icon not provided or failed to load
+                    CustomIcon {
+                        id: fallbackIcon
                         anchors.fill: parent
-                        active: root.notif && !root.notif.appIcon
-                        sourceComponent: CustomIcon {
-                            source: "software-update-urgent-symbolic.svg"
-                            width: 20
-                            height: 20
-                        }
-
+                        source: "software-update-urgent-symbolic.svg"
+                        width: 20
+                        height: 20
+                        visible: appIconImage.status !== Image.Ready
                     }
                 }
 
@@ -152,7 +188,7 @@ Item {
                 ClippingWrapperRectangle {
                     radius: 8
                     antialiasing: true
-                    visible: root.notif && root.notif.image !== ""
+                    visible: root.isRealImage(root.notif?.image ?? "") && notificationImage.status === Image.Ready
                     Item {
                         id: notificationImageContainer
                         implicitWidth: 86
@@ -166,14 +202,29 @@ Item {
                                 if (root.notif && root.notif.image) {
                                     let imagePath = root.notif.image;
 
-                                    // convert "image://icon/home/user/..." → "file:///home/user/..."
+                                    // Handle image://qsimage/ URLs (actual notification images from D-Bus)
+                                    if (imagePath.startsWith("image://qsimage/")) {
+                                        return imagePath;
+                                    }
+
+                                    // Handle image://icon/ prefix (some apps use this format)
                                     if (imagePath.startsWith("image://icon/")) {
                                         const stripped = imagePath.replace("image://icon/", "");
+                                        // Check if stripped value is an icon name (no path separator)
+                                        if (!stripped.includes("/")) {
+                                            return Quickshell.iconPath(stripped, "");
+                                        }
+                                        // It's a file path, convert to file:// URL
                                         if (stripped.startsWith("~/"))
                                             return "file://" + stripped.replace("~", Quickshell.homePath);
-                                        if (!stripped.startsWith("/"))
-                                            return "file:///" + stripped;
                                         return "file://" + stripped;
+                                    }
+
+                                    // Detect if image is actually an icon name (no path separators or schemes)
+                                    // Some apps (SafeEyes, fish) put icon names in the image field
+                                    if (!imagePath.includes("/") && !imagePath.includes("://")) {
+                                        // It's likely an icon name, resolve it via Quickshell.iconPath()
+                                        return Quickshell.iconPath(imagePath, "");
                                     }
 
                                     // handle normal "~/" paths
@@ -184,7 +235,7 @@ Item {
                                     if (imagePath.startsWith("file://"))
                                         return imagePath;
 
-                                    // default case
+                                    // default case (could be a direct path)
                                     return imagePath;
                                 }
                                 return "";
