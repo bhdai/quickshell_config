@@ -10,10 +10,10 @@ BaseOSD {
     sliderIcon: Audio.symbol
     sliderFrom: 0.0
     sliderTo: 1.0
-    sliderValue: Audio.ready ? Audio.sink.audio.volume : 0.0
+    sliderValue: Audio.ready && Audio.sink?.audio ? Audio.sink.audio.volume : 0.0
 
     onSliderMoved: value => {
-        if (Audio.ready) {
+        if (Audio.ready && Audio.sink?.audio) {
             Audio.sink.audio.volume = value;
         }
     }
