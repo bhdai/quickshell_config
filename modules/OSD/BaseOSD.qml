@@ -15,6 +15,7 @@ PanelWindow {
     property alias sliderIcon: slider.insetIconSource
 
     signal sliderMoved(real value)
+    signal rightClicked()
 
     implicitWidth: 400
     implicitHeight: 150
@@ -66,6 +67,12 @@ PanelWindow {
             height: slider.handleHeight + slider.anchors.margins
             radius: 21
             color: Appearance.m3colors.m3background
+
+            // Right-click to emit signal
+            TapHandler {
+                acceptedButtons: Qt.RightButton
+                onTapped: baseOsd.rightClicked()
+            }
 
             StyledSlider {
                 id: slider

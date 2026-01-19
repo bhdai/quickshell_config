@@ -14,4 +14,13 @@ SliderControl {
             Audio.sink.audio.volume = value;
         }
     }
+
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        onTapped: {
+            if (Audio.ready && Audio.sink?.audio) {
+                Audio.sink.audio.muted = !Audio.sink.audio.muted;
+            }
+        }
+    }
 }

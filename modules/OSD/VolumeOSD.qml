@@ -18,6 +18,12 @@ BaseOSD {
         }
     }
 
+    onRightClicked: {
+        if (Audio.ready && Audio.sink?.audio) {
+            Audio.sink.audio.muted = !Audio.sink.audio.muted;
+        }
+    }
+
     Connections {
         target: Audio
         function onSinkVolumeChanged() {
