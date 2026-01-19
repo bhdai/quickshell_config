@@ -10,7 +10,7 @@ BaseOSD {
     sliderIcon: Audio.symbol
     sliderFrom: 0.0
     sliderTo: 1.0
-    sliderValue: Audio.ready && Audio.sink?.audio ? Audio.sink.audio.volume : 0.0
+    sliderValue: Audio.ready ? Audio.sinkVolume : 0.0
 
     onSliderMoved: value => {
         if (Audio.ready && Audio.sink?.audio) {
@@ -19,8 +19,8 @@ BaseOSD {
     }
 
     Connections {
-        target: Audio.sink?.audio ?? null
-        function onVolumeChanged() {
+        target: Audio
+        function onSinkVolumeChanged() {
             if (Audio.ready) {
                 volumeOsd.show();
             }

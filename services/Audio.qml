@@ -11,9 +11,45 @@ Singleton {
     property bool ready: Pipewire.defaultAudioSink?.ready ?? false
     property PwNode sink: Pipewire.defaultAudioSink
     property PwNode source: Pipewire.defaultAudioSource
-    property string symbol: ready && sink?.audio ? (sink.audio.muted ? "audio-volume-muted-symbolic" : (sink.audio.volume > 0.7 ? "audio-volume-high-symbolic" : sink.audio.volume > 0.3 ? "audio-volume-medium-symbolic" : sink.audio.volume > 0.0 ? "audio-volume-low-symbolic" : "audio-volume-muted-symbolic")) : "audio-volume-muted-symbolic"
+    
+    // Cached volume that gets updated properly
+    property real sinkVolume: 0
+    
+    // Helper to get current volume, filtering NaN
+    function getCurrentVolume(): real {
+        const vol = sink?.audio?.volume ?? 0;
+        return isNaN(vol) ? 0 : vol;
+    }
+    
+    property string symbol: ready && sink?.audio ? (sink.audio.muted ? "audio-volume-muted-symbolic" : (sinkVolume > 0.7 ? "audio-volume-high-symbolic" : sinkVolume > 0.3 ? "audio-volume-medium-symbolic" : sinkVolume > 0.0 ? "audio-volume-low-symbolic" : "audio-volume-muted-symbolic")) : "audio-volume-muted-symbolic"
     readonly property bool sinkProtectionEnabled: false
     readonly property real hardMaxValue: 2.00 // Absolute maximum volume (200%) - prevents extreme over-amplification
+
+    onReadyChanged: {
+        if (ready) {
+            volumeRecoveryTimer.restart()
+        }
+    }
+    onSinkChanged: volumeRecoveryTimer.restart()
+    Component.onCompleted: sinkVolume = getCurrentVolume()
+    
+    // Timer to recover from NaN volume state (poll for up to 5 seconds)
+    Timer {
+        id: volumeRecoveryTimer
+        interval: 100
+        repeat: true
+        property int attempts: 0
+        onTriggered: {
+            const vol = root.getCurrentVolume()
+            if (vol > 0 || attempts >= 50) {
+                root.sinkVolume = vol
+                stop()
+                attempts = 0
+            } else {
+                attempts++
+            }
+        }
+    }
 
     signal sinkProtectionTriggered(string reason)
 
@@ -39,14 +75,20 @@ Singleton {
             if (isNaN(newVolume) || newVolume === undefined || newVolume === null) {
                 lastReady = false;
                 lastVolume = 0;
+                // Start recovery timer when we get NaN
+                volumeRecoveryTimer.restart()
                 return;
             }
+
+            // Update the cached sinkVolume
+            root.sinkVolume = newVolume;
 
             // Hard max enforcement - always runs as safety net
             if (newVolume > root.hardMaxValue) {
                 sink.audio.volume = root.hardMaxValue;
                 root.sinkProtectionTriggered("Exceeded hard max");
                 lastVolume = root.hardMaxValue;
+                root.sinkVolume = root.hardMaxValue;
                 return;
             }
 
@@ -73,6 +115,7 @@ Singleton {
                 sink.audio.volume = Math.min(lastVolume, maxAllowed);
             }
             lastVolume = sink.audio.volume;
+            root.sinkVolume = sink.audio.volume;
         }
     }
 }
