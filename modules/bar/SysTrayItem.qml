@@ -8,6 +8,9 @@ MouseArea {
 
     required property SystemTrayItem modelData
 
+    signal menuOpened()
+    signal menuClosed()
+
     implicitWidth: 30
     implicitHeight: 30
     hoverEnabled: true
@@ -74,7 +77,14 @@ MouseArea {
                 gravity: Edges.Bottom | Edges.Left
             }
 
-            onClosed: menuLoader.active = false
+            Component.onCompleted: {
+                root.menuOpened();
+            }
+
+            onClosed: {
+                root.menuClosed();
+                menuLoader.active = false;
+            }
         }
     }
 }
