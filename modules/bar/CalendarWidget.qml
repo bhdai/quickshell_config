@@ -153,7 +153,7 @@ Rectangle {
 
                                     implicitWidth: 40
                                     implicitHeight: 36
-                                    buttonRadius: 8
+                                    buttonRadius: 12
                                     toggled: isToday
 
                                     colBackground: "transparent"
