@@ -254,11 +254,6 @@ Item {
                     }
                 }
 
-                onFocusChanged: {
-                    if (focus)
-                        appResults.currentIndex = 0;
-                }
-
                 Connections {
                     target: root
                     function onSearchingTextChanged() {
