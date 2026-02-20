@@ -21,7 +21,7 @@ Scope {
         sourceComponent: PanelWindow {
             id: sessionPanel
             visible: sessionLoader.active
-            property string subtitle: ""
+            property string subtitle: "Lock"
 
             function hide() {
                 Session.sessionOpen = false;
@@ -144,11 +144,17 @@ Scope {
                 // Currently focused action label
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    visible: sessionPanel.subtitle !== ""
                     width: subtitleText.implicitWidth + 24
                     height: subtitleText.implicitHeight + 12
                     color: Appearance.colors.colTooltip
                     radius: 8
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 100
+                            easing.type: Easing.OutQuad
+                        }
+                    }
 
                     Text {
                         id: subtitleText
