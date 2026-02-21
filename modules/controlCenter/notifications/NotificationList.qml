@@ -18,7 +18,8 @@ ListView {
     spacing: 6
 
     model: ScriptModel {
-        values: Notifications.listArray
+        values: Notifications.groupedList
+        objectProp: "key"
     }
 
     property real headerAndMarginHeight: 0
@@ -58,9 +59,9 @@ ListView {
         }
     }
 
-    delegate: NotificationItem {
+    delegate: NotificationGroup {
         width: notifList.width
-        notif: modelData
+        group: modelData
     }
 
     interactive: true

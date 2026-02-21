@@ -24,6 +24,7 @@ Singleton {
         property bool popup: false
         property string appIcon: notification?.appIcon ?? ""
         property string appName: notification?.appName ?? ""
+        property string desktopEntry: notification?.desktopEntry ?? ""
         property string body: notification?.body ?? ""
         property string image: notification?.image ?? ""
         property string summary: notification?.summary ?? ""
@@ -67,6 +68,7 @@ Singleton {
             "actions": notif.actions,
             "appIcon": notif.appIcon,
             "appName": notif.appName,
+            "desktopEntry": notif.desktopEntry,
             "body": notif.body,
             "image": notif.image,
             "summary": notif.summary,
@@ -88,6 +90,55 @@ Singleton {
     property var popupList: list.filter(notif => notif.popup)
     property bool popupInhibited: false || silent
     property var listArray: list.map(notif => notif)
+
+    function getGroupKey(notif) {
+        if (notif.desktopEntry && notif.desktopEntry !== "")
+            return notif.desktopEntry.toLowerCase();
+        return notif.appName.toLowerCase();
+    }
+
+    property var groupedList: {
+        const groups = {};
+        const order = [];
+        for (const notif of root.list) {
+            const key = getGroupKey(notif);
+            if (!groups[key]) {
+                groups[key] = {
+                    key: key,
+                    appName: notif.appName,
+                    appIcon: notif.appIcon,
+                    notifications: [],
+                    latestNotification: notif,
+                    count: 0
+                };
+                order.push(key);
+            }
+            groups[key].notifications.push(notif);
+            groups[key].count++;
+            if (notif.time > groups[key].latestNotification.time) {
+                groups[key].latestNotification = notif;
+                groups[key].appName = notif.appName;
+                groups[key].appIcon = notif.appIcon;
+            }
+        }
+        return order.map(key => groups[key]);
+    }
+
+    function discardGroup(groupKey) {
+        const toDiscard = root.list.filter(n => getGroupKey(n) === groupKey);
+        for (const notif of toDiscard) {
+            const index = root.list.findIndex(n => n.notificationId === notif.notificationId);
+            if (index !== -1)
+                root.list.splice(index, 1);
+            const serverIndex = notifServer.trackedNotifications.values.findIndex(n => n.id + root.idOffset === notif.notificationId);
+            if (serverIndex !== -1)
+                notifServer.trackedNotifications.values[serverIndex].dismiss();
+            root.discard(notif.notificationId);
+        }
+        notifFileView.setText(stringifyList(root.list));
+        triggerListChange();
+    }
+
     Component {
         id: notifComponent
         Notif {}
@@ -227,6 +278,7 @@ Singleton {
                     ,
                     "appIcon": notif.appIcon,
                     "appName": notif.appName,
+                    "desktopEntry": notif.desktopEntry ?? "",
                     "body": notif.body,
                     "image": notif.image,
                     "summary": notif.summary,

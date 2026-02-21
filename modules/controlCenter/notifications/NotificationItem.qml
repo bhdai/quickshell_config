@@ -11,6 +11,11 @@ Item {
     id: root
     property var notif
     property bool collapsed: false
+    property bool inGroup: false
+    property int groupCount: 0
+    property bool showExpandChevron: false
+    signal closeClicked()
+    signal expandClicked()
 
     // Helper: Determine if image value is a real image (not an icon name/file)
     function isRealImage(imageValue: string): bool {
@@ -109,6 +114,25 @@ Item {
                     font.pointSize: 10
                 }
 
+                // Group count badge (shown when part of a group with count > 1)
+                Rectangle {
+                    visible: root.groupCount > 1
+                    Layout.leftMargin: 4
+                    width: Math.max(groupCountText.implicitWidth + 8, 20)
+                    height: 18
+                    radius: 9
+                    color: Appearance.m3colors.m3primary
+
+                    Text {
+                        id: groupCountText
+                        anchors.centerIn: parent
+                        text: root.groupCount
+                        color: Appearance.m3colors.m3onPrimary
+                        font.pixelSize: 10
+                        font.bold: true
+                    }
+                }
+
                 Item {
                     Layout.fillWidth: true
                 } // spacer
@@ -147,6 +171,23 @@ Item {
                     }
                 }
 
+                // Expand/collapse chevron for groups
+                MouseArea {
+                    id: expandChevronButton
+                    visible: root.showExpandChevron
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.expandClicked()
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "expand_more"
+                        iconSize: 16
+                        color: Appearance.colors.colOnLayer0
+                    }
+                }
+
                 MouseArea {
                     id: closeButtonContainer
                     property real iconSize: 15
@@ -154,7 +195,11 @@ Item {
                     implicitHeight: iconSize
                     hoverEnabled: true
                     onClicked: {
-                        Notifications.discardNotification(root.notif.notificationId);
+                        if (root.inGroup) {
+                            root.closeClicked();
+                        } else {
+                            Notifications.discardNotification(root.notif.notificationId);
+                        }
                     }
                     CustomIcon {
                         id: closeIcon
