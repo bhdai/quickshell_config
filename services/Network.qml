@@ -25,7 +25,7 @@ Singleton {
         if (ethernet)
             return "network-wired-symbolic";
 
-        const strength = Network.networkStrength;
+        const strength = root.networkStrength;
         if (root.wifiEnabled) {
             switch (root.wifiStatus) {
             case "connected":
@@ -223,7 +223,7 @@ Singleton {
     Process {
         id: updateNetworkStrength
         running: true
-        command: ["sh", "-c", "nmcli -f IN-USE,SIGNAL,SSID device wifi | awk '/^\*/{if (NR!=1) {print $2}}'"]
+        command: ["sh", "-c", "nmcli -f IN-USE,SIGNAL,SSID device wifi | awk '/^[*]/{if (NR!=1) {print $2}}'"]
         stdout: SplitParser {
             onRead: data => {
                 root.networkStrength = parseInt(data);
