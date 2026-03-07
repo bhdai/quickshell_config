@@ -14,6 +14,8 @@ Item {
     property bool inGroup: false
     property int groupCount: 0
     property bool showExpandChevron: false
+    property bool showHeader: true
+    property bool compact: false
     signal closeClicked()
     signal expandClicked()
 
@@ -30,22 +32,23 @@ Item {
     }
 
     width: parent?.width ?? 300
-    implicitHeight: mainLayout.implicitHeight + 10 // 10px padding on top/bottom
+    implicitHeight: mainLayout.implicitHeight + (root.compact ? 4 : 10)
 
     Rectangle {
         id: bg
         anchors.fill: parent
-        radius: 8
-        color: Appearance.colors.colLayer1
+        radius: root.showHeader ? 8 : 0
+        color: root.showHeader ? Appearance.colors.colLayer1 : "transparent"
 
         ColumnLayout {
             id: mainLayout
             anchors.fill: parent
-            anchors.margins: 5
+            anchors.margins: root.compact ? 2 : 5
             spacing: 0
 
             // header Section
             RowLayout {
+                visible: root.showHeader
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
                 Layout.rightMargin: 4
@@ -180,11 +183,15 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.expandClicked()
 
-                    MaterialSymbol {
+                    CustomIcon {
+                        source: "go-down-symbolic"
                         anchors.centerIn: parent
-                        text: "expand_more"
-                        iconSize: 16
+                        width: 16
+                        height: 16
+                        colorize: true
                         color: Appearance.colors.colOnLayer0
+                        rotation: 0
+                        Behavior on rotation { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
                     }
                 }
 
@@ -215,6 +222,7 @@ Item {
 
             // separator
             Rectangle {
+                visible: root.showHeader
                 Layout.fillWidth: true
                 height: 1
                 color: Appearance.colors.colOnLayer0
@@ -224,16 +232,16 @@ Item {
             // content section
             RowLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: 8
-                Layout.bottomMargin: 8
-                Layout.leftMargin: 5
-                Layout.rightMargin: 5
+                Layout.topMargin: root.compact ? 0 : 8
+                Layout.bottomMargin: root.compact ? 0 : 8
+                Layout.leftMargin: root.compact ? 3 : 5
+                Layout.rightMargin: root.compact ? 3 : 5
                 spacing: 10
 
                 ClippingWrapperRectangle {
                     radius: 8
                     antialiasing: true
-                    visible: root.isRealImage(root.notif?.image ?? "") && notificationImage.status === Image.Ready
+                    visible: !root.compact && root.isRealImage(root.notif?.image ?? "") && notificationImage.status === Image.Ready
                     Item {
                         id: notificationImageContainer
                         implicitWidth: 86
@@ -301,9 +309,42 @@ Item {
                 // right column: summary & body
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 3
+                    spacing: root.compact ? 0 : 3
 
+                    // Compact mode: summary + body preview on one line
+                    RowLayout {
+                        visible: root.compact
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Text {
+                            text: root.notif ? (root.notif.summary || "") : ""
+                            font.bold: true
+                            font.pixelSize: 12
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            color: Appearance.colors.colOnLayer0
+                            Layout.maximumWidth: Math.min(implicitWidth, parent.width * 0.4)
+                        }
+
+                        Text {
+                            text: {
+                                if (!root.notif) return "";
+                                const body = (root.notif.body || "").replace(/<[^>]*>/g, "").replace(/\n/g, " ").trim();
+                                return body;
+                            }
+                            visible: text !== ""
+                            font.pixelSize: 12
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                            color: Appearance.colors.colSubtext
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    // Normal mode: summary
                     Text {
+                        visible: !root.compact
                         text: root.notif ? root.notif.summary : ""
                         font.bold: true
                         font.pixelSize: 14
@@ -312,7 +353,9 @@ Item {
                         Layout.fillWidth: true
                     }
 
+                    // Normal mode: body
                     Text {
+                        visible: !root.compact
                         text: root.notif ? root.notif.body : ""
                         wrapMode: Text.WordWrap
                         textFormat: Text.RichText // to handle markup if any

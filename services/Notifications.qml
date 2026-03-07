@@ -90,6 +90,7 @@ Singleton {
     property var popupList: list.filter(notif => notif.popup)
     property bool popupInhibited: false || silent
     property var listArray: list.map(notif => notif)
+    property bool _bulkOperationInProgress: false
 
     function getGroupKey(notif) {
         if (notif.desktopEntry && notif.desktopEntry !== "")
@@ -125,18 +126,18 @@ Singleton {
     }
 
     function discardGroup(groupKey) {
+        root._bulkOperationInProgress = true;
         const toDiscard = root.list.filter(n => getGroupKey(n) === groupKey);
+        const discardIds = new Set(toDiscard.map(n => n.notificationId));
         for (const notif of toDiscard) {
-            const index = root.list.findIndex(n => n.notificationId === notif.notificationId);
-            if (index !== -1)
-                root.list.splice(index, 1);
             const serverIndex = notifServer.trackedNotifications.values.findIndex(n => n.id + root.idOffset === notif.notificationId);
             if (serverIndex !== -1)
                 notifServer.trackedNotifications.values[serverIndex].dismiss();
             root.discard(notif.notificationId);
         }
+        root._bulkOperationInProgress = false;
+        root.list = root.list.filter(n => !discardIds.has(n.notificationId));
         notifFileView.setText(stringifyList(root.list));
-        triggerListChange();
     }
 
     Component {
@@ -190,6 +191,7 @@ Singleton {
     }
 
     function discardNotification(id) {
+        if (root._bulkOperationInProgress) return;
         console.log("[Notifications] Discarding notification with ID: " + id);
         const index = root.list.findIndex(notif => notif.notificationId === id);
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex(notif => notif.id + root.idOffset === id);
