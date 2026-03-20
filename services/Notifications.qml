@@ -85,10 +85,11 @@ Singleton {
     }
 
     property bool silent: false
+    property bool controlCenterOpen: false
     property var filePath: `${Quickshell.env("HOME")}/.cache/notifications/notifications.json`
     property list<Notif> list: []
     property var popupList: list.filter(notif => notif.popup)
-    property bool popupInhibited: false || silent
+    property bool popupInhibited: false || silent || controlCenterOpen
     property var listArray: list.map(notif => notif)
     property bool _bulkOperationInProgress: false
 

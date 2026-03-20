@@ -8,7 +8,7 @@ import qs.modules.common
 
 PanelWindow {
     id: root
-    visible: Notifications.popupList.length > 0
+    visible: Notifications.popupList.length > 0 && !Notifications.controlCenterOpen
     screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
 
     WlrLayershell.namespace: "quickshell-notification-popups"

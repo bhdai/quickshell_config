@@ -142,5 +142,17 @@ WrapperMouseArea {
 
     ControlCenter {
         id: controlCenter
+
+        onIsOpenChanged: {
+            Notifications.controlCenterOpen = isOpen;
+        }
+    }
+
+    Component.onCompleted: {
+        Notifications.controlCenterOpen = controlCenter.isOpen;
+    }
+
+    Component.onDestruction: {
+        Notifications.controlCenterOpen = false;
     }
 }
