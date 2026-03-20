@@ -16,6 +16,8 @@ ListView {
 
     clip: true
     spacing: 6
+    reuseItems: false
+    cacheBuffer: 2400
 
     model: ScriptModel {
         values: Notifications.groupedList

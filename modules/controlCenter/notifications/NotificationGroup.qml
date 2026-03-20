@@ -228,7 +228,7 @@ Item {
                     Layout.topMargin: 4
 
                     Repeater {
-                        model: root.group ? root.group.notifications.slice(0, 10) : []
+                        model: root.group ? root.group.notifications : []
 
                         NotificationItem {
                             Layout.fillWidth: true
