@@ -91,7 +91,7 @@ ColumnLayout {
                 spacing: 10
 
                 PowerProfile {}
-                NightLight {}
+                CloudflareWarp {}
                 IdleInhibitor {}
                 GameMode {}
                 SilentNotification {}

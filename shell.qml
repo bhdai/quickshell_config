@@ -10,6 +10,7 @@ import qs.services
 ShellRoot {
     property var brightness: Brightness
     property var gameMode: GamingModeService
+    property var warp: WarpService
     property var screenZoom: ScreenZoom
     property var powerProfile: PowerProfileService
     property var session: Session

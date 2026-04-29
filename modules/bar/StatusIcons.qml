@@ -105,6 +105,23 @@ WrapperMouseArea {
             }
 
             Loader {
+                active: WarpService.isActive
+                visible: active
+                Layout.preferredWidth: active ? backgroundRect.iconSize : 0
+                Layout.preferredHeight: active ? backgroundRect.iconSize : 0
+                Layout.maximumWidth: active ? backgroundRect.iconSize : 0
+                Layout.maximumHeight: active ? backgroundRect.iconSize : 0
+
+                sourceComponent: CustomIcon {
+                    source: "cloudflare-dns-symbolic"
+                    width: backgroundRect.iconSize
+                    height: backgroundRect.iconSize
+                    colorize: true
+                    color: backgroundRect.iconColor
+                }
+            }
+
+            Loader {
                 active: Idle.inhibit
                 visible: active
                 Layout.preferredWidth: active ? backgroundRect.iconSize : 0
