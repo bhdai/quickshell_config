@@ -194,13 +194,11 @@ Singleton {
     function discardNotification(id) {
         if (root._bulkOperationInProgress) return;
         console.log("[Notifications] Discarding notification with ID: " + id);
-        const index = root.list.findIndex(notif => notif.notificationId === id);
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex(notif => notif.id + root.idOffset === id);
-        if (index !== -1) {
-            root.list.splice(index, 1);
-            notifFileView.setText(stringifyList(root.list));
-            triggerListChange();
-        }
+        // Reassign list first so QML bindings update the UI immediately,
+        // then write to disk — same ordering used by discardGroup.
+        root.list = root.list.filter(notif => notif.notificationId !== id);
+        notifFileView.setText(stringifyList(root.list));
         if (notifServerIndex !== -1) {
             notifServer.trackedNotifications.values[notifServerIndex].dismiss();
         }
