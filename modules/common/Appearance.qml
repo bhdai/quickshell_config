@@ -6,9 +6,14 @@ import qs.modules.common.functions
 /**
  * Appearance - Unified Material 3 design system singleton
  * Replaces Colors.qml and LauncherAppearance.qml with:
- * - m3colors: All 50+ matugen scheme colors
+ * - m3colors: All 50+ matugen scheme colors (writable at runtime for live palette loading)
  * - colors: Computed layer system + semantic colors + status colors
  * - font, rounding, sizes, animation: UI configuration
+ *
+ * The m3colors properties are plain (non-readonly) so that MaterialThemeLoader
+ * can overwrite them at runtime when a generated colors.json palette is available.
+ * Default values reflect the source palette (#95CDF7) and remain in effect until
+ * MaterialThemeLoader applies a wallpaper-derived scheme.
  */
 Singleton {
     id: root
@@ -18,72 +23,73 @@ Singleton {
     property real contentTransparency: 0
 
     // Material 3 color scheme (from matugen - source #95CDF7)
+    // Properties are writable so MaterialThemeLoader can apply a live palette.
     property QtObject m3colors: QtObject {
-        readonly property bool darkmode: true
+        property bool darkmode: true
 
         // Primary
-        readonly property color m3primary: "#95CDF7"
-        readonly property color m3onPrimary: "#00344E"
-        readonly property color m3primaryContainer: "#004C6E"
-        readonly property color m3onPrimaryContainer: "#C9E6FF"
-        readonly property color m3inversePrimary: "#006590"
-        readonly property color m3primaryFixed: "#C9E6FF"
-        readonly property color m3primaryFixedDim: "#8BCBF5"
-        readonly property color m3onPrimaryFixed: "#001E2F"
-        readonly property color m3onPrimaryFixedVariant: "#004C6E"
+        property color m3primary: "#95CDF7"
+        property color m3onPrimary: "#00344E"
+        property color m3primaryContainer: "#004C6E"
+        property color m3onPrimaryContainer: "#C9E6FF"
+        property color m3inversePrimary: "#006590"
+        property color m3primaryFixed: "#C9E6FF"
+        property color m3primaryFixedDim: "#8BCBF5"
+        property color m3onPrimaryFixed: "#001E2F"
+        property color m3onPrimaryFixedVariant: "#004C6E"
 
         // Secondary
-        readonly property color m3secondary: "#B7C9D9"
-        readonly property color m3onSecondary: "#22323F"
-        readonly property color m3secondaryContainer: "#384956"
-        readonly property color m3onSecondaryContainer: "#D3E5F5"
-        readonly property color m3secondaryFixed: "#D3E5F5"
-        readonly property color m3secondaryFixedDim: "#B7C9D9"
-        readonly property color m3onSecondaryFixed: "#0C1D29"
-        readonly property color m3onSecondaryFixedVariant: "#384956"
+        property color m3secondary: "#B7C9D9"
+        property color m3onSecondary: "#22323F"
+        property color m3secondaryContainer: "#384956"
+        property color m3onSecondaryContainer: "#D3E5F5"
+        property color m3secondaryFixed: "#D3E5F5"
+        property color m3secondaryFixedDim: "#B7C9D9"
+        property color m3onSecondaryFixed: "#0C1D29"
+        property color m3onSecondaryFixedVariant: "#384956"
 
         // Tertiary
-        readonly property color m3tertiary: "#CEC0E8"
-        readonly property color m3onTertiary: "#352B4B"
-        readonly property color m3tertiaryContainer: "#4C4163"
-        readonly property color m3onTertiaryContainer: "#EADDFF"
-        readonly property color m3tertiaryFixed: "#EADDFF"
-        readonly property color m3tertiaryFixedDim: "#D1C1E9"
-        readonly property color m3onTertiaryFixed: "#201535"
-        readonly property color m3onTertiaryFixedVariant: "#4C4163"
+        property color m3tertiary: "#CEC0E8"
+        property color m3onTertiary: "#352B4B"
+        property color m3tertiaryContainer: "#4C4163"
+        property color m3onTertiaryContainer: "#EADDFF"
+        property color m3tertiaryFixed: "#EADDFF"
+        property color m3tertiaryFixedDim: "#D1C1E9"
+        property color m3onTertiaryFixed: "#201535"
+        property color m3onTertiaryFixedVariant: "#4C4163"
 
         // Error
-        readonly property color m3error: "#FFB4AB"
-        readonly property color m3onError: "#690005"
-        readonly property color m3errorContainer: "#93000A"
-        readonly property color m3onErrorContainer: "#FFDAD6"
+        property color m3error: "#FFB4AB"
+        property color m3onError: "#690005"
+        property color m3errorContainer: "#93000A"
+        property color m3onErrorContainer: "#FFDAD6"
 
         // Surface & Background
-        readonly property color m3background: "#101417"
-        readonly property color m3onBackground: "#E0E3E8"
-        readonly property color m3surface: "#101417"
-        readonly property color m3surfaceDim: "#101417"
-        readonly property color m3surfaceBright: "#353A3E"
-        readonly property color m3surfaceContainerLowest: "#0A0F12"
-        readonly property color m3surfaceContainerLow: "#181C20"
-        readonly property color m3surfaceContainer: "#1C2024"
-        readonly property color m3surfaceContainerHigh: "#262A2E"
-        readonly property color m3surfaceContainerHighest: "#313539"
-        readonly property color m3onSurface: "#E0E3E8"
-        readonly property color m3surfaceVariant: "#41474D"
-        readonly property color m3onSurfaceVariant: "#C1C7CE"
-        readonly property color m3inverseSurface: "#E0E3E8"
-        readonly property color m3inverseOnSurface: "#2D3135"
+        property color m3background: "#101417"
+        property color m3onBackground: "#E0E3E8"
+        property color m3surface: "#101417"
+        property color m3surfaceDim: "#101417"
+        property color m3surfaceBright: "#353A3E"
+        property color m3surfaceContainerLowest: "#0A0F12"
+        property color m3surfaceContainerLow: "#181C20"
+        property color m3surfaceContainer: "#1C2024"
+        property color m3surfaceContainerHigh: "#262A2E"
+        property color m3surfaceContainerHighest: "#313539"
+        property color m3onSurface: "#E0E3E8"
+        property color m3surfaceVariant: "#41474D"
+        property color m3onSurfaceVariant: "#C1C7CE"
+        property color m3inverseSurface: "#E0E3E8"
+        property color m3inverseOnSurface: "#2D3135"
 
         // Outline
-        readonly property color m3outline: "#8B9198"
+        property color m3outline: "#8B9198"
         // readonly property color m3outlineVariant: "#41474D"
-        readonly property color m3outlineVariant: "#313539"
+        property color m3outlineVariant: "#313539"
 
         // Shadow & Scrim
-        readonly property color m3shadow: "#000000"
-        readonly property color m3scrim: "#000000"
-        readonly property color m3surfaceTint: "#95CDF7"
+        property color m3shadow: "#000000"
+        property color m3scrim: "#000000"
+        property color m3surfaceTint: "#95CDF7"
     }
 
     // Computed semantic colors with layer system

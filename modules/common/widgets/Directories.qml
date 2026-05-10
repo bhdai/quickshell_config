@@ -25,6 +25,9 @@ Singleton {
     property string latexOutput: FileUtils.trimFileProtocol(`${Directories.cache}/media/latex`)
     property string todoPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo.json`)
     property string notificationsPath: FileUtils.trimFileProtocol(`${Directories.cache}/notifications/notifications.json`)
+    property string generatedMaterialThemePath: FileUtils.trimFileProtocol(
+        `${Directories.state}/user/generated/colors.json`
+    )
     property string cliphistDecode: FileUtils.trimFileProtocol(`/tmp/quickshell/media/cliphist`)
     property string screenshotTemp: "/tmp/quickshell/media/screenshot"
     // Cleanup on init
@@ -44,5 +47,7 @@ Singleton {
         `]);
         Quickshell.execDetached(["bash", "-c", `rm -rf '${latexOutput}'; mkdir -p '${latexOutput}'`]);
         Quickshell.execDetached(["bash", "-c", `rm -rf '${cliphistDecode}'; mkdir -p '${cliphistDecode}'`]);
+        Quickshell.execDetached(["mkdir", "-p",
+            FileUtils.trimFileProtocol(`${Directories.state}/user/generated`)]);
     }
 }

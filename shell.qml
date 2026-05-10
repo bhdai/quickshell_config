@@ -11,6 +11,7 @@ ShellRoot {
     property var brightness: Brightness
     property var gameMode: GamingModeService
     property var warp: WarpService
+    property var materialTheme: MaterialThemeLoader
     property var screenZoom: ScreenZoom
     property var powerProfile: PowerProfileService
     property var session: Session
