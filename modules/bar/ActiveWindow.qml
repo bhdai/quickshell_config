@@ -69,7 +69,7 @@ Item {
                 onClicked: {
                     // Validate address before focusing
                     if (window.address && window.address.length > 0) {
-                        Hyprland.dispatch("focuswindow address:0x" + window.address);
+                        Hyprland.dispatch(`hl.dsp.focus({ window = "address:0x${window.address}" })`);
                     }
                 }
 
