@@ -1,4 +1,5 @@
 pragma Singleton
+import QtQuick
 import Quickshell
 import Quickshell.Io
 
@@ -21,11 +22,29 @@ Singleton {
 
     Process {
         id: fetchActiveState
+        command: ["bash", "-c", "hyprctl getoption decoration:blur:enabled 2>/dev/null | awk 'NR==1{print $2}'"]
         running: true
-        command: ["bash", "-c", `test "$(hyprctl getoption decoration:blur:enabled | awk 'NR==1{print$2}')" -ne 0`]
-        onExited: (exitCode, exitStatus) => {
-            service.isActive = exitCode !== 0;
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const val = text.trim();
+                if (val === "0") {
+                    service.isActive = true;
+                } else if (val === "1") {
+                    service.isActive = false;
+                } else {
+                    // hyprctl not ready yet or unexpected output.
+                    // Default to off and retry shortly.
+                    service.isActive = false;
+                    retryTimer.start();
+                }
+            }
         }
+    }
+
+    Timer {
+        id: retryTimer
+        interval: 2000
+        onTriggered: fetchActiveState.running = true
     }
 
     IpcHandler {
