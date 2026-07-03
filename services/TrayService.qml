@@ -12,7 +12,7 @@ Singleton {
 
     // Hardcoded list of app IDs to pin inline in the bar
     // Edit this list to customize which apps appear inline vs in overflow
-    readonly property var pinnedIds: ["fcitx", "librepods"]
+    readonly property var pinnedIds: ["fcitx", "librepods", "windscribe2"]
 
     // Items matching pinnedIds - display inline in bar
     readonly property var pinnedItems: SystemTray.items.values.filter(item =>
