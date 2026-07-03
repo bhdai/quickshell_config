@@ -33,6 +33,18 @@ RippleButton {
     onClicked: expanded = !expanded
     altAction: () => expanded = !expanded
 
+    // Trust + connect only after pairing actually succeeds. Pre-trusting an unpaired
+    // device makes BlueZ auto-connect it, turning a failed pair into a connect/disconnect loop.
+    Connections {
+        target: root.device
+        function onPairedChanged() {
+            if (root.device?.paired) {
+                root.device.trusted = true;
+                root.device.connect();
+            }
+        }
+    }
+
     component ActionButton: RippleButton {
         id: actionButton
 
@@ -158,12 +170,16 @@ RippleButton {
                     if (Bluetooth.defaultAdapter && !Bluetooth.defaultAdapter.pairable) {
                         Bluetooth.defaultAdapter.pairable = true;
                     }
-                    // Set trusted before pairing so the device is remembered
-                    root.device.trusted = true;
+                    // Do NOT pre-trust: trusting an unpaired device makes BlueZ auto-connect
+                    // it on sight, so a failed pair leaves it bouncing connect/disconnect.
+                    // Trust + connect only once pairing actually succeeds (see Connections below).
                     root.device.pair();
                 }
             }
             ActionButton {
+                // Only offer Connect once paired; connecting an unpaired HID device
+                // connects-then-drops because there is no encrypted bond yet.
+                visible: root.device?.paired ?? false
                 buttonText: root.device?.connected ? "Disconnect" : "Connect"
                 colBackground: Appearance.m3colors.m3primary
                 colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
