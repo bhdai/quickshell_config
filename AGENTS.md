@@ -37,6 +37,10 @@ a shell config, not a QtQuick application.
 8. **Layer surfaces:** set `WlrLayershell.namespace: "quickshell:<name>"` (Hyprland
    layer rules match on this namespace).
 
+## Pull requests
+
+PR titles use the `feat:`, `fix:`, or `chore:` Conventional Commit prefix.
+
 ## Running & verifying
 
 - Started by Hyprland autostart as bare `quickshell` (default config). This config
