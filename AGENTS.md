@@ -47,6 +47,44 @@ a shell config, not a QtQuick application.
 - QML errors (bad bindings, missing types, zero-sized items) surface in
   quickshell's stderr/log, not as a build failure.
 
+## Development workflow
+
+There are **two checkouts of the same `quickshell_config.git`**, and which one you
+touch matters:
+
+- **Live / deployed:** `~/.config/quickshell` (symlink → `dotfiles/config/quickshell`,
+  a submodule of the `dotfiles` superrepo). Autostarted by Hyprland, always kept on
+  `main`. **Never do WIP here** — it hot-reloads straight into the running desktop, so
+  a broken branch is a broken shell.
+- **Dev clone:** `~/ghq/github.com/bhdai/quickshell_config` (standalone). All branch /
+  PR / issue work happens here.
+
+Feature loop:
+
+1. Branch in the dev clone (`git switch -c feat-foo`), make changes there.
+2. Test it as its own instance, isolated from the live shell:
+   ```
+   killall quickshell                                # stop the live default
+   qs -p ~/ghq/github.com/bhdai/quickshell_config    # run the dev clone (hot-reloads on save)
+   # ... iterate ...
+   killall quickshell && qs                          # back to the live default
+   ```
+   Use `-p <path>`, not `-c <name>`: `-c` only resolves configs under
+   `~/.config/quickshell/<name>/`, and the dev clone lives outside that tree.
+3. PR `feat-foo` → `main` on `quickshell_config`; merge.
+4. Land it on the live shell and re-pin the superrepo:
+   ```
+   git -C ~/.config/quickshell pull                  # live shell hot-reloads to merged code
+   git -C ~/ghq/github.com/bhdai/dotfiles add config/quickshell
+   git -C ~/ghq/github.com/bhdai/dotfiles commit -m "quickshell: bump submodule"
+   ```
+   The submodule pointer bump (the second/third commands) is required — without it, a
+   fresh machine still checks out the old commit.
+
+`AGENTS.md` here is a symlink target of `CLAUDE.md`; edit `AGENTS.md`. This file is
+tracked by `quickshell_config.git`, so it reaches the dev clone the normal way (commit
++ pull), not by editing both copies.
+
 ## IPC (runtime control)
 
 Actions reachable from keybinds are exposed via `IpcHandler` and invoked from
