@@ -51,6 +51,29 @@ PR titles follow the Conventional Commits specification.
 - QML errors (bad bindings, missing types, zero-sized items) surface in
   quickshell's stderr/log, not as a build failure.
 
+## Testing
+
+- Keep pure `string → data` parsing, formatting, and symbol selection in a
+  `.pragma library` JavaScript file beside the service that owns it. Keep the QML
+  Singleton as a thin shell responsible for `Process` I/O and QML object
+  lifecycle. Reserve `modules/common/functions/` for cross-cutting utilities.
+- Run the full unit suite with `node --test`. It uses Node's built-in test runner
+  with no dependencies, `package.json`, or `node_modules`.
+- Tests load the unchanged QML JavaScript source through
+  `tests/load-qml-js.mjs`. The loader must evaluate functions in Node's host realm;
+  a separate `vm` realm gives returned arrays and objects different prototypes,
+  causing `assert.deepEqual` to reject otherwise identical values.
+- `.github/workflows/test.yml` runs the required unit-test gate on pushes and
+  pull requests into `main`. `.github/workflows/smoke.yml` loads the full shell
+  under headless Wayland on pull requests into `main`; it starts non-blocking and
+  should become required after it proves stable.
+- `qmllint` is deliberately deferred. After `.qmlls.ini` exists and the config
+  has been launched, Quickshell generates the tooling VFS and import paths that
+  resolve `qs.*`; do not synthesize or commit `qmldir` files for linting. Even
+  with that native setup, qmllint 1.0 with Qt 6.11.1 hard-crashes with exit 255
+  and no diagnostic on roughly half the repository. Revisit a qmllint gate when
+  that upstream defect is fixed.
+
 ## Development workflow
 
 There are **two checkouts of the same `quickshell_config.git`**, and which one you
