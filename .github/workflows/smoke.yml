@@ -1,0 +1,83 @@
+name: Smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    # Make this required after it has passed consistently across several PRs.
+    continue-on-error: true
+    container: archlinux:latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Quickshell and sway
+        run: |
+          pacman -Syu --noconfirm pipewire quickshell qt6-5compat sway
+          # Docker denies exec of Arch's capability-marked sway without SYS_NICE.
+          setcap -r /usr/bin/sway
+      - name: Load the shell
+        env:
+          WLR_BACKENDS: headless
+          WLR_HEADLESS_OUTPUTS: "1"
+          WLR_LIBINPUT_NO_DEVICES: "1"
+          WLR_RENDERER: pixman
+          XDG_RUNTIME_DIR: /tmp/quickshell-smoke-runtime
+        run: |
+          set -euo pipefail
+
+          install -d -m 700 "$XDG_RUNTIME_DIR"
+          pipewire >pipewire.log 2>&1 &
+          pipewire_pid=$!
+          sway --config /dev/null >sway.log 2>&1 &
+          sway_pid=$!
+          qs_pid=
+
+          cleanup() {
+            if [[ -n "$qs_pid" ]]; then
+              kill "$qs_pid" 2>/dev/null || true
+            fi
+            kill "$sway_pid" 2>/dev/null || true
+            kill "$pipewire_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          wayland_display=
+          for _ in {1..50}; do
+            wayland_display="$(find "$XDG_RUNTIME_DIR" -maxdepth 1 -type s -name 'wayland-*' -printf '%f\n' -quit)"
+            if [[ -n "$wayland_display" && -S "$XDG_RUNTIME_DIR/pipewire-0" ]]; then
+              break
+            fi
+            sleep 0.1
+          done
+
+          if [[ -z "$wayland_display" || ! -S "$XDG_RUNTIME_DIR/pipewire-0" ]]; then
+            cat pipewire.log
+            cat sway.log
+            echo "The headless session did not become ready"
+            exit 1
+          fi
+          export WAYLAND_DISPLAY="$wayland_display"
+
+          qs --no-color -p . >quickshell-startup.log 2>&1 &
+          qs_pid=$!
+          sleep 10
+
+          qslog="$(find "$XDG_RUNTIME_DIR/quickshell" -type f -name log.qslog -print -quit 2>/dev/null || true)"
+          if [[ -z "$qslog" ]]; then
+            cat quickshell-startup.log
+            echo "Quickshell did not create a qslog"
+            exit 1
+          fi
+
+          qs log --no-color "$qslog" >quickshell.log
+          cat quickshell.log
+
+          if grep -qE 'ERROR|Failed to load configuration' quickshell.log; then
+            exit 1
+          fi
