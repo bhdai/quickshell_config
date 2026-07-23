@@ -39,7 +39,7 @@ a shell config, not a QtQuick application.
 
 ## Pull requests
 
-PR titles use the `feat:`, `fix:`, or `chore:` Conventional Commit prefix.
+PR titles follow the Conventional Commits specification.
 
 ## Running & verifying
 
