@@ -67,10 +67,12 @@ PR titles follow the Conventional Commits specification.
   pull requests into `main`. `.github/workflows/smoke.yml` loads the full shell
   under headless Wayland on pull requests into `main`; it starts non-blocking and
   should become required after it proves stable.
-- `qmllint` is deliberately deferred. Quickshell's native VFS resolves `qs.*`,
-  but qmllint 1.0 with Qt 6.11.1 hard-crashes with exit 255 and no diagnostic on
-  roughly half the repository. Revisit a qmllint gate when that upstream defect
-  is fixed.
+- `qmllint` is deliberately deferred. After `.qmlls.ini` exists and the config
+  has been launched, Quickshell generates the tooling VFS and import paths that
+  resolve `qs.*`; do not synthesize or commit `qmldir` files for linting. Even
+  with that native setup, qmllint 1.0 with Qt 6.11.1 hard-crashes with exit 255
+  and no diagnostic on roughly half the repository. Revisit a qmllint gate when
+  that upstream defect is fixed.
 
 ## Development workflow
 
