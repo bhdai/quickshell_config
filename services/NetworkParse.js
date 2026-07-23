@@ -25,3 +25,37 @@ function pickNetworkSymbol({ ethernet, wifiEnabled, wifiStatus, strength }) {
     }
     return "network-wireless-disabled-symbolic";
 }
+
+function parseConnectionStatus(buffer) {
+    const lines = buffer.trim().split('\n');
+    const connectivity = lines.pop();
+    let hasEthernet = false;
+    let hasWifi = false;
+    let wifiStatus = "disconnected";
+    lines.forEach(line => {
+        if (line.includes("ethernet") && line.includes("connected"))
+            hasEthernet = true;
+        else if (line.includes("wifi:")) {
+            if (line.includes("disconnected")) {
+                wifiStatus = "disconnected";
+            } else if (line.includes("connected")) {
+                hasWifi = true;
+                wifiStatus = "connected";
+
+                if (connectivity === "limited") {
+                    hasWifi = false;
+                    wifiStatus = "limited";
+                }
+            } else if (line.includes("connecting")) {
+                wifiStatus = "connecting";
+            } else if (line.includes("unavailable")) {
+                wifiStatus = "disabled";
+            }
+        }
+    });
+    return {
+        wifiStatus,
+        ethernet: hasEthernet,
+        wifi: hasWifi
+    };
+}
