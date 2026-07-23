@@ -4,6 +4,7 @@ pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "NetworkParse.js" as NetworkParse
 
 Singleton {
     id: root
@@ -21,32 +22,12 @@ Singleton {
 
     property string networkName: ""
     property int networkStrength
-    property string symbol: {
-        if (ethernet)
-            return "network-wired-symbolic";
-
-        const strength = root.networkStrength;
-        if (root.wifiEnabled) {
-            switch (root.wifiStatus) {
-            case "connected":
-                if (strength > 66)
-                    return "network-wireless-signal-good-symbolic";
-                if (strength > 33)
-                    return "network-wireless-signal-ok-symbolic";
-                if (strength > 0)
-                    return "network-wireless-signal-weak-symbolic";
-                else
-                    return "network-wireless-signal-none-symbolic";
-            case "connecting":
-                return "network-wireless-acquiring-symbolic";
-            case "disconnected":
-                return "network-wireless-signal-none-symbolic";
-            default:
-                return "network-wireless-offline-symbolic";
-            }
-        }
-        return "network-wireless-disabled-symbolic";
-    }
+    property string symbol: NetworkParse.pickNetworkSymbol({
+        ethernet: root.ethernet,
+        wifiEnabled: root.wifiEnabled,
+        wifiStatus: root.wifiStatus,
+        strength: root.networkStrength
+    })
 
     function enableWifi(enabled = true): void {
         const cmd = enabled ? "on" : "off";
