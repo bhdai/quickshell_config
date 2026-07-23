@@ -158,35 +158,10 @@ Singleton {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            const lines = updateConnectionType.buffer.trim().split('\n');
-            const connectivity = lines.pop(); // none, limited, full
-            let hasEthernet = false;
-            let hasWifi = false;
-            let wifiStatus = "disconnected";
-            lines.forEach(line => {
-                if (line.includes("ethernet") && line.includes("connected"))
-                    hasEthernet = true;
-                else if (line.includes("wifi:")) {
-                    if (line.includes("disconnected")) {
-                        wifiStatus = "disconnected";
-                    } else if (line.includes("connected")) {
-                        hasWifi = true;
-                        wifiStatus = "connected";
-
-                        if (connectivity === "limited") {
-                            hasWifi = false;
-                            wifiStatus = "limited";
-                        }
-                    } else if (line.includes("connecting")) {
-                        wifiStatus = "connecting";
-                    } else if (line.includes("unavailable")) {
-                        wifiStatus = "disabled";
-                    }
-                }
-            });
-            root.wifiStatus = wifiStatus;
-            root.ethernet = hasEthernet;
-            root.wifi = hasWifi;
+            const status = NetworkParse.parseConnectionStatus(updateConnectionType.buffer);
+            root.wifiStatus = status.wifiStatus;
+            root.ethernet = status.ethernet;
+            root.wifi = status.wifi;
         }
     }
 
