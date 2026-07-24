@@ -1,0 +1,3 @@
+#!/bin/sh
+
+printf '%s\n' "$*" >>"$DDC_TEST_CALLS"
