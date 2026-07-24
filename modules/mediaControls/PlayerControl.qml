@@ -376,13 +376,7 @@ Item {
                         Item {
                             id: progressBarContainer
                             Layout.fillWidth: true
-                            implicitHeight: {
-                                const baseHeight = Math.max(sliderLoader.implicitHeight, progressBarLoader.implicitHeight);
-                                if (sliderLoader.active && playerController.player?.isPlaying) {
-                                    return baseHeight * 4;
-                                }
-                                return baseHeight;
-                            }
+                            implicitHeight: Math.max(sliderLoader.implicitHeight, progressBarLoader.implicitHeight)
 
                             Loader {
                                 id: sliderLoader
