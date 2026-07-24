@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "$*" == "dev wifi connect Test Network" ]]; then
+    attempt=0
+    if [[ -f "$NETWORK_PASSWORD_RETRY_STATE" ]]; then
+        read -r attempt <"$NETWORK_PASSWORD_RETRY_STATE"
+    fi
+    attempt=$((attempt + 1))
+    printf '%s\n' "$attempt" >"$NETWORK_PASSWORD_RETRY_STATE"
+
+    if ((attempt == 1)); then
+        echo "Error: Secrets were required" >&2
+        exit 10
+    fi
+    exit "${NETWORK_PASSWORD_RETRY_EXIT_CODE:-0}"
+fi
+
+if [[ "$*" == "radio wifi" ]]; then
+    echo "enabled"
+fi

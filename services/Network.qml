@@ -61,6 +61,7 @@ Singleton {
     function changePassword(network: WifiAccessPoint, password: string, username = ""): void {
         // TODO: enterprise wifi with username
         network.askingPassword = false;
+        root.wifiConnectTarget = network;
         changePasswordProc.exec(["nmcli", "connection", "modify", network.ssid, "wifi-sec.psk", password]);
     }
 
@@ -83,13 +84,14 @@ Singleton {
         stderr: SplitParser {
             onRead: line => {
                 // print("err:", line)
-                if (line.includes("Secrets were required")) {
+                if (root.wifiConnectTarget && line.includes("Secrets were required")) {
                     root.wifiConnectTarget.askingPassword = true;
                 }
             }
         }
         onExited: (exitCode, exitStatus) => {
-            root.wifiConnectTarget.askingPassword = (exitCode !== 0);
+            if (root.wifiConnectTarget)
+                root.wifiConnectTarget.askingPassword = (exitCode !== 0);
             root.wifiConnectTarget = null;
         }
     }
