@@ -21,6 +21,8 @@ jobs:
           pacman -Syu --noconfirm pipewire quickshell qt6-5compat sway
           # Docker denies exec of Arch's capability-marked sway without SYS_NICE.
           setcap -r /usr/bin/sway
+      - name: Test Wi-Fi password retry
+        run: tests/network-password-retry.sh
       - name: Load the shell
         env:
           WLR_BACKENDS: headless
