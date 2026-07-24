@@ -66,6 +66,8 @@ jobs:
           fi
           export WAYLAND_DISPLAY="$wayland_display"
 
+          tests/compact-notification-layout.sh
+
           qs --no-color -p . >quickshell-startup.log 2>&1 &
           qs_pid=$!
           sleep 10

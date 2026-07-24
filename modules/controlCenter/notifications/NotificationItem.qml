@@ -324,7 +324,7 @@ Item {
                             elide: Text.ElideRight
                             maximumLineCount: 1
                             color: Appearance.colors.colOnLayer0
-                            Layout.maximumWidth: Math.min(implicitWidth, parent.width * 0.4)
+                            Layout.maximumWidth: Math.min(implicitWidth, root.width * 0.4)
                         }
 
                         Text {
