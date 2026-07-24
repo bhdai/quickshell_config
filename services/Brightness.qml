@@ -7,6 +7,7 @@ pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import QtCore
 import QtQuick
 
 /**
@@ -44,7 +45,8 @@ Singleton {
 
     onMonitorsChanged: {
         ddcMonitors = [];
-        ddcProc.running = true;
+        if (StandardPaths.findExecutable("ddcutil").toString())
+            ddcProc.running = true;
     }
 
     Process {

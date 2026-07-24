@@ -23,6 +23,8 @@ jobs:
           setcap -r /usr/bin/sway
       - name: Test Wi-Fi password retry
         run: tests/network-password-retry.sh
+      - name: Test optional DDC support
+        run: tests/brightness-without-ddcutil.sh
       - name: Load the shell
         env:
           WLR_BACKENDS: headless
