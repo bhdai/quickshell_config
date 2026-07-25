@@ -58,7 +58,9 @@ Item {
         }
         padding: 0
         buttonRadius: Appearance.rounding.normal
-        colBackground: "transparent"
+        // Rest is the row's own fill rather than transparent: a target that fades in from
+        // transparent crosses rgba(0,0,0,0) on its way, which flashes dark over a filled row.
+        colBackground: root.colBackground
         colBackgroundHover: root.colBackgroundHover
         colRipple: Appearance.colors.colPrimary
 
@@ -96,7 +98,7 @@ Item {
         implicitWidth: 44
         implicitHeight: 44
         buttonRadius: Appearance.rounding.full
-        colBackground: "transparent"
+        colBackground: root.colBackground
         colBackgroundHover: root.colBackgroundHover
         colRipple: Appearance.colors.colPrimary
 
