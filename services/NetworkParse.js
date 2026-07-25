@@ -37,6 +37,34 @@ function sortWifiNetworks(list) {
     });
 }
 
+// The tail beyond `limit` is what the panel's See-all chevron reveals. Returns a new array;
+// the caller's list (a live QML model in the panel) is never sliced in place.
+function visibleWifiNetworks(list, limit, expanded) {
+    return expanded ? [...list] : list.slice(0, limit);
+}
+
+// Finds the saved connection profile for an SSID in `nmcli -g UUID,NAME,TYPE connection show`
+// output, so the panel's gear can hand nm-connection-editor one specific network. Returns ""
+// when the network has never been saved. Only wireless profiles match: a wired profile can
+// carry the same name, and editing it would be the wrong network entirely.
+function findWifiConnectionUuid(text, ssid) {
+    if (!ssid)
+        return "";
+
+    const PLACEHOLDER = "STRINGWHICHHOPEFULLYWONTBEUSED";
+    const rep = new RegExp("\\\\:", "g");
+    const rep2 = new RegExp(PLACEHOLDER, "g");
+
+    for (const line of text.trim().split("\n")) {
+        const fields = line.replace(rep, PLACEHOLDER).split(":");
+        const name = fields[1]?.replace(rep2, ":") ?? "";
+        const type = fields[2] ?? "";
+        if (name === ssid && type.includes("wireless"))
+            return fields[0] ?? "";
+    }
+    return "";
+}
+
 function parseConnectionStatus(buffer) {
     const lines = buffer.trim().split('\n');
     const connectivity = lines.pop();

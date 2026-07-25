@@ -1,142 +1,117 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Controls.Material
-import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.controlCenter.detailPanel
 import qs.services
+import QtQuick
 import Quickshell
-import Quickshell.Bluetooth
 
-Rectangle {
+DetailPanel {
     id: root
 
     signal closePanel
 
-    color: Appearance.m3colors.m3background
-    radius: 20
-    border.width: 1
-    border.color: Appearance.m3colors.m3outlineVariant
+    // How much of the scan the list shows before the See-all chevron; the strongest networks
+    // are all a user normally wants, and the tail of far-away access points is long.
+    readonly property int collapsedCount: 5
+    readonly property var sortedNetworks: Network.sortWifiNetworks(Network.wifiNetworks)
+    property bool showAll: false
 
     implicitHeight: 600
+    title: "Wi-Fi"
+    subtitle: "Tap a network to connect"
+    scanning: Network.wifiScanning
+    switchLabel: "Use Wi-Fi"
+    switchChecked: Network.wifiEnabled
 
-    ColumnLayout {
-        id: wifiPanelLayout
-        anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
+    onSwitchToggled: Network.toggleWifi()
+    onDone: root.closePanel()
 
-        // Header
-        Text {
-            text: "Connect to Wi-Fi"
-            color: Appearance.colors.colOnLayer0
-            font.pixelSize: 18
+    footerLeading: RippleButton {
+        implicitHeight: 40
+        implicitWidth: 120
+        padding: 0
+        buttonRadius: Appearance.rounding.full
+        colBackground: Appearance.colors.colSecondaryContainer
+        colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+        colRipple: Appearance.colors.colPrimary
+
+        onClicked: Network.openConnectionEditor()
+
+        contentItem: Text {
+            text: "Advanced"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.pixelSize: Appearance.font.pixelSize.smaller
             font.bold: true
-            Layout.fillWidth: true
+            color: Appearance.colors.colOnSecondaryContainer
+        }
+    }
+
+    ListView {
+        id: networkList
+
+        anchors.fill: parent
+        clip: true
+        spacing: 0
+
+        model: ScriptModel {
+            values: Network.visibleWifiNetworks(root.sortedNetworks, root.collapsedCount, root.showAll)
         }
 
-        Rectangle {
-            implicitHeight: 1
-            Layout.fillWidth: true
-            color: Appearance.colors.colOnLayer0
-            opacity: 0.3
-            visible: !Network.wifiScanning
-            Layout.leftMargin: -wifiPanelLayout.anchors.margins
-            Layout.rightMargin: -wifiPanelLayout.anchors.margins
+        delegate: WiFiNetworkItem {
+            required property WifiAccessPoint modelData
+
+            network: modelData
+            // Not anchors to `parent`: a vertical ListView's contentItem carries no width of
+            // its own, so an anchored row collapses to nothing.
+            width: networkList.width
         }
 
-        ProgressBar {
-            indeterminate: true
-            Material.accent: Appearance.m3colors.m3primary
-            visible: Network.wifiScanning
-            Layout.fillWidth: true
-            Layout.topMargin: -8
-            Layout.bottomMargin: -8
-            Layout.leftMargin: -wifiPanelLayout.anchors.margins
-            Layout.rightMargin: -wifiPanelLayout.anchors.margins
-        }
+        footer: RippleButton {
+            width: networkList.width
+            implicitHeight: visible ? 48 : 0
+            visible: root.sortedNetworks.length > root.collapsedCount
+            padding: 0
+            buttonRadius: Appearance.rounding.normal
+            colBackground: "transparent"
+            colBackgroundHover: Appearance.colors.colLayer1Hover
+            colRipple: Appearance.colors.colPrimary
 
-        ListView {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+            onClicked: root.showAll = !root.showAll
 
-            Layout.leftMargin: -wifiPanelLayout.anchors.margins + 1 // for the border
-            Layout.rightMargin: -wifiPanelLayout.anchors.margins + 1
-
-            clip: true
-            spacing: 0
-
-            model: ScriptModel {
-                values: Network.sortWifiNetworks(Network.wifiNetworks)
-            }
-            delegate: WiFiNetworkItem {
-                required property WifiAccessPoint modelData
-                wifiNetwork: modelData
-                anchors {
-                    left: parent?.left
-                    right: parent?.right
-                }
-            }
-        }
-
-        Rectangle {
-            implicitHeight: 1
-            Layout.fillWidth: true
-            color: Appearance.colors.colOnLayer0
-            opacity: 0.3
-            Layout.leftMargin: -wifiPanelLayout.anchors.margins
-            Layout.rightMargin: -wifiPanelLayout.anchors.margins
-        }
-
-        RowLayout {
-            spacing: 4
-
-            RippleButton {
-                id: detailButton
-                implicitHeight: 36
-                implicitWidth: 80
-                padding: 14
-                buttonRadius: 9999
-                colBackground: Appearance.m3colors.m3background
-
-                contentItem: Text {
-                    anchors.fill: parent
-                    anchors.leftMargin: detailButton.padding
-                    anchors.rightMargin: detailButton.padding
-                    text: "Details"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
-                    font.bold: true
-                    color: detailButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            RippleButton {
-                id: doneButton
-                implicitHeight: 36
-                implicitWidth: 80
-                padding: 14
-                buttonRadius: 9999
-                colBackground: Appearance.m3colors.m3background
-
-                contentItem: Text {
-                    anchors.fill: parent
-                    anchors.leftMargin: doneButton.padding
-                    anchors.rightMargin: doneButton.padding
-                    text: "Done"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    font.pixelSize: 12
-                    font.bold: true
-                    color: doneButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
+            contentItem: Item {
+                Text {
+                    anchors {
+                        left: parent.left
+                        leftMargin: 12
+                        verticalCenter: parent.verticalCenter
+                    }
+                    text: root.showAll ? "See less" : "See all"
+                    color: Appearance.colors.colOnLayer0
+                    font.pixelSize: Appearance.font.pixelSize.small
                 }
 
-                onClicked: root.closePanel()
+                CustomIcon {
+                    anchors {
+                        right: parent.right
+                        rightMargin: 12
+                        verticalCenter: parent.verticalCenter
+                    }
+                    width: 20
+                    height: 20
+                    source: "go-down-symbolic"
+                    colorize: true
+                    color: Appearance.colors.colOnLayer0
+                    rotation: root.showAll ? 180 : 0
+
+                    Behavior on rotation {
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.animation.expressiveEffects
+                        }
+                    }
+                }
             }
         }
     }
