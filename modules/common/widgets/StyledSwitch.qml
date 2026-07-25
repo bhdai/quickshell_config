@@ -1,4 +1,5 @@
 import qs.modules.common
+import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Controls
 
@@ -38,6 +39,22 @@ Switch {
     onClicked: root.toggled()
 
     onCheckedChanged: dragArea.settling = false
+
+    // Both handle glyphs exist at once and cross-fade, so neither pops mid-travel. Like the
+    // track and handle colours they follow `checked`, not the drag: a drag previews nothing
+    // until the caller writes it back.
+    component HandleIcon: MaterialSymbol {
+        anchors.centerIn: parent
+        iconSize: 16
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animation.expressiveEffects
+            }
+        }
+    }
 
     indicator: Rectangle {
         anchors.fill: parent
@@ -93,6 +110,18 @@ Switch {
                     easing.type: Easing.BezierSpline
                     easing.bezierCurve: Appearance.animation.expressiveEffects
                 }
+            }
+
+            HandleIcon {
+                text: "check"
+                color: Appearance.colors.colOnPrimaryContainer
+                opacity: root.checked ? 1 : 0
+            }
+
+            HandleIcon {
+                text: "close"
+                color: Appearance.colors.colSurfaceContainerHighest
+                opacity: root.checked ? 0 : 1
             }
         }
     }
