@@ -8,14 +8,14 @@ import Quickshell.Bluetooth
 import Quickshell.Io
 import Quickshell.Hyprland
 
-BigToggleButton {
+LongToggleTile {
     id: root
 
     readonly property BluetoothAdapter currentAdapter: Bluetooth.defaultAdapter
 
     signal openBluetoothPanel
 
-    icon: BluetoothStatus.symbol
+    iconSource: BluetoothStatus.symbol
     toggled: BluetoothStatus.enabled
     title: {
         if (!toggled)
@@ -24,13 +24,17 @@ BigToggleButton {
             return "Connecting...";
         return BluetoothStatus.connected ? "Connected" : "Disconnected";
     }
-    subtitle: BluetoothStatus.firstActiveDevice ? BluetoothStatus.firstActiveDevice.name : "No connected device"
+    subtitle: {
+        if (!toggled)
+            return "";
+        return BluetoothStatus.firstActiveDevice ? BluetoothStatus.firstActiveDevice.name : "No connected device";
+    }
 
-    onLeftClicked: {
+    onIconClicked: {
         currentAdapter.enabled = !currentAdapter.enabled;
     }
 
-    onRightClicked: {
+    onBodyClicked: {
         root.openBluetoothPanel();
     }
 }

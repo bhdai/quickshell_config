@@ -54,17 +54,11 @@ ColumnLayout {
             anchors.margins: root.margins
             spacing: 10
 
-            RowLayout {
-                id: bigToggleRow
+            ButtonGroup {
                 Layout.fillWidth: true
                 spacing: 10
 
-                property real buttonBaseWidth: (width - spacing) / 2
-
                 NetworkToggle {
-                    Layout.fillWidth: true
-                    baseWidth: bigToggleRow.buttonBaseWidth
-
                     onOpenWifiPanel: {
                         Network.enableWifi();
                         Network.rescanWifi();
@@ -74,9 +68,6 @@ ColumnLayout {
                 }
 
                 BluetoothToggle {
-                    Layout.fillWidth: true
-                    baseWidth: bigToggleRow.buttonBaseWidth
-
                     onOpenBluetoothPanel: {
                         Bluetooth.defaultAdapter.enabled = true;
                         Bluetooth.defaultAdapter.discovering = true;
