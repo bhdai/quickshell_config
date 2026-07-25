@@ -27,11 +27,14 @@ ColumnLayout {
     property alias topWindow: controlPannel
     property alias bottomWindow: contentLoader
 
-    property bool wifiPanelOpen: false
-    property bool bluetoothPanelOpen: false
+    // Which detail panel the bottom container is showing: "wifi", "bluetooth", or "" for the
+    // notification list. One property rather than a flag per panel — with two flags, swapping
+    // panels takes two writes, and the binding below re-evaluates between them, so the Loader
+    // built and tore down the notification list on the way from one panel to the other.
+    property string openPanel: ""
 
-    onBluetoothPanelOpenChanged: {
-        if (!bluetoothPanelOpen)
+    onOpenPanelChanged: {
+        if (openPanel !== "bluetooth" && Bluetooth.defaultAdapter)
             Bluetooth.defaultAdapter.discovering = false;
     }
 
@@ -42,6 +45,12 @@ ColumnLayout {
         // binding it here left the layout squeezing the card to its implicit zero on every
         // relayout and the binding snapping it back — a visible jump each time a panel opened.
         implicitHeight: mainLayout.implicitHeight + root.margins * 2
+        // A ColumnLayout shrinks every child toward its minimum when the children want more
+        // room than there is, and Layout.fillHeight only governs growth — so without a floor
+        // here the card lost its share of the deficit a detail panel opens, while the layout
+        // inside it stayed anchored to the top and spilled out of the shrinking background.
+        // The card is fixed chrome; the detail panel below scrolls, so it absorbs the deficit.
+        Layout.minimumHeight: implicitHeight
 
         radius: root.radius
         color: Appearance.m3colors.m3background
@@ -65,8 +74,7 @@ ColumnLayout {
                     onOpenWifiPanel: {
                         Network.enableWifi();
                         Network.rescanWifi();
-                        root.bluetoothPanelOpen = false;
-                        root.wifiPanelOpen = true;
+                        root.openPanel = "wifi";
                     }
                 }
 
@@ -74,10 +82,7 @@ ColumnLayout {
                     // Neither the adapter nor discovery is forced on here: the panel's own
                     // "Use Bluetooth" switch owns the adapter, and its "Pair new device" row
                     // owns discovery — which the scan indicator would otherwise show forever.
-                    onOpenBluetoothPanel: {
-                        root.wifiPanelOpen = false;
-                        root.bluetoothPanelOpen = true;
-                    }
+                    onOpenBluetoothPanel: root.openPanel = "bluetooth"
                 }
             }
 
@@ -109,11 +114,11 @@ ColumnLayout {
     Loader {
         id: contentLoader
         Layout.fillWidth: true
-        Layout.fillHeight: root.wifiPanelOpen || root.bluetoothPanelOpen
+        Layout.fillHeight: root.openPanel !== ""
         sourceComponent: {
-            if (root.wifiPanelOpen)
+            if (root.openPanel === "wifi")
                 return wifiPanelComponent;
-            if (root.bluetoothPanelOpen)
+            if (root.openPanel === "bluetooth")
                 return bluetoothPanelComponent;
             return notificationPanelComponent;
         }
@@ -124,7 +129,7 @@ ColumnLayout {
 
         WiFiPanel {
             onClosePanel: {
-                root.wifiPanelOpen = false;
+                root.openPanel = "";
             }
         }
     }
@@ -134,7 +139,7 @@ ColumnLayout {
 
         BluetoothPanel {
             onClosePanel: {
-                root.bluetoothPanelOpen = false;
+                root.openPanel = "";
             }
         }
     }
@@ -206,7 +211,12 @@ ColumnLayout {
         }
     }
 
+    // Packs a short notification list up against the card. It must stop filling once a detail
+    // panel opens, or it splits the leftover space with the panel and each panel settles at a
+    // height of its own — so swapping one panel for another moves the bottom edge. With only
+    // the panel filling, every panel gets exactly the space the card leaves, whatever it asked
+    // for, and a swap changes nothing outside the panel.
     Item {
-        Layout.fillHeight: true
+        Layout.fillHeight: root.openPanel === ""
     }
 }

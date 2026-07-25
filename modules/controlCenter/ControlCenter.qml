@@ -8,12 +8,15 @@ Scope {
 
     property bool isOpen: false
     property int desiredPanelWidth: 430
-    property int desiredPanelHeight: 800
     // The window is the ceiling every panel below it shares — the toggles and sliders take a
-    // fixed slice off the top, and a detail panel can only have what is left. The Wi-Fi panel's
-    // network list and its subpage's dozen rows do not fit in that, so the window grows for it
-    // alone; the Bluetooth panel and the notification list keep the room they had.
-    property int desiredWifiPanelHeight: 950
+    // fixed slice off the top, and a detail panel gets what is left, which is this minus 306
+    // (the card, the window margins, and the spacing between the two). The Wi-Fi list is what
+    // sets the floor: five networks and the See-all row want about 600, so trimming much below
+    // 900 starts the list scrolling. Sized once and never resized per panel — a layer surface
+    // is resized asynchronously, so a panel whose height comes off the window's gets laid out
+    // against the old height and then again, a frame or more later, against the new one, and
+    // that second pass is a visible snap whenever a panel was already on screen to watch it.
+    property int desiredPanelHeight: 900
 
     Loader {
         id: controlCenterLoader
@@ -25,9 +28,7 @@ Scope {
 
             exclusiveZone: 0
             implicitWidth: root.desiredPanelWidth
-            // Safe to read the content's flag back into the window's size: it is a plain bool
-            // set by a tap, not geometry, so nothing here feeds the height that feeds it.
-            implicitHeight: content.wifiPanelOpen ? root.desiredWifiPanelHeight : root.desiredPanelHeight
+            implicitHeight: root.desiredPanelHeight
 
             WlrLayershell.namespace: "quickshell:controlCenter"
             color: "transparent"
