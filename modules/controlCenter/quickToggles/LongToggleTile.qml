@@ -15,7 +15,8 @@ import QtQuick.Layouts
 GroupButton {
     id: root
 
-    property string icon
+    // Not `icon`: AbstractButton already owns that name as a FINAL grouped property.
+    property string iconSource
     property string title
     property string subtitle
 
@@ -69,7 +70,7 @@ GroupButton {
                 anchors.centerIn: parent
                 width: 22
                 height: 22
-                source: root.icon
+                source: root.iconSource
                 colorize: true
                 color: root.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
 

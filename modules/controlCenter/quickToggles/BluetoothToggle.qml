@@ -15,7 +15,7 @@ LongToggleTile {
 
     signal openBluetoothPanel
 
-    icon: BluetoothStatus.symbol
+    iconSource: BluetoothStatus.symbol
     toggled: BluetoothStatus.enabled
     title: {
         if (!toggled)

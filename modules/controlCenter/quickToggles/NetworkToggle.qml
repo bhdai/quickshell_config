@@ -9,7 +9,7 @@ LongToggleTile {
 
     signal openWifiPanel
 
-    icon: Network.symbol
+    iconSource: Network.symbol
     toggled: Network.wifiStatus !== "disabled"
     title: toggled ? (Network.wifiStatus === "connected" ? "Connected" : (Network.wifiStatus === "connecting" ? "Connecting..." : "Disconnected")) : "Disable"
 
