@@ -28,9 +28,14 @@ GroupButton {
     // at an edge, and an enclosing ButtonGroup already halves what an edge button gains.
     clickedWidth: baseWidth + 16
     horizontalPadding: 12
-    verticalPadding: 10
-    buttonRadius: Appearance.rounding.normal
-    buttonRadiusPressed: Appearance.rounding.small
+    // Tight enough that the toggled icon container fits the content height exactly.
+    verticalPadding: 8
+    // OFF is a pill echoing the circular icon container; ON squares tile and container off
+    // together, in proportion. The resting radius is derived rather than taken from
+    // rounding.full, whose 9999 would animate through a long stretch of values the shape has
+    // already clamped away.
+    buttonRadius: toggled ? Appearance.rounding.large : baseHeight / 2
+    buttonRadiusPressed: Appearance.rounding.normal
 
     // Only the icon container carries the accent, so the body keeps its resting colours in the
     // toggled state instead of GroupButton's accent fill.
@@ -53,10 +58,29 @@ GroupButton {
 
         Rectangle {
             id: iconContainer
-            implicitWidth: 40
-            implicitHeight: 40
-            radius: Appearance.rounding.full
+            // Centered rather than left to the layout, which would otherwise stretch the
+            // container to the row height and pull the untoggled circle into an ellipse.
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: root.toggled ? 44 : 40
+            implicitHeight: implicitWidth
+            radius: root.toggled ? Appearance.rounding.normal : width / 2
             color: root.toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
+
+            Behavior on implicitWidth {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveFastSpatial
+                }
+            }
+
+            Behavior on radius {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
+                }
+            }
 
             Behavior on color {
                 ColorAnimation {
@@ -86,6 +110,7 @@ GroupButton {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
             spacing: 2
 
             Text {
