@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 import qs.services
 
-BigToggleButton {
+LongToggleTile {
     id: root
 
     signal openWifiPanel
@@ -15,7 +15,7 @@ BigToggleButton {
 
     subtitle: {
         if (!toggled)
-            return "Disable";
+            return "";
         if (Network.wifiStatus === "disconnected")
             return "No connected device";
         if (Network.connectivity === "full")
@@ -27,11 +27,11 @@ BigToggleButton {
         return Network.networkName;
     }
 
-    onLeftClicked: {
+    onIconClicked: {
         Network.toggleWifi();
     }
 
-    onRightClicked: {
+    onBodyClicked: {
         root.openWifiPanel();
     }
 }

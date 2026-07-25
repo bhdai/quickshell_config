@@ -30,7 +30,7 @@ Rectangle {
     bottomRightRadius: 12
 
     color: "transparent"
-    implicitHeight: 50 + padding * 2
+    implicitHeight: rowLayout.implicitHeight + padding * 2
 
     children: [
         RowLayout {

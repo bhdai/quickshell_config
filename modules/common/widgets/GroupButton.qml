@@ -20,6 +20,10 @@ Button {
     property var altAction // When right clicking
     property var middleClickAction // When middle clicking
     property bool bounce: true
+    // Where the last press landed, in button coordinates. A button whose content is split into
+    // several targets hit-tests this on click rather than layering a second MouseArea over the
+    // one below, which would take the press away from the bounce.
+    property point pressPosition
     property real baseWidth: contentItem.implicitWidth + horizontalPadding * 2
     property real baseHeight: contentItem.implicitHeight + verticalPadding * 2
     property var parentGroup: root.parent
@@ -109,6 +113,7 @@ Button {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onPressed: event => {
+            root.pressPosition = Qt.point(event.x, event.y);
             if (event.button === Qt.RightButton) {
                 if (root.altAction)
                     root.altAction();
