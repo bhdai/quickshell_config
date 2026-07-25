@@ -102,6 +102,18 @@ test("the device subpage exposes forget, auto-connect, battery and type behind a
     assert.match(source, /deviceTypeLabel/);
 });
 
+// A Rectangle covers the panel visually but passes input straight through, so the rows behind
+// the subpage kept taking the hover and the click.
+test("the subpage swallows the input meant for the panel it covers", () => {
+    const source = read(bluetoothDevice, "BluetoothDeviceDetailPage.qml");
+    const swallower = blocks(source, "MouseArea")[0];
+
+    assert.ok(swallower, "the subpage has a MouseArea");
+    assert.match(swallower, /anchors\.fill:\s*parent/);
+    assert.match(swallower, /hoverEnabled:\s*true/);
+    assert.match(swallower, /acceptedButtons:\s*Qt\.AllButtons/);
+});
+
 test("pairing never pre-trusts an unpaired device", () => {
     const source = read(bluetoothDevice, "BluetoothDeviceItem.qml");
     const guard = blocks(source, "function onPairedChanged()");

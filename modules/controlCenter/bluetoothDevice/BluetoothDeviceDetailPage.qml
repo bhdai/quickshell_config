@@ -25,6 +25,16 @@ Rectangle {
     border.width: 1
     border.color: Appearance.colors.colOutlineVariant
 
+    // The subpage only covers the panel visually: a Rectangle consumes no input, so without
+    // this the panel's rows underneath still take the hover (and the click). Declared first,
+    // so the page's own controls sit above it.
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.ArrowCursor
+    }
+
     component InfoRow: RowLayout {
         id: infoRow
 
