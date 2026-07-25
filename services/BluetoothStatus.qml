@@ -77,6 +77,7 @@ Singleton {
         return BluetoothFormat.deviceStatusLine({
             paired: device.paired,
             connected: device.connected,
+            pairing: device.pairing,
             batteryAvailable: device.batteryAvailable,
             battery: device.battery
         });
@@ -84,6 +85,19 @@ Singleton {
 
     function deviceSymbol(iconName: string): string {
         return BluetoothFormat.deviceSymbol(iconName);
+    }
+
+    function deviceTypeLabel(iconName: string): string {
+        return BluetoothFormat.deviceTypeLabel(iconName);
+    }
+
+    function batteryLabel(device: BluetoothDevice): string {
+        if (!device)
+            return "";
+        return BluetoothFormat.batteryLabel({
+            batteryAvailable: device.batteryAvailable,
+            battery: device.battery
+        });
     }
 
     function sortDevices(devices: list<BluetoothDevice>): var {

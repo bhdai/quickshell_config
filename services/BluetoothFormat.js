@@ -2,7 +2,9 @@
 
 // `battery` is a 0..1 fraction, as BluetoothDevice reports it. Returns "" for an
 // unpaired device: the caller decides whether an empty line is hidden or reserved.
-function deviceStatusLine({ paired, connected, batteryAvailable, battery }) {
+function deviceStatusLine({ paired, connected, pairing, batteryAvailable, battery }) {
+    if (pairing)
+        return "Pairing…";
     if (!paired)
         return "";
 
@@ -29,6 +31,32 @@ function deviceSymbol(iconName) {
     if (name.includes("keyboard"))
         return "input-keyboard-symbolic";
     return "bluetooth-active-symbolic";
+}
+
+// The same icon names as `deviceSymbol`, read out for the device subpage's "Device type" row.
+function deviceTypeLabel(iconName) {
+    const name = iconName ?? "";
+    if (name.includes("headset"))
+        return "Headset";
+    if (name.includes("headphones"))
+        return "Headphones";
+    if (name.includes("audio"))
+        return "Speaker";
+    if (name.includes("phone"))
+        return "Phone";
+    if (name.includes("mouse"))
+        return "Mouse";
+    if (name.includes("keyboard"))
+        return "Keyboard";
+    return "Other";
+}
+
+// The battery on its own, for the subpage row that already carries a "Battery" label. "" when
+// the device reports none, which is also the caller's cue to hide the row.
+function batteryLabel({ batteryAvailable, battery }) {
+    if (!batteryAvailable)
+        return "";
+    return `${Math.round(battery * 100)}%`;
 }
 
 // Returns a new array; the caller's list (a live QML model in the panel) is never reordered.
