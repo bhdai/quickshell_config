@@ -73,13 +73,14 @@ test("the scan indicator follows the adapter's discovering state", () => {
     assert.match(panel, /scanning:.*discovering/);
 });
 
-test("a gearless Pair new device row drives discovery", () => {
-    const source = read(bluetoothDevice, "BluetoothPanel.qml");
-    const pairRow = blocks(source, "SplitTargetRow").find(row => row.includes("Pair new device"));
+test("Pair new device sits in the footer and drives discovery", () => {
+    const chrome = read(detailPanel, "DetailPanel.qml");
+    const pairButton = blocks(read(bluetoothDevice, "BluetoothPanel.qml"), "footerLeading: RippleButton")[0];
 
-    assert.ok(pairRow, "the panel has a Pair new device row");
-    assert.match(pairRow, /trailingVisible:\s*false/);
-    assert.match(pairRow, /discovering\s*=\s*true/);
+    assert.match(chrome, /property Component footerLeading/);
+    assert.ok(pairButton, "the panel fills the footer slot");
+    assert.match(pairButton, /"Pair new device"/);
+    assert.match(pairButton, /discovering\s*=\s*true/);
 });
 
 test("device rows are split-target: body connects, gear opens the subpage", () => {

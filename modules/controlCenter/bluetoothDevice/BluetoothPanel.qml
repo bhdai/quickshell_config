@@ -3,7 +3,6 @@ import qs.modules.common.widgets
 import qs.modules.controlCenter.detailPanel
 import qs.services
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Bluetooth
 
@@ -50,72 +49,53 @@ Item {
         }
         onDone: root.closePanel()
 
-        ColumnLayout {
-            anchors.fill: parent
-            spacing: 0
+        footerLeading: RippleButton {
+            implicitHeight: 40
+            implicitWidth: 140
+            padding: 0
+            buttonRadius: Appearance.rounding.full
+            colBackground: Appearance.colors.colSecondaryContainer
+            colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+            colRipple: Appearance.colors.colPrimary
 
-            ListView {
-                id: deviceList
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                spacing: 0
-
-                model: ScriptModel {
-                    values: BluetoothStatus.sortDevices(Bluetooth.devices.values)
-                }
-
-                delegate: BluetoothDeviceItem {
-                    required property BluetoothDevice modelData
-
-                    device: modelData
-                    // Not anchors to `parent`: a vertical ListView's contentItem carries no
-                    // width of its own, so an anchored row collapses to nothing.
-                    width: deviceList.width
-
-                    onOpenDetails: {
-                        root.detailDevice = device;
-                        root.detailOpen = true;
-                    }
-                }
+            onClicked: {
+                if (!root.adapter)
+                    return;
+                root.adapter.pairable = true;
+                root.adapter.discovering = true;
             }
 
-            SplitTargetRow {
-                Layout.fillWidth: true
-                trailingVisible: false
+            contentItem: Text {
+                text: "Pair new device"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.bold: true
+                color: Appearance.colors.colOnSecondaryContainer
+            }
+        }
 
-                onBodyClicked: {
-                    if (!root.adapter)
-                        return;
-                    root.adapter.pairable = true;
-                    root.adapter.discovering = true;
-                }
+        ListView {
+            id: deviceList
+            anchors.fill: parent
+            clip: true
+            spacing: 0
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    spacing: 12
+            model: ScriptModel {
+                values: BluetoothStatus.sortDevices(Bluetooth.devices.values)
+            }
 
-                    // Bare `+` in the icon column: no circle, unlike the device rows.
-                    MaterialSymbol {
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.preferredWidth: 40
-                        text: "add"
-                        iconSize: 24
-                        color: Appearance.colors.colOnLayer0
-                        horizontalAlignment: Text.AlignHCenter
-                    }
+            delegate: BluetoothDeviceItem {
+                required property BluetoothDevice modelData
 
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        // Discovery is the only way unpaired devices reach the list at all,
-                        // and it is otherwise invisible — so the row says when it is running.
-                        text: (root.adapter?.discovering ?? false) ? "Searching for devices…" : "Pair new device"
-                        color: Appearance.colors.colOnLayer0
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        elide: Text.ElideRight
-                    }
+                device: modelData
+                // Not anchors to `parent`: a vertical ListView's contentItem carries no
+                // width of its own, so an anchored row collapses to nothing.
+                width: deviceList.width
+
+                onOpenDetails: {
+                    root.detailDevice = device;
+                    root.detailOpen = true;
                 }
             }
         }

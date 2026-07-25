@@ -21,6 +21,10 @@ Rectangle {
     property bool switchChecked: false
 
     default property alias content: contentArea.data
+    // The panel's own footer action, left of Done — Bluetooth pairs a new device here, Wi-Fi
+    // will open the native editor. A Component rather than a slot Item, so the footer row can
+    // size it without reading its children's geometry back into the layout.
+    property Component footerLeading: null
 
     signal switchToggled
     signal done
@@ -77,6 +81,11 @@ Rectangle {
         RowLayout {
             Layout.fillWidth: true
             spacing: 4
+
+            Loader {
+                Layout.alignment: Qt.AlignVCenter
+                sourceComponent: root.footerLeading
+            }
 
             Item {
                 Layout.fillWidth: true
