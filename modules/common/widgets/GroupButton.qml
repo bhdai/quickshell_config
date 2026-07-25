@@ -36,9 +36,15 @@ Button {
     property real clickedWidth: baseWidth + (isAtSide ? 10 : 20)
     property real clickedHeight: baseHeight
 
-    Layout.fillWidth: (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
-    Layout.fillHeight: (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
-    implicitWidth: (root.down && bounce) ? clickedWidth : baseWidth
+    // Width handed down by an enclosing ButtonGroup, which keeps the row width fixed and
+    // shrinks only the pressed button's neighbours. -1 outside such a group, where the
+    // button instead grows on its own and the surrounding layout absorbs it.
+    readonly property real groupWidth: parentGroup?.buttonWidths?.[indexInParent] ?? -1
+    readonly property bool inButtonGroup: groupWidth >= 0
+
+    Layout.fillWidth: !inButtonGroup && (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
+    Layout.fillHeight: !inButtonGroup && (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
+    implicitWidth: inButtonGroup ? groupWidth : ((root.down && bounce) ? clickedWidth : baseWidth)
     implicitHeight: (root.down && bounce) ? clickedHeight : baseHeight
 
     property color colBackground: Appearance.colors.colLayer2
@@ -54,14 +60,24 @@ Button {
     property color color: root.enabled ? (root.toggled ? (root.down ? colBackgroundToggledActive : root.hovered ? colBackgroundToggledHover : colBackgroundToggled) : (root.down ? colBackgroundActive : root.hovered ? colBackgroundHover : colBackground)) : colBackground
 
     onDownChanged: {
-        if (root.down) {
-            if (root.parent.clickIndex !== undefined) {
-                root.parent.clickIndex = parent.children.indexOf(root);
-            }
-        }
+        if (parentGroup?.clickIndex === undefined)
+            return;
+        if (root.down)
+            parentGroup.clickIndex = indexInParent;
+        else if (parentGroup.clickIndex === indexInParent)
+            parentGroup.clickIndex = -1;
     }
 
+    // An enclosing ButtonGroup can only allocate widths once the row itself has been laid
+    // out, so implicitWidth resolves off zero one frame late. Animating that first resolve
+    // would replay a grow-in every time the surface is created; the latch is set from the
+    // change handler, which runs after the Behavior has already declined to intercept.
+    property bool widthSettled: false
+    onImplicitWidthChanged: if (implicitWidth > 0)
+        widthSettled = true
+
     Behavior on implicitWidth {
+        enabled: root.widthSettled
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
