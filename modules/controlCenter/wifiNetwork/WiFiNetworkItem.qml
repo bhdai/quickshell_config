@@ -26,6 +26,7 @@ SplitTargetRow {
     colBackgroundHover: root.connected ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer1Hover
     colDivider: root.connected ? Appearance.colors.colOnPrimary : Appearance.colors.colOutlineVariant
     colTrailing: root.colForeground
+    trailingPadding: 4
 
     // The row owns its height rather than reading the prompt's geometry back through a layout,
     // so the expand animates without the prompt's size chasing the row's.
@@ -58,8 +59,8 @@ SplitTargetRow {
                 left: parent.left
                 right: parent.right
                 top: parent.top
-                leftMargin: 12
-                rightMargin: 12
+                leftMargin: 16
+                rightMargin: 16
             }
             height: 64
             spacing: 12
@@ -112,8 +113,8 @@ SplitTargetRow {
                 left: parent.left
                 right: parent.right
                 top: networkRow.bottom
-                leftMargin: 12
-                rightMargin: 12
+                leftMargin: 16
+                rightMargin: 16
             }
             visible: root.askingPassword
             spacing: 4

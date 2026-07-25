@@ -22,6 +22,9 @@ Item {
     property color colBackgroundHover: Appearance.colors.colLayer1Hover
     property color colDivider: Appearance.colors.colOutlineVariant
     property color colTrailing: Appearance.colors.colOnLayer1
+    // The gear's own button already leaves 12px around its icon, which reads as enough on a
+    // bare row. A filled row (Wi-Fi's pill) has a visible edge to clear, so it asks for more.
+    property real trailingPadding: 0
     default property alias bodyData: bodySlot.data
 
     signal bodyClicked
@@ -85,6 +88,7 @@ Item {
 
         anchors {
             right: parent.right
+            rightMargin: root.trailingPadding
             verticalCenter: parent.verticalCenter
         }
         visible: root.trailingVisible
