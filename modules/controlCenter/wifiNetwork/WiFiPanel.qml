@@ -67,13 +67,7 @@ Rectangle {
             spacing: 0
 
             model: ScriptModel {
-                values: [...Network.wifiNetworks].sort((a, b) => {
-                    if (a.active && !b.active)
-                        return -1;
-                    if (!a.active && b.active)
-                        return 1;
-                    return b.strength - a.strength;
-                })
+                values: Network.sortWifiNetworks(Network.wifiNetworks)
             }
             delegate: WiFiNetworkItem {
                 required property WifiAccessPoint modelData

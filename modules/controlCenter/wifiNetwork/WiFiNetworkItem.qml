@@ -47,14 +47,7 @@ RippleButton {
             spacing: 10
 
             CustomIcon {
-                property int strength: root.wifiNetwork?.strength ?? 0
-                source: {
-                    if (strength > 66)
-                        return "network-wireless-signal-good-symbolic";
-                    if (strength > 33)
-                        return "network-wireless-signal-ok-symbolic";
-                    return "network-wireless-signal-weak-symbolic";
-                }
+                source: Network.networkSymbol(root.wifiNetwork?.strength ?? 0)
                 width: 20
                 height: 20
                 colorize: true

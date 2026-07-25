@@ -29,6 +29,22 @@ Singleton {
         strength: root.networkStrength
     })
 
+    // NetworkParse.js can only be imported by a QML file in its own directory (a cross-directory
+    // JS import would need a relative path, and Quickshell resolves no qmldir here), so the
+    // service re-exports the pure helpers the Wi-Fi panel needs.
+    function sortWifiNetworks(networks: list<WifiAccessPoint>): var {
+        return NetworkParse.sortWifiNetworks(networks);
+    }
+
+    function networkSymbol(strength: int): string {
+        return NetworkParse.pickNetworkSymbol({
+            ethernet: false,
+            wifiEnabled: true,
+            wifiStatus: "connected",
+            strength: strength
+        });
+    }
+
     function enableWifi(enabled = true): void {
         const cmd = enabled ? "on" : "off";
         enableWifiProc.exec(["nmcli", "radio", "wifi", cmd]);

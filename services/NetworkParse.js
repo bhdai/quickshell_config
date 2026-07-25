@@ -26,6 +26,17 @@ function pickNetworkSymbol({ ethernet, wifiEnabled, wifiStatus, strength }) {
     return "network-wireless-disabled-symbolic";
 }
 
+// Returns a new array; the caller's list (a live QML model in the panel) is never reordered.
+function sortWifiNetworks(list) {
+    return [...list].sort((a, b) => {
+        if (a.active && !b.active)
+            return -1;
+        if (!a.active && b.active)
+            return 1;
+        return b.strength - a.strength;
+    });
+}
+
 function parseConnectionStatus(buffer) {
     const lines = buffer.trim().split('\n');
     const connectivity = lines.pop();
