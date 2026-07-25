@@ -38,8 +38,15 @@ Item {
         switchChecked: root.adapter?.enabled ?? false
 
         onSwitchToggled: {
-            if (root.adapter)
-                root.adapter.enabled = !root.adapter.enabled;
+            const adapter = root.adapter;
+            if (!adapter)
+                return;
+            // The switch only moves once BlueZ confirms, which invites a second press while
+            // the adapter is still powering up or down — and BlueZ answers that one with
+            // org.bluez.Error.Busy.
+            if (adapter.state === BluetoothAdapterState.Enabling || adapter.state === BluetoothAdapterState.Disabling)
+                return;
+            adapter.enabled = !adapter.enabled;
         }
         onDone: root.closePanel()
 
@@ -48,6 +55,7 @@ Item {
             spacing: 0
 
             ListView {
+                id: deviceList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
@@ -61,10 +69,9 @@ Item {
                     required property BluetoothDevice modelData
 
                     device: modelData
-                    anchors {
-                        left: parent?.left
-                        right: parent?.right
-                    }
+                    // Not anchors to `parent`: a vertical ListView's contentItem carries no
+                    // width of its own, so an anchored row collapses to nothing.
+                    width: deviceList.width
 
                     onOpenDetails: {
                         root.detailDevice = device;

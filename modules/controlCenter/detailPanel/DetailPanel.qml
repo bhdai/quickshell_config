@@ -87,15 +87,18 @@ Rectangle {
 
                 implicitHeight: 40
                 implicitWidth: 90
-                padding: 14
+                padding: 0
                 buttonRadius: Appearance.rounding.full
                 colBackground: Appearance.colors.colPrimary
                 colBackgroundHover: Appearance.colors.colPrimaryHover
                 colRipple: Appearance.colors.colPrimaryActive
 
+                // The Control sizes contentItem to the whole button, so the label centres
+                // itself inside that box rather than being centred as a box of its own.
                 contentItem: Text {
-                    anchors.centerIn: parent
                     text: "Done"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     font.bold: true
                     color: Appearance.colors.colOnPrimary

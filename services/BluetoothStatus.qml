@@ -100,7 +100,10 @@ Singleton {
         });
     }
 
-    function sortDevices(devices: list<BluetoothDevice>): var {
+    // `devices` is deliberately untyped: annotating it `list<BluetoothDevice>` makes QML
+    // coerce the adapter's QList<QObject*> to a typed list, which fails element-wise and
+    // silently hands the sort an empty list.
+    function sortDevices(devices): var {
         return BluetoothFormat.sortDevices(devices);
     }
 }

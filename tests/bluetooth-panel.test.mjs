@@ -130,6 +130,15 @@ test("status lines, symbols and order come from the format library", () => {
         assert.doesNotMatch(read(file), /Math\.round\(/, `${path.basename(file)} formats nothing itself`);
 });
 
+// Found the hard way: `list<BluetoothDevice>` made QML coerce the adapter's QList<QObject*>
+// element-wise, fail, and hand the sort an empty list — a silent empty device list, no warning.
+test("the device-list re-export takes its argument untyped", () => {
+    const source = read(repoRoot, "services", "BluetoothStatus.qml");
+
+    assert.match(source, /function sortDevices\(devices\)/);
+    assert.doesNotMatch(source, /function sortDevices\(devices\s*:/);
+});
+
 test("the panel and its chrome stay on colors.* tokens", () => {
     const offenders = [...qmlFilesIn(detailPanel), ...qmlFilesIn(bluetoothDevice)].flatMap(file =>
         read(file).split("\n")
