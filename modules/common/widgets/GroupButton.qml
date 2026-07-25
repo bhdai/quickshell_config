@@ -68,16 +68,11 @@ Button {
             parentGroup.clickIndex = -1;
     }
 
-    // An enclosing ButtonGroup can only allocate widths once the row itself has been laid
-    // out, so implicitWidth resolves off zero one frame late. Animating that first resolve
-    // would replay a grow-in every time the surface is created; the latch is set from the
-    // change handler, which runs after the Behavior has already declined to intercept.
-    property bool widthSettled: false
-    onImplicitWidthChanged: if (implicitWidth > 0)
-        widthSettled = true
-
     Behavior on implicitWidth {
-        enabled: root.widthSettled
+        // An enclosing ButtonGroup animates the whole row from one progress value and hands
+        // down a finished width each frame. Interpolating again here would fight it, and the
+        // independently rounded result would drift the row's right-hand side mid-press.
+        enabled: !root.inButtonGroup
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline

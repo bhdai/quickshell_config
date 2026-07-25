@@ -8,9 +8,12 @@
  * when looking for a pressed button's neighbours. `pressedIndex` indexes the same slots
  * (-1 when nothing is held). `pressGrowth` is how much the held button wants to gain.
  *
- * The returned visible widths plus the inter-button spacing always sum back to
- * `totalWidth`, so a press can never resize the row itself. A neighbour is never shrunk
- * past half its resting width, which caps the growth actually granted.
+ * `pressGrowth` arrives already scaled by the press animation's progress, so this runs once
+ * per frame and every frame has to hold the row together.
+ *
+ * The returned widths are whole pixels that, with the inter-button spacing, always sum back
+ * to `totalWidth` — a press can never resize the row or nudge a button it did not touch. A
+ * neighbour is never shrunk past half its resting width, which caps the growth granted.
  */
 function allocateWidths(visibility, totalWidth, spacing, pressedIndex, pressGrowth) {
     const widths = visibility.map(() => 0);
@@ -27,21 +30,47 @@ function allocateWidths(visibility, totalWidth, spacing, pressedIndex, pressGrow
         widths[slot] = base;
 
     const position = shown.indexOf(pressedIndex);
-    if (position < 0 || pressGrowth <= 0)
-        return widths;
-
     const neighbours = [];
-    if (position > 0)
-        neighbours.push(shown[position - 1]);
-    if (position < shown.length - 1)
-        neighbours.push(shown[position + 1]);
-    if (neighbours.length === 0)
-        return widths;
+    if (position >= 0 && pressGrowth > 0) {
+        if (position > 0)
+            neighbours.push(shown[position - 1]);
+        if (position < shown.length - 1)
+            neighbours.push(shown[position + 1]);
+    }
+    if (neighbours.length > 0) {
+        const shrink = Math.min(pressGrowth / neighbours.length, base / 2);
+        for (const slot of neighbours)
+            widths[slot] = base - shrink;
+        widths[pressedIndex] = base + shrink * neighbours.length;
+    }
 
-    const shrink = Math.min(pressGrowth / neighbours.length, base / 2);
-    for (const slot of neighbours)
-        widths[slot] = base - shrink;
-    widths[pressedIndex] = base + shrink * neighbours.length;
+    return snapToPixels(widths, shown, totalWidth, spacing);
+}
 
-    return widths;
+/**
+ * Round each button's left edge rather than its width.
+ *
+ * Rounding widths one by one lets the errors accumulate: positions in a row are a running
+ * sum, so half a pixel gained on the pressed button and half on each neighbour drags every
+ * button to their right off its resting position, and pushes the last one past the end of
+ * the row. Rounding the running sum instead keeps a button's edge wherever the exact
+ * arithmetic put it, which for anything outside the pressed trio is exactly where it was.
+ */
+function snapToPixels(widths, shown, totalWidth, spacing) {
+    const snapped = widths.map(() => 0);
+    let edge = 0;
+    let lastSlot = -1;
+    let lastEdge = 0;
+
+    for (const slot of shown) {
+        const rounded = Math.round(edge);
+        if (lastSlot >= 0)
+            snapped[lastSlot] = rounded - spacing - lastEdge;
+        lastSlot = slot;
+        lastEdge = rounded;
+        edge += widths[slot] + spacing;
+    }
+    snapped[lastSlot] = totalWidth - lastEdge;
+
+    return snapped;
 }
