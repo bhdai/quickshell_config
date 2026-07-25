@@ -102,6 +102,29 @@ test("the device subpage exposes forget, auto-connect, battery and type behind a
     assert.match(source, /deviceTypeLabel/);
 });
 
+// The rounded ends belong to the first and last *shown* row, and the battery row is conditional
+// — a group shaped by declaration order flattens the wrong edge on a device with no battery.
+test("the subpage's settings are one shaped group, skipping hidden rows", () => {
+    assert.match(read(bluetoothDevice, "BluetoothDeviceDetailPage.qml"), /CardGroup\s*\{/);
+
+    const group = read(widgets, "CardGroup.qml");
+
+    assert.match(group, /\.visible/);
+    assert.match(group, /visibleChanged\.connect/);
+});
+
+// CardGroup shapes a row by writing its corners, and every link of that chain is a plain
+// property forward: drop one and the card silently keeps the wrong shape.
+test("per-corner radii reach the switch row's card through RippleButton", () => {
+    const button = read(widgets, "RippleButton.qml");
+    const row = read(detailPanel, "SwitchRow.qml");
+
+    for (const corner of ["topLeftRadius", "topRightRadius", "bottomLeftRadius", "bottomRightRadius"]) {
+        assert.match(button, new RegExp(`property real ${corner}`), `RippleButton takes ${corner}`);
+        assert.match(row, new RegExp(`property alias ${corner}`), `SwitchRow forwards ${corner}`);
+    }
+});
+
 // A Rectangle covers the panel visually but passes input straight through, so the rows behind
 // the subpage kept taking the hover and the click.
 test("the subpage swallows the input meant for the panel it covers", () => {

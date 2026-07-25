@@ -16,6 +16,12 @@ Item {
     property bool checked: false
     property color colBackground: Appearance.colors.colLayer1
 
+    // Forwarded so a CardGroup can shape the row's card from the outside.
+    property alias topLeftRadius: body.topLeftRadius
+    property alias topRightRadius: body.topRightRadius
+    property alias bottomLeftRadius: body.bottomLeftRadius
+    property alias bottomRightRadius: body.bottomRightRadius
+
     signal toggled
 
     implicitHeight: 56
