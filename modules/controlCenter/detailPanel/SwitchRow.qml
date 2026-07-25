@@ -9,41 +9,60 @@ import QtQuick
  *
  * Pressing anywhere on the row is the same as pressing the switch.
  */
-Rectangle {
+Item {
     id: root
 
     property string label
     property bool checked: false
     property color colBackground: Appearance.colors.colLayer1
 
+    // Forwarded so a CardGroup can shape the row's card from the outside.
+    property alias topLeftRadius: body.topLeftRadius
+    property alias topRightRadius: body.topRightRadius
+    property alias bottomLeftRadius: body.bottomLeftRadius
+    property alias bottomRightRadius: body.bottomRightRadius
+
     signal toggled
 
     implicitHeight: 56
-    radius: Appearance.rounding.normal
-    color: root.colBackground
 
-    MouseArea {
+    RippleButton {
+        id: body
+
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
+        padding: 0
+        buttonRadius: Appearance.rounding.normal
+        colBackground: root.colBackground
+        colBackgroundHover: Appearance.colors.colLayer1Hover
+        colRipple: Appearance.colors.colPrimary
+
         onClicked: root.toggled()
-    }
 
-    Text {
-        anchors {
-            left: parent.left
-            leftMargin: 16
-            right: switchControl.left
-            rightMargin: 12
-            verticalCenter: parent.verticalCenter
+        contentItem: Item {
+            Text {
+                anchors {
+                    left: parent.left
+                    leftMargin: 16
+                    // The switch sits outside this content item, so the gap to it is a
+                    // margin rather than an anchor against it.
+                    right: parent.right
+                    rightMargin: 16 + switchControl.width + 12
+                    verticalCenter: parent.verticalCenter
+                }
+                text: root.label
+                color: Appearance.colors.colOnLayer1
+                font.pixelSize: Appearance.font.pixelSize.normal
+                elide: Text.ElideRight
+            }
         }
-        text: root.label
-        color: Appearance.colors.colOnLayer1
-        font.pixelSize: Appearance.font.pixelSize.normal
-        elide: Text.ElideRight
     }
 
+    // Sits outside the row's button, and after it, so the handle's drag reliably takes the
+    // press. Inside the button's content item its stacking against the button's own mouse
+    // area would decide that, and a swallowed press means no drag at all.
     StyledSwitch {
         id: switchControl
+
         anchors {
             right: parent.right
             rightMargin: 16

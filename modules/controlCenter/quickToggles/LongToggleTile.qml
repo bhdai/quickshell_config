@@ -23,13 +23,14 @@ GroupButton {
     signal iconClicked
     signal bodyClicked
 
-    baseHeight: 60
     // A flat growth rather than GroupButton's edge-aware one: both tiles of a two-tile row sit
     // at an edge, and an enclosing ButtonGroup already halves what an edge button gains.
     clickedWidth: baseWidth + 16
-    horizontalPadding: 12
-    // Tight enough that the icon container fits the content height exactly.
-    verticalPadding: 8
+    // Equal on both axes, and the tile's height is left to GroupButton to derive from the icon
+    // container plus this padding. A hardcoded height would set the gap above and below the
+    // container independently of the gap beside it, and the two would drift apart.
+    horizontalPadding: 6
+    verticalPadding: 6
     // OFF is a pill echoing the circular icon container; ON squares tile and container off
     // together, in proportion. The resting radius is derived rather than taken from
     // rounding.full, whose 9999 would animate through a long stretch of values the shape has
@@ -61,7 +62,10 @@ GroupButton {
             // Centered rather than left to the layout, which would otherwise stretch the
             // container to the row height and pull the untoggled circle into an ellipse.
             Layout.alignment: Qt.AlignVCenter
-            implicitWidth: 44
+            // Sets the tile's height, which is this plus the padding above and below. It is the
+            // one knob for the tile's scale: the body's title and subtitle are shorter than it,
+            // so they never come into it.
+            implicitWidth: 56
             implicitHeight: implicitWidth
             radius: root.toggled ? Appearance.rounding.normal : width / 2
             color: root.toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
@@ -84,8 +88,8 @@ GroupButton {
 
             CustomIcon {
                 anchors.centerIn: parent
-                width: 22
-                height: 22
+                width: 26
+                height: 26
                 source: root.iconSource
                 colorize: true
                 color: root.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0

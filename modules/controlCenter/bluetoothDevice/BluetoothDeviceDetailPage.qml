@@ -35,30 +35,36 @@ Rectangle {
         cursorShape: Qt.ArrowCursor
     }
 
-    component InfoRow: RowLayout {
+    component InfoRow: Rectangle {
         id: infoRow
 
         property string label
         property string value
 
         Layout.fillWidth: true
-        Layout.preferredHeight: 44
-        spacing: 12
+        implicitHeight: 56
+        radius: Appearance.rounding.normal
+        color: Appearance.colors.colLayer1
 
-        Text {
-            Layout.fillWidth: true
-            Layout.leftMargin: 16
-            text: infoRow.label
-            color: Appearance.colors.colOnLayer1
-            font.pixelSize: Appearance.font.pixelSize.small
-            elide: Text.ElideRight
-        }
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            spacing: 12
 
-        Text {
-            Layout.rightMargin: 16
-            text: infoRow.value
-            color: Appearance.colors.colSubtext
-            font.pixelSize: Appearance.font.pixelSize.small
+            Text {
+                Layout.fillWidth: true
+                text: infoRow.label
+                color: Appearance.colors.colOnLayer1
+                font.pixelSize: Appearance.font.pixelSize.small
+                elide: Text.ElideRight
+            }
+
+            Text {
+                text: infoRow.value
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.small
+            }
         }
     }
 
@@ -208,41 +214,29 @@ Rectangle {
             }
         }
 
-        Rectangle {
+        CardGroup {
             Layout.fillWidth: true
             Layout.topMargin: 12
-            implicitHeight: settingsColumn.implicitHeight
-            radius: Appearance.rounding.normal
-            color: Appearance.colors.colLayer1
 
-            ColumnLayout {
-                id: settingsColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                spacing: 0
-
-                SwitchRow {
-                    Layout.fillWidth: true
-                    label: "Connect automatically"
-                    colBackground: "transparent"
-                    checked: root.device?.trusted ?? false
-                    onToggled: {
-                        if (root.device)
-                            root.device.trusted = !root.device.trusted;
-                    }
+            SwitchRow {
+                Layout.fillWidth: true
+                label: "Connect automatically"
+                checked: root.device?.trusted ?? false
+                onToggled: {
+                    if (root.device)
+                        root.device.trusted = !root.device.trusted;
                 }
+            }
 
-                InfoRow {
-                    label: "Battery"
-                    value: BluetoothStatus.batteryLabel(root.device)
-                    visible: value.length > 0
-                }
+            InfoRow {
+                label: "Battery"
+                value: BluetoothStatus.batteryLabel(root.device)
+                visible: value.length > 0
+            }
 
-                InfoRow {
-                    label: "Device type"
-                    value: BluetoothStatus.deviceTypeLabel(root.device?.icon ?? "")
-                }
+            InfoRow {
+                label: "Device type"
+                value: BluetoothStatus.deviceTypeLabel(root.device?.icon ?? "")
             }
         }
 

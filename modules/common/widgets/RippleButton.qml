@@ -16,6 +16,13 @@ Button {
     property real buttonRadius: 4
     property real buttonRadiusPressed: buttonRadius
     property real buttonEffectiveRadius: root.down ? root.buttonRadiusPressed : root.buttonRadius
+    // Per-corner overrides for buttons that sit in a group (see CardGroup). Rectangle's own
+    // per-corner properties treat any assigned value as set — including a negative one, which
+    // squares the corner — so there is no sentinel to default these to but the shared radius.
+    property real topLeftRadius: root.buttonEffectiveRadius
+    property real topRightRadius: root.buttonEffectiveRadius
+    property real bottomLeftRadius: root.buttonEffectiveRadius
+    property real bottomRightRadius: root.buttonEffectiveRadius
     property int rippleDuration: 1200
     property bool rippleEnabled: true
     property var downAction // When left clicking (down)
@@ -141,6 +148,10 @@ Button {
     background: Rectangle {
         id: buttonBackground
         radius: root.buttonEffectiveRadius
+        topLeftRadius: root.topLeftRadius
+        topRightRadius: root.topRightRadius
+        bottomLeftRadius: root.bottomLeftRadius
+        bottomRightRadius: root.bottomRightRadius
         implicitHeight: 30
 
         color: root.buttonColor
@@ -158,6 +169,10 @@ Button {
                 width: buttonBackground.width
                 height: buttonBackground.height
                 radius: root.buttonEffectiveRadius
+                topLeftRadius: root.topLeftRadius
+                topRightRadius: root.topRightRadius
+                bottomLeftRadius: root.bottomLeftRadius
+                bottomRightRadius: root.bottomRightRadius
             }
         }
 
