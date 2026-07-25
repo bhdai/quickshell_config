@@ -16,8 +16,10 @@ GroupButton {
     toggled: false
     // ON is signalled by shape and fill alone — a reduced radius over the accent fill — while
     // a press is transient: wider and rounder for as long as it is held, then back to base.
-    buttonRadius: toggled ? Appearance.rounding.small : Appearance.rounding.normal
-    buttonRadiusPressed: Appearance.rounding.large
+    // The pressed radius is derived rather than taken from rounding.full, whose 9999 would
+    // animate through a long stretch of values the shape has already clamped away.
+    buttonRadius: toggled ? Appearance.rounding.small : Appearance.rounding.large
+    buttonRadiusPressed: baseHeight / 2
     bounce: true
 
     contentItem: MaterialSymbol {
