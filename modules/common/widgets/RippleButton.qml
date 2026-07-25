@@ -148,7 +148,7 @@ Button {
             ColorAnimation {
                 duration: 200
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+                easing.bezierCurve: Appearance.animation.expressiveEffects
             }
         }
 
@@ -175,7 +175,7 @@ Button {
                 ColorAnimation {
                     duration: 200
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
                 }
             }
 

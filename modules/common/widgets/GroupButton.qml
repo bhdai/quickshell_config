@@ -61,12 +61,11 @@ Button {
         }
     }
 
-    // Advanced bouncy animation with expressiveFastSpatial curve
     Behavior on implicitWidth {
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial
+            easing.bezierCurve: Appearance.animation.expressiveFastSpatial
         }
     }
 
@@ -74,7 +73,7 @@ Button {
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.42, 1.67, 0.21, 0.90, 1, 1]  // expressiveFastSpatial
+            easing.bezierCurve: Appearance.animation.expressiveFastSpatial
         }
     }
 
@@ -82,7 +81,7 @@ Button {
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]  // expressiveEffects curve
+            easing.bezierCurve: Appearance.animation.expressiveEffects
         }
     }
 
@@ -90,7 +89,7 @@ Button {
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]  // expressiveEffects curve
+            easing.bezierCurve: Appearance.animation.expressiveEffects
         }
     }
 
@@ -151,7 +150,7 @@ Button {
             ColorAnimation {
                 duration: 200
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
+                easing.bezierCurve: Appearance.animation.expressiveEffects
             }
         }
     }
