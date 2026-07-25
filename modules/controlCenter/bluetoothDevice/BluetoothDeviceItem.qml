@@ -1,40 +1,42 @@
 import qs.modules.common
-import qs.modules.common.functions
 import qs.modules.common.widgets
+import qs.modules.controlCenter.detailPanel
 import qs.services
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Bluetooth
 
-RippleButton {
+/**
+ * One device in the Bluetooth panel's list. The body is the whole connection lifecycle —
+ * pair, connect, disconnect — and the gear hands the device to the panel's detail subpage.
+ */
+SplitTargetRow {
     id: root
 
-    horizontalPadding: 20
-    verticalPadding: 12
-    clip: true
-    required property var device
-    property bool expanded: false
-    pointingHandCursor: !expanded
-    implicitWidth: contentItem.implicitWidth + horizontalPadding * 2
-    implicitHeight: contentItem.implicitHeight + verticalPadding * 2
+    required property BluetoothDevice device
 
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 500
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.38, 1.21, 0.22, 1.00, 1, 1]
+    signal openDetails
+
+    onBodyClicked: {
+        if (!root.device)
+            return;
+        if (!root.device.paired) {
+            // Some adapters come up non-pairable, and BlueZ then refuses the pair outright.
+            if (Bluetooth.defaultAdapter && !Bluetooth.defaultAdapter.pairable)
+                Bluetooth.defaultAdapter.pairable = true;
+            // Do NOT pre-trust: trusting an unpaired device makes BlueZ auto-connect it on
+            // sight, so a failed pair leaves it bouncing connect/disconnect. Trust + connect
+            // only once pairing actually succeeds (see the Connections below).
+            root.device.pair();
+        } else if (root.device.connected) {
+            root.device.disconnect();
+        } else {
+            root.device.connect();
         }
     }
-    colBackground: Appearance.m3colors.m3background
-    colBackgroundHover: Appearance.colors.colLayer2Hover
-    colRipple: Appearance.m3colors.m3primary
-    buttonRadius: 0
 
-    onClicked: expanded = !expanded
-    altAction: () => expanded = !expanded
+    onTrailingClicked: root.openDetails()
 
-    // Trust + connect only after pairing actually succeeds. Pre-trusting an unpaired
-    // device makes BlueZ auto-connect it, turning a failed pair into a connect/disconnect loop.
     Connections {
         target: root.device
         function onPairedChanged() {
@@ -45,145 +47,57 @@ RippleButton {
         }
     }
 
-    component ActionButton: RippleButton {
-        id: actionButton
+    RowLayout {
+        anchors.fill: parent
+        anchors.leftMargin: 12
+        spacing: 12
 
-        implicitHeight: 36
-        implicitWidth: 80
-        padding: 14
-        buttonRadius: 9999
-        property color colText: actionButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
+        Rectangle {
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: 40
+            implicitHeight: 40
+            radius: width / 2
+            color: root.device?.connected ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
 
-        contentItem: Text {
-            anchors.fill: parent
-            anchors.leftMargin: actionButton.padding
-            anchors.rightMargin: actionButton.padding
-            text: actionButton.buttonText
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 12
-            color: actionButton.colText
-        }
-    }
-
-    contentItem: ColumnLayout {
-        anchors {
-            fill: parent
-            topMargin: root.verticalPadding
-            bottomMargin: root.verticalPadding
-            leftMargin: root.horizontalPadding
-            rightMargin: root.horizontalPadding
-        }
-        spacing: 0
-
-        RowLayout {
-            // Name
-            spacing: 10
+            Behavior on color {
+                ColorAnimation {
+                    duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
+                }
+            }
 
             CustomIcon {
-                source: BluetoothStatus.deviceSymbol(root.device?.icon ?? "")
+                anchors.centerIn: parent
                 width: 20
                 height: 20
+                source: BluetoothStatus.deviceSymbol(root.device?.icon ?? "")
                 colorize: true
-                color: Appearance.colors.colOnLayer0
-            }
-
-            ColumnLayout {
-                spacing: 2
-                Layout.fillWidth: true
-                Text {
-                    Layout.fillWidth: true
-                    color: Appearance.colors.colOnLayer0
-                    elide: Text.ElideRight
-                    text: root.device?.name || "Unknown device"
-                }
-                Text {
-                    visible: (root.device?.connected || root.device?.paired) ?? false
-                    Layout.fillWidth: true
-                    font.pixelSize: 12
-                    color: Appearance.colors.colSubtext
-                    elide: Text.ElideRight
-                    text: BluetoothStatus.deviceStatusLine(root.device)
-                }
-            }
-
-            CustomIcon {
-                source: "go-down-symbolic"
-                width: 15
-                height: 15
-                colorize: true
-                color: Appearance.colors.colOnLayer0
-                rotation: root.expanded ? 180 : 0
-
-                Behavior on rotation {
-                    NumberAnimation {
-                        duration: 200
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Appearance.animation.expressiveEffects
-                    }
-                }
+                color: root.device?.connected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
             }
         }
 
-        RowLayout {
-            visible: root.expanded
-            Layout.topMargin: 8
-            Item {
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 2
+
+            Text {
                 Layout.fillWidth: true
+                text: root.device?.name || "Unknown device"
+                color: Appearance.colors.colOnLayer0
+                font.pixelSize: Appearance.font.pixelSize.small
+                elide: Text.ElideRight
             }
-            ActionButton {
-                // Show Pair button for unpaired devices
-                visible: !(root.device?.paired ?? false)
-                buttonText: root.device?.pairing ? "Pairing..." : "Pair"
-                enabled: !(root.device?.pairing ?? false)
-                colBackground: Appearance.m3colors.m3secondaryContainer
-                colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
-                colText: Appearance.m3colors.m3onSecondaryContainer
 
-                onClicked: {
-                    // Ensure adapter is pairable (some systems have this off by default)
-                    if (Bluetooth.defaultAdapter && !Bluetooth.defaultAdapter.pairable) {
-                        Bluetooth.defaultAdapter.pairable = true;
-                    }
-                    // Do NOT pre-trust: trusting an unpaired device makes BlueZ auto-connect
-                    // it on sight, so a failed pair leaves it bouncing connect/disconnect.
-                    // Trust + connect only once pairing actually succeeds (see Connections below).
-                    root.device.pair();
-                }
+            Text {
+                Layout.fillWidth: true
+                text: BluetoothStatus.deviceStatusLine(root.device)
+                visible: text.length > 0
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                elide: Text.ElideRight
             }
-            ActionButton {
-                // Only offer Connect once paired; connecting an unpaired HID device
-                // connects-then-drops because there is no encrypted bond yet.
-                visible: root.device?.paired ?? false
-                buttonText: root.device?.connected ? "Disconnect" : "Connect"
-                colBackground: Appearance.m3colors.m3primary
-                colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
-                colText: Appearance.m3colors.m3onPrimary
-
-                onClicked: {
-                    if (root.device?.connected) {
-                        root.device.disconnect();
-                    } else {
-                        root.device.connect();
-                    }
-                }
-            }
-            ActionButton {
-                visible: root.device?.paired ?? false
-                colBackground: Appearance.colors.colError
-                colBackgroundHover: ColorUtils.transparentize(colBackground, 0.2)
-                colRipple: Appearance.m3colors.m3onError
-                colText: Appearance.m3colors.m3onError
-
-                buttonText: "Forget"
-                onClicked: {
-                    root.device?.forget();
-                }
-            }
-        }
-
-        Item {
-            Layout.fillHeight: true
         }
     }
 }

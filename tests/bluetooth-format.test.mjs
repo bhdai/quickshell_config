@@ -3,9 +3,9 @@ import test from "node:test";
 
 import { loadQmlJs } from "./load-qml-js.mjs";
 
-const { deviceStatusLine, deviceSymbol, sortDevices } = loadQmlJs(
+const { deviceStatusLine, deviceSymbol, deviceTypeLabel, batteryLabel, sortDevices } = loadQmlJs(
     new URL("../services/BluetoothFormat.js", import.meta.url),
-    ["deviceStatusLine", "deviceSymbol", "sortDevices"],
+    ["deviceStatusLine", "deviceSymbol", "deviceTypeLabel", "batteryLabel", "sortDevices"],
 );
 
 test("an unpaired device has no status line", () => {
@@ -57,6 +57,17 @@ test("battery is also shown for a paired but disconnected device", () => {
     );
 });
 
+test("a pairing device reads Pairing whatever else it reports", () => {
+    assert.equal(
+        deviceStatusLine({ paired: false, connected: false, pairing: true, batteryAvailable: false, battery: 0 }),
+        "Pairing…",
+    );
+    assert.equal(
+        deviceStatusLine({ paired: true, connected: true, pairing: true, batteryAvailable: true, battery: 0.8 }),
+        "Pairing…",
+    );
+});
+
 test("headset icons map to the headset symbol", () => {
     assert.equal(deviceSymbol("audio-headset"), "audio-headset-symbolic");
 });
@@ -93,6 +104,30 @@ test("an unrecognised icon falls back to the bluetooth symbol", () => {
 test("a missing icon falls back to the bluetooth symbol", () => {
     assert.equal(deviceSymbol(""), "bluetooth-active-symbolic");
     assert.equal(deviceSymbol(undefined), "bluetooth-active-symbolic");
+});
+
+test("each device class has a readable type label", () => {
+    assert.equal(deviceTypeLabel("audio-headset"), "Headset");
+    assert.equal(deviceTypeLabel("audio-headphones"), "Headphones");
+    assert.equal(deviceTypeLabel("audio-card"), "Speaker");
+    assert.equal(deviceTypeLabel("phone"), "Phone");
+    assert.equal(deviceTypeLabel("input-mouse"), "Mouse");
+    assert.equal(deviceTypeLabel("input-keyboard"), "Keyboard");
+});
+
+test("an unrecognised or missing icon has a generic type label", () => {
+    assert.equal(deviceTypeLabel("video-display"), "Other");
+    assert.equal(deviceTypeLabel(""), "Other");
+    assert.equal(deviceTypeLabel(undefined), "Other");
+});
+
+test("battery reads as a rounded percentage when the device reports one", () => {
+    assert.equal(batteryLabel({ batteryAvailable: true, battery: 0.8 }), "80%");
+    assert.equal(batteryLabel({ batteryAvailable: true, battery: 0.375 }), "38%");
+});
+
+test("battery is empty when the device reports none", () => {
+    assert.equal(batteryLabel({ batteryAvailable: false, battery: 0.8 }), "");
 });
 
 function device(name, { connected = false, paired = false } = {}) {

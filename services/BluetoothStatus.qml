@@ -77,6 +77,7 @@ Singleton {
         return BluetoothFormat.deviceStatusLine({
             paired: device.paired,
             connected: device.connected,
+            pairing: device.pairing,
             batteryAvailable: device.batteryAvailable,
             battery: device.battery
         });
@@ -86,7 +87,23 @@ Singleton {
         return BluetoothFormat.deviceSymbol(iconName);
     }
 
-    function sortDevices(devices: list<BluetoothDevice>): var {
+    function deviceTypeLabel(iconName: string): string {
+        return BluetoothFormat.deviceTypeLabel(iconName);
+    }
+
+    function batteryLabel(device: BluetoothDevice): string {
+        if (!device)
+            return "";
+        return BluetoothFormat.batteryLabel({
+            batteryAvailable: device.batteryAvailable,
+            battery: device.battery
+        });
+    }
+
+    // `devices` is deliberately untyped: annotating it `list<BluetoothDevice>` makes QML
+    // coerce the adapter's QList<QObject*> to a typed list, which fails element-wise and
+    // silently hands the sort an empty list.
+    function sortDevices(devices): var {
         return BluetoothFormat.sortDevices(devices);
     }
 }

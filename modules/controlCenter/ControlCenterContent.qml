@@ -68,9 +68,10 @@ ColumnLayout {
                 }
 
                 BluetoothToggle {
+                    // Neither the adapter nor discovery is forced on here: the panel's own
+                    // "Use Bluetooth" switch owns the adapter, and its "Pair new device" row
+                    // owns discovery — which the scan indicator would otherwise show forever.
                     onOpenBluetoothPanel: {
-                        Bluetooth.defaultAdapter.enabled = true;
-                        Bluetooth.defaultAdapter.discovering = true;
                         root.wifiPanelOpen = false;
                         root.bluetoothPanelOpen = true;
                     }
