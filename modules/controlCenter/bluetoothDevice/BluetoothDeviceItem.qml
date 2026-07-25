@@ -81,24 +81,7 @@ RippleButton {
             spacing: 10
 
             CustomIcon {
-                property string symbol: {
-                    const name = root.device?.icon ?? "";
-                    if (name.includes("headset"))
-                        return "audio-headset-symbolic";
-                    if (name.includes("headphones"))
-                        return "audio-headphones-symbolic";
-                    if (name.includes("audio"))
-                        return "audio-speakers-symbolic";
-                    if (name.includes("phone"))
-                        return "phone-apple-iphone-symbolic";
-                    if (name.includes("mouse"))
-                        return "input-mouse-symbolic";
-                    if (name.includes("keyboard"))
-                        return "input-keyboard-symbolic";
-                    return "bluetooth-active-symbolic";
-                }
-
-                source: symbol
+                source: BluetoothStatus.deviceSymbol(root.device?.icon ?? "")
                 width: 20
                 height: 20
                 colorize: true
@@ -120,15 +103,7 @@ RippleButton {
                     font.pixelSize: 12
                     color: Appearance.colors.colSubtext
                     elide: Text.ElideRight
-                    text: {
-                        if (!root.device?.paired)
-                            return "";
-                        let statusText = root.device?.connected ? "Connected" : "Paired";
-                        if (!root.device?.batteryAvailable)
-                            return statusText;
-                        statusText += ` • ${Math.round(root.device?.battery * 100)}%`;
-                        return statusText;
-                    }
+                    text: BluetoothStatus.deviceStatusLine(root.device)
                 }
             }
 

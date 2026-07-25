@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Io
 import QtQuick
+import "BluetoothFormat.js" as BluetoothFormat
 
 Singleton {
     id: root
@@ -65,5 +66,27 @@ Singleton {
 
         // adapter is enabled but no devices connected
         return "bluetooth-disconnected-symbolic";
+    }
+
+    // BluetoothFormat.js can only be imported by a QML file in its own directory (a cross-directory
+    // JS import would need a relative path, and Quickshell resolves no qmldir here), so the
+    // service re-exports the pure helpers the Bluetooth panel needs.
+    function deviceStatusLine(device: BluetoothDevice): string {
+        if (!device)
+            return "";
+        return BluetoothFormat.deviceStatusLine({
+            paired: device.paired,
+            connected: device.connected,
+            batteryAvailable: device.batteryAvailable,
+            battery: device.battery
+        });
+    }
+
+    function deviceSymbol(iconName: string): string {
+        return BluetoothFormat.deviceSymbol(iconName);
+    }
+
+    function sortDevices(devices: list<BluetoothDevice>): var {
+        return BluetoothFormat.sortDevices(devices);
     }
 }
