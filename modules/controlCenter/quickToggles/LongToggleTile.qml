@@ -28,7 +28,7 @@ GroupButton {
     // at an edge, and an enclosing ButtonGroup already halves what an edge button gains.
     clickedWidth: baseWidth + 16
     horizontalPadding: 12
-    // Tight enough that the toggled icon container fits the content height exactly.
+    // Tight enough that the icon container fits the content height exactly.
     verticalPadding: 8
     // OFF is a pill echoing the circular icon container; ON squares tile and container off
     // together, in proportion. The resting radius is derived rather than taken from
@@ -61,18 +61,10 @@ GroupButton {
             // Centered rather than left to the layout, which would otherwise stretch the
             // container to the row height and pull the untoggled circle into an ellipse.
             Layout.alignment: Qt.AlignVCenter
-            implicitWidth: root.toggled ? 44 : 40
+            implicitWidth: 44
             implicitHeight: implicitWidth
             radius: root.toggled ? Appearance.rounding.normal : width / 2
             color: root.toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
-
-            Behavior on implicitWidth {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.BezierSpline
-                    easing.bezierCurve: Appearance.animation.expressiveFastSpatial
-                }
-            }
 
             Behavior on radius {
                 NumberAnimation {
