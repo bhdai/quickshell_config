@@ -36,6 +36,10 @@ Singleton {
         return NetworkParse.sortWifiNetworks(networks);
     }
 
+    function visibleWifiNetworks(networks: var, limit: int, expanded: bool): var {
+        return NetworkParse.visibleWifiNetworks(networks, limit, expanded);
+    }
+
     function networkSymbol(strength: int): string {
         return NetworkParse.pickNetworkSymbol({
             ethernet: false,
@@ -70,8 +74,40 @@ Singleton {
             disconnectProc.exec(["nmcli", "connection", "down", active.ssid]);
     }
 
-    function openPublicWifiPortal() {
-        Quickshell.execDetached(["xdg-open", "https://nmcheck.gnome.org/"]);
+    /**
+     * Hands deep per-network configuration to NetworkManager's own editor. With an `ssid`
+     * the editor opens that network's saved profile; without one it opens its connection
+     * list. Detached because the editor is a window of the user's, not of the shell — a
+     * config reload must not take it down with the Process that started it.
+     *
+     * The UUID is looked up at call time rather than cached: the profile behind an SSID can
+     * be replaced by a reconnect elsewhere, and a stale UUID would open the wrong network.
+     */
+    function openConnectionEditor(ssid = ""): void {
+        if (!ssid) {
+            Quickshell.execDetached(["nm-connection-editor"]);
+            return;
+        }
+        connectionUuidProc.ssid = ssid;
+        connectionUuidProc.exec(["nmcli", "-g", "UUID,NAME,TYPE", "connection", "show"]);
+    }
+
+    Process {
+        id: connectionUuidProc
+
+        property string ssid
+
+        environment: ({
+                LANG: "C",
+                LC_ALL: "C"
+            })
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const uuid = NetworkParse.findWifiConnectionUuid(text, connectionUuidProc.ssid);
+                // An unsaved network has no profile to edit, so the editor opens on its list.
+                Quickshell.execDetached(uuid ? ["nm-connection-editor", "-e", uuid] : ["nm-connection-editor"]);
+            }
+        }
     }
 
     function changePassword(network: WifiAccessPoint, password: string, username = ""): void {

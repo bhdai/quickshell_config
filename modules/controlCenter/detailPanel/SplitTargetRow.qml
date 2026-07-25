@@ -16,12 +16,32 @@ Item {
 
     property bool trailingVisible: true
     property string trailingIcon: "applications-system-symbolic"
+    // The row is bare by default; a filled row (Wi-Fi's connected pill) paints one background
+    // behind both targets so the fill reads as a single shape rather than two buttons.
+    property color colBackground: "transparent"
+    property color colBackgroundHover: Appearance.colors.colLayer1Hover
+    property color colDivider: Appearance.colors.colOutlineVariant
+    property color colTrailing: Appearance.colors.colOnLayer1
     default property alias bodyData: bodySlot.data
 
     signal bodyClicked
     signal trailingClicked
 
     implicitHeight: 64
+
+    Rectangle {
+        anchors.fill: parent
+        radius: Appearance.rounding.normal
+        color: root.colBackground
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animation.expressiveEffects
+            }
+        }
+    }
 
     RippleButton {
         id: body
@@ -36,7 +56,7 @@ Item {
         padding: 0
         buttonRadius: Appearance.rounding.normal
         colBackground: "transparent"
-        colBackgroundHover: Appearance.colors.colLayer1Hover
+        colBackgroundHover: root.colBackgroundHover
         colRipple: Appearance.colors.colPrimary
 
         onClicked: root.bodyClicked()
@@ -57,7 +77,7 @@ Item {
         visible: root.trailingVisible
         implicitWidth: 1
         implicitHeight: 24
-        color: Appearance.colors.colOutlineVariant
+        color: root.colDivider
     }
 
     RippleButton {
@@ -73,7 +93,7 @@ Item {
         implicitHeight: 44
         buttonRadius: Appearance.rounding.full
         colBackground: "transparent"
-        colBackgroundHover: Appearance.colors.colLayer1Hover
+        colBackgroundHover: root.colBackgroundHover
         colRipple: Appearance.colors.colPrimary
 
         onClicked: root.trailingClicked()
@@ -87,7 +107,7 @@ Item {
                 height: 20
                 source: root.trailingIcon
                 colorize: true
-                color: Appearance.colors.colOnLayer1
+                color: root.colTrailing
             }
         }
     }

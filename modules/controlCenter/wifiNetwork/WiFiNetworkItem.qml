@@ -1,186 +1,186 @@
 import qs.modules.common
 import qs.modules.common.widgets
-import qs.modules.common.functions
+import qs.modules.controlCenter.detailPanel
 import qs.services
 import QtQuick
 import QtQuick.Layouts
 
-RippleButton {
+/**
+ * One network in the Wi-Fi panel's list. The connected network wears the accent pill and
+ * hands its gear to the service's native editor; every other row connects on tap and grows
+ * an inline password field when NetworkManager asks for secrets.
+ */
+SplitTargetRow {
     id: root
 
-    horizontalPadding: 20
-    verticalPadding: 12
-    clip: true
-    required property WifiAccessPoint wifiNetwork
-    property bool active: (wifiNetwork?.askingPassword || wifiNetwork?.active) ?? false
-    pointingHandCursor: !active
-    implicitWidth: contentItem.implicitWidth + horizontalPadding * 2
-    implicitHeight: contentItem.implicitHeight + verticalPadding * 2
+    required property WifiAccessPoint network
+
+    readonly property bool connected: root.network?.active ?? false
+    readonly property bool askingPassword: root.network?.askingPassword ?? false
+    readonly property bool connecting: Network.wifiConnectTarget === root.network
+    readonly property color colForeground: root.connected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
+
+    // Only the connected network has something to configure, so it alone carries the gear.
+    trailingVisible: root.connected
+    colBackground: root.connected ? Appearance.colors.colPrimary : "transparent"
+    colBackgroundHover: root.connected ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer1Hover
+    colDivider: root.connected ? Appearance.colors.colOnPrimary : Appearance.colors.colOutlineVariant
+    colTrailing: root.colForeground
+
+    // The row owns its height rather than reading the prompt's geometry back through a layout,
+    // so the expand animates without the prompt's size chasing the row's.
+    implicitHeight: 64 + (root.askingPassword ? passwordPrompt.implicitHeight + 12 : 0)
+
     Behavior on implicitHeight {
         NumberAnimation {
-            duration: 500
+            duration: 400
             easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.38, 1.21, 0.22, 1.00, 1, 1]
+            easing.bezierCurve: Appearance.animation.expressiveFastSpatial
         }
     }
-    colBackground: Appearance.m3colors.m3background
-    colBackgroundHover: active ? colBackground : Appearance.colors.colLayer2Hover
-    colRipple: Appearance.m3colors.m3primary
-    buttonRadius: 0
 
-    onClicked: {
-        Network.connectToWifiNetwork(wifiNetwork);
+    onBodyClicked: {
+        if (!root.network || root.connected)
+            return;
+        Network.connectToWifiNetwork(root.network);
     }
 
-    contentItem: ColumnLayout {
-        anchors {
-            fill: parent
-            topMargin: root.verticalPadding
-            bottomMargin: root.verticalPadding
-            leftMargin: root.horizontalPadding
-            rightMargin: root.horizontalPadding
-        }
-        spacing: 0
+    onTrailingClicked: Network.openConnectionEditor(root.network?.ssid ?? "")
+
+    Item {
+        anchors.fill: parent
+        clip: true
 
         RowLayout {
-            // Name
-            spacing: 10
+            id: networkRow
+
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                leftMargin: 12
+                rightMargin: 12
+            }
+            height: 64
+            spacing: 12
 
             CustomIcon {
-                source: Network.networkSymbol(root.wifiNetwork?.strength ?? 0)
-                width: 20
-                height: 20
+                width: 24
+                height: 24
+                source: Network.networkSymbol(root.network?.strength ?? 0)
                 colorize: true
-                color: Appearance.colors.colOnLayer0
+                color: root.colForeground
             }
 
-            Text {
+            ColumnLayout {
                 Layout.fillWidth: true
-                color: Appearance.colors.colOnLayer0
-                elide: Text.ElideRight
-                text: root.wifiNetwork?.ssid ?? "Unknown"
+                spacing: 2
+
+                Text {
+                    Layout.fillWidth: true
+                    text: root.network?.ssid ?? "Unknown"
+                    color: root.colForeground
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: "Connected"
+                    visible: root.connected
+                    color: root.colForeground
+                    opacity: 0.8
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    elide: Text.ElideRight
+                }
             }
 
             CustomIcon {
-                visible: (root.wifiNetwork?.isSecure || root.wifiNetwork?.active) ?? false
-                source: root.wifiNetwork?.active ? "object-select-symbolic" : Network.wifiConnectTarget === root.wifiNetwork ? "content-loading-symbolic" : "channel-secure-symbolic"
                 width: 20
                 height: 20
+                visible: !root.connected && (root.connecting || (root.network?.isSecure ?? false))
+                source: root.connecting ? "content-loading-symbolic" : "channel-secure-symbolic"
                 colorize: true
-                color: Appearance.colors.colOnLayer0
+                color: root.colForeground
             }
         }
 
-        ColumnLayout { // Password
+        ColumnLayout {
             id: passwordPrompt
-            Layout.topMargin: 8
-            visible: root.wifiNetwork?.askingPassword ?? false
+
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: networkRow.bottom
+                leftMargin: 12
+                rightMargin: 12
+            }
+            visible: root.askingPassword
+            spacing: 4
 
             MaterialTextField {
                 id: passwordField
+
                 Layout.fillWidth: true
                 placeholderText: "Password"
-
-                // Password
                 echoMode: TextInput.Password
                 inputMethodHints: Qt.ImhSensitiveData
 
-                onAccepted: {
-                    Network.changePassword(root.wifiNetwork, passwordField.text);
-                }
+                onAccepted: Network.changePassword(root.network, passwordField.text)
             }
 
             RowLayout {
                 Layout.fillWidth: true
+                spacing: 4
 
                 Item {
                     Layout.fillWidth: true
                 }
 
                 RippleButton {
-                    id: cancelButton
                     implicitHeight: 36
-                    implicitWidth: 80
-                    padding: 14
-                    colBackground: ColorUtils.transparentize(Appearance.m3colors.m3background)
-                    buttonRadius: 9999
+                    implicitWidth: 90
+                    padding: 0
+                    buttonRadius: Appearance.rounding.full
+                    colBackground: "transparent"
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                    colRipple: Appearance.colors.colPrimary
 
                     contentItem: Text {
-                        anchors.fill: parent
-                        anchors.leftMargin: cancelButton.padding
-                        anchors.rightMargin: cancelButton.padding
                         text: "Cancel"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 12
-                        color: cancelButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colOnLayer0
                     }
 
                     onClicked: {
-                        root.wifiNetwork.askingPassword = false;
+                        if (root.network)
+                            root.network.askingPassword = false;
                     }
                 }
 
                 RippleButton {
-                    id: connectButton
                     implicitHeight: 36
-                    implicitWidth: 80
-                    padding: 14
-                    colBackground: ColorUtils.transparentize(Appearance.m3colors.m3background)
-                    buttonRadius: 9999
+                    implicitWidth: 90
+                    padding: 0
+                    buttonRadius: Appearance.rounding.full
+                    colBackground: Appearance.colors.colSecondaryContainer
+                    colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                    colRipple: Appearance.colors.colPrimary
 
                     contentItem: Text {
-                        anchors.fill: parent
-                        anchors.leftMargin: connectButton.padding
-                        anchors.rightMargin: connectButton.padding
                         text: "Connect"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 12
-                        color: connectButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        font.bold: true
+                        color: Appearance.colors.colOnSecondaryContainer
                     }
 
-                    onClicked: {
-                        Network.changePassword(root.wifiNetwork, passwordField.text);
-                    }
+                    onClicked: Network.changePassword(root.network, passwordField.text)
                 }
             }
-        }
-
-        ColumnLayout { // Public wifi login page
-            id: publicWifiPortal
-            Layout.topMargin: 8
-            visible: (root.wifiNetwork?.active && (root.wifiNetwork?.security ?? "").trim().length === 0) ?? false
-
-            RowLayout {
-                RippleButton {
-                    id: networkPortalButton
-                    Layout.fillWidth: true
-                    implicitHeight: 36
-                    implicitWidth: networkPortalText.implicitWidth + padding * 2
-                    padding: 14
-
-                    contentItem: Text {
-                        id: networkPortalText
-                        anchors.fill: parent
-                        anchors.leftMargin: networkPortalButton.padding
-                        anchors.rightMargin: networkPortalButton.padding
-                        text: "Open network portal"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.pixelSize: 15
-                        color: cancelButton.enabled ? Appearance.colors.colOnLayer0 : Appearance.m3colors.m3background
-                    }
-
-                    onClicked: {
-                        Network.openPublicWifiPortal();
-                    }
-                }
-            }
-        }
-
-        Item {
-            Layout.fillHeight: true
         }
     }
 }
