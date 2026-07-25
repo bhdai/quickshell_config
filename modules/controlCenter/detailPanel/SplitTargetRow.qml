@@ -15,7 +15,7 @@ Item {
     id: root
 
     property bool trailingVisible: true
-    property string trailingSymbol: "settings"
+    property string trailingIcon: "applications-system-symbolic"
     default property alias bodyData: bodySlot.data
 
     signal bodyClicked
@@ -78,11 +78,17 @@ Item {
 
         onClicked: root.trailingClicked()
 
-        contentItem: MaterialSymbol {
-            anchors.centerIn: parent
-            text: root.trailingSymbol
-            iconSize: 20
-            color: Appearance.colors.colOnLayer1
+        // The icon centres inside a slot the Control sizes, rather than anchoring itself
+        // against that same sizing — which is what pulled it off centre.
+        contentItem: Item {
+            CustomIcon {
+                anchors.centerIn: parent
+                width: 20
+                height: 20
+                source: root.trailingIcon
+                colorize: true
+                color: Appearance.colors.colOnLayer1
+            }
         }
     }
 }

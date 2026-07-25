@@ -109,7 +109,9 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
-                        text: "Pair new device"
+                        // Discovery is the only way unpaired devices reach the list at all,
+                        // and it is otherwise invisible — so the row says when it is running.
+                        text: (root.adapter?.discovering ?? false) ? "Searching for devices…" : "Pair new device"
                         color: Appearance.colors.colOnLayer0
                         font.pixelSize: Appearance.font.pixelSize.small
                         elide: Text.ElideRight

@@ -75,10 +75,11 @@ Rectangle {
             onClicked: circleAction.triggered()
 
             contentItem: MaterialSymbol {
-                anchors.centerIn: parent
                 text: circleAction.symbol
                 iconSize: 24
                 color: Appearance.colors.colOnSecondaryContainer
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
@@ -111,10 +112,11 @@ Rectangle {
                 onClicked: root.back()
 
                 contentItem: MaterialSymbol {
-                    anchors.centerIn: parent
                     text: "arrow_back"
                     iconSize: 22
                     color: Appearance.colors.colOnLayer0
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
 
