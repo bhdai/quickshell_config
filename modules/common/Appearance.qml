@@ -240,6 +240,11 @@ Singleton {
 
     // Animation configuration
     readonly property QtObject animation: QtObject {
+        // Material 3 expressive curves, for `easing.bezierCurve` on a BezierSpline easing.
+        // The token is the curve alone — each call site still picks its own duration.
+        readonly property var expressiveEffects: [0.34, 0.80, 0.34, 1.00, 1, 1] // radius / colour
+        readonly property var expressiveFastSpatial: [0.42, 1.67, 0.21, 0.90, 1, 1] // width / size bounce
+
         readonly property QtObject elementMove: QtObject {
             readonly property int duration: 200
             readonly property int type: Easing.OutQuad
