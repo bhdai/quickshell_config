@@ -1,0 +1,11 @@
+#!/bin/sh
+
+printf '%s\n' "$*" >>"$UDEV_TEST_CALLS"
+
+# Stand in for a writer outside this shell (firmware brightness keys, hypridle,
+# a stray brightnessctl): move the device, then emit the event the kernel emits.
+sleep 1
+printf '80\n' >"$BRIGHTNESS_STATE"
+printf 'UDEV  [1.000000] change   /devices/fake/intel_backlight (backlight)\n'
+
+sleep 10

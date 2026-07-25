@@ -28,14 +28,16 @@ Singleton {
     }
 
     function increaseBrightness(): void {
-        const focusedName = Hyprland.focusedMonitor.name;
+        // Null until Hyprland has answered the first monitor query, which can be
+        // after the first keypress reaches us.
+        const focusedName = Hyprland.focusedMonitor?.name;
         const monitor = monitors.find(m => focusedName === m.screen.name);
         if (monitor)
             monitor.setBrightness(monitor.brightness + 0.05);
     }
 
     function decreaseBrightness(): void {
-        const focusedName = Hyprland.focusedMonitor.name;
+        const focusedName = Hyprland.focusedMonitor?.name;
         const monitor = monitors.find(m => focusedName === m.screen.name);
         if (monitor)
             monitor.setBrightness(monitor.brightness - 0.05);
@@ -70,6 +72,25 @@ Singleton {
 
     Process {
         id: setProc
+    }
+
+    // The kernel emits a udev change event for every backlight write, including
+    // ones this shell did not make: firmware/ACPI handling of the laptop
+    // brightness keys, hypridle, a stray brightnessctl. Without re-reading the
+    // device on those events the value cached here is write-only — it drifts out
+    // of sync with the panel, and the next relative adjustment steps from the
+    // stale value instead of the real one.
+    Process {
+        id: udevProc
+
+        running: true
+        command: ["udevadm", "monitor", "--udev", "--subsystem-match=backlight"]
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.includes("(backlight)"))
+                    root.monitors.forEach(m => m.scheduleRefresh());
+            }
+        }
     }
 
     component BrightnessMonitor: QtObject {
@@ -118,6 +139,22 @@ Singleton {
             onTriggered: {
                 syncBrightness();
             }
+        }
+
+        // Coalesce bursts of events — key repeat, a slider drag — into one read
+        // after they settle, so a read can never overtake a write we just issued
+        // and snap the value back to what the device held a moment ago.
+        property var refreshTimer: Timer {
+            id: refreshTimer
+            interval: 200
+            onTriggered: monitor.initProc.running = true
+        }
+
+        // DDC monitors have no backlight device behind these events; they are
+        // driven over I2C and report through ddcutil instead.
+        function scheduleRefresh(): void {
+            if (!monitor.isDdc && monitor.ready)
+                refreshTimer.restart();
         }
 
         function syncBrightness() {

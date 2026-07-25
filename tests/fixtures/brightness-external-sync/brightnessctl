@@ -1,0 +1,15 @@
+#!/bin/sh
+
+printf '%s\n' "$*" >>"$BRIGHTNESS_TEST_CALLS"
+
+case "$1" in
+g)
+    cat "$BRIGHTNESS_STATE"
+    ;;
+m)
+    printf '100\n'
+    ;;
+s)
+    printf '%s\n' "$2" >"$BRIGHTNESS_STATE"
+    ;;
+esac
