@@ -2,33 +2,27 @@ import qs.modules.common
 import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
+import "ButtonGroupLayout.js" as ButtonGroupLayout
 
 /**
  * A container that displays buttons with equal widths and bouncy interactions.
+ *
+ * Holding a button grows it and shrinks only its two neighbours, at a fixed row width.
+ * Children read their allocated width from `buttonWidths` (indexed by child order) and
+ * report a press by writing their own index to `clickIndex`, or -1 on release —
+ * `GroupButton` does both.
+ *
+ * The bounce is animated here, as a single progress value the whole row is re-allocated
+ * from, rather than per button: the allocator can only keep the row's pixel arithmetic
+ * exact if it sees every frame.
  */
 Rectangle {
     id: root
     default property alias data: rowLayout.data
     property real spacing: 5
     property real padding: 0
-    property int clickIndex: -1  // Index of currently pressed button
-
-    property int visibleChildCount: {
-        let count = 0;
-        for (let i = 0; i < rowLayout.children.length; ++i) {
-            if (rowLayout.children[i].visible)
-                count++;
-        }
-        return count;
-    }
-
-    // Base equal width for each button when not pressed
-    property real baseButtonWidth: {
-        if (visibleChildCount === 0)
-            return 0;
-        const availableWidth = root.width - (padding * 2) - (spacing * (visibleChildCount - 1));
-        return availableWidth / visibleChildCount;
-    }
+    property alias clickIndex: rowLayout.clickIndex
+    property alias visibleChildCount: rowLayout.visibleChildCount
 
     topLeftRadius: 12
     bottomLeftRadius: 12
@@ -45,38 +39,51 @@ Rectangle {
             anchors.margins: root.padding
             spacing: root.spacing
 
-            // Set Layout.fillWidth based on proximity to clicked button
-            onChildrenChanged: {
-                updateChildrenLayout();
+            property int clickIndex: -1
+
+            // The button the row is still shaped around. It outlives clickIndex so that a
+            // release animates back down instead of snapping the moment the press is gone.
+            property int heldIndex: -1
+            property real pressProgress: 0
+
+            onClickIndexChanged: {
+                if (clickIndex >= 0)
+                    heldIndex = clickIndex;
+                pressProgress = clickIndex >= 0 ? 1 : 0;
+            }
+
+            Behavior on pressProgress {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveFastSpatial
+                }
+            }
+
+            property int visibleChildCount: {
+                let count = 0;
+                for (let i = 0; i < children.length; ++i) {
+                    if (children[i].visible)
+                        count++;
+                }
+                return count;
+            }
+
+            // How much the held button asks to gain, taken from the button itself so each
+            // kind of button keeps owning its own press expression.
+            readonly property real pressGrowth: {
+                if (heldIndex < 0 || heldIndex >= children.length)
+                    return 0;
+                const held = children[heldIndex];
+                return Math.max(0, (held.clickedWidth ?? 0) - (held.baseWidth ?? 0));
+            }
+
+            readonly property var buttonWidths: {
+                const visibility = [];
+                for (let i = 0; i < children.length; ++i)
+                    visibility.push(children[i].visible);
+                return ButtonGroupLayout.allocateWidths(visibility, width, spacing, heldIndex, pressGrowth * pressProgress);
             }
         }
     ]
-
-    onClickIndexChanged: {
-        updateChildrenLayout();
-    }
-
-    function updateChildrenLayout() {
-        for (let i = 0; i < rowLayout.children.length; ++i) {
-            const child = rowLayout.children[i];
-            if (!child.visible)
-                continue;
-
-            // Check if this child is the clicked one or adjacent to it
-            const isClicked = (i === clickIndex);
-            const isAdjacent = (i === clickIndex - 1 || i === clickIndex + 1);
-
-            if (clickIndex === -1) {
-                // No button pressed - all equal width
-                child.Layout.fillWidth = true;
-            } else if (isClicked || isAdjacent) {
-                // Clicked button and adjacent buttons use fillWidth for animation
-                child.Layout.fillWidth = true;
-            } else {
-                // Other buttons maintain their base width
-                child.Layout.fillWidth = false;
-                child.Layout.preferredWidth = baseButtonWidth;
-            }
-        }
-    }
 }

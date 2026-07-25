@@ -36,9 +36,15 @@ Button {
     property real clickedWidth: baseWidth + (isAtSide ? 10 : 20)
     property real clickedHeight: baseHeight
 
-    Layout.fillWidth: (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
-    Layout.fillHeight: (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
-    implicitWidth: (root.down && bounce) ? clickedWidth : baseWidth
+    // Width handed down by an enclosing ButtonGroup, which keeps the row width fixed and
+    // shrinks only the pressed button's neighbours. -1 outside such a group, where the
+    // button instead grows on its own and the surrounding layout absorbs it.
+    readonly property real groupWidth: parentGroup?.buttonWidths?.[indexInParent] ?? -1
+    readonly property bool inButtonGroup: groupWidth >= 0
+
+    Layout.fillWidth: !inButtonGroup && (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
+    Layout.fillHeight: !inButtonGroup && (clickIndex - 1 <= indexInParent && indexInParent <= clickIndex + 1)
+    implicitWidth: inButtonGroup ? groupWidth : ((root.down && bounce) ? clickedWidth : baseWidth)
     implicitHeight: (root.down && bounce) ? clickedHeight : baseHeight
 
     property color colBackground: Appearance.colors.colLayer2
@@ -54,14 +60,19 @@ Button {
     property color color: root.enabled ? (root.toggled ? (root.down ? colBackgroundToggledActive : root.hovered ? colBackgroundToggledHover : colBackgroundToggled) : (root.down ? colBackgroundActive : root.hovered ? colBackgroundHover : colBackground)) : colBackground
 
     onDownChanged: {
-        if (root.down) {
-            if (root.parent.clickIndex !== undefined) {
-                root.parent.clickIndex = parent.children.indexOf(root);
-            }
-        }
+        if (parentGroup?.clickIndex === undefined)
+            return;
+        if (root.down)
+            parentGroup.clickIndex = indexInParent;
+        else if (parentGroup.clickIndex === indexInParent)
+            parentGroup.clickIndex = -1;
     }
 
     Behavior on implicitWidth {
+        // An enclosing ButtonGroup animates the whole row from one progress value and hands
+        // down a finished width each frame. Interpolating again here would fight it, and the
+        // independently rounded result would drift the row's right-hand side mid-press.
+        enabled: !root.inButtonGroup
         NumberAnimation {
             duration: 200
             easing.type: Easing.BezierSpline
