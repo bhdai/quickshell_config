@@ -35,78 +35,6 @@ Rectangle {
         cursorShape: Qt.ArrowCursor
     }
 
-    component InfoRow: Rectangle {
-        id: infoRow
-
-        property string label
-        property string value
-
-        Layout.fillWidth: true
-        implicitHeight: 56
-        radius: Appearance.rounding.normal
-        color: Appearance.colors.colLayer1
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            spacing: 12
-
-            Text {
-                Layout.fillWidth: true
-                text: infoRow.label
-                color: Appearance.colors.colOnLayer1
-                font.pixelSize: Appearance.font.pixelSize.small
-                elide: Text.ElideRight
-            }
-
-            Text {
-                text: infoRow.value
-                color: Appearance.colors.colSubtext
-                font.pixelSize: Appearance.font.pixelSize.small
-            }
-        }
-    }
-
-    component CircleAction: ColumnLayout {
-        id: circleAction
-
-        property string symbol
-        property string label
-
-        signal triggered
-
-        spacing: 6
-
-        RippleButton {
-            Layout.alignment: Qt.AlignHCenter
-            implicitWidth: 56
-            implicitHeight: 56
-            padding: 0
-            buttonRadius: Appearance.rounding.full
-            colBackground: Appearance.colors.colSecondaryContainer
-            colBackgroundHover: Appearance.colors.colSecondaryContainerHover
-            colRipple: Appearance.colors.colPrimary
-
-            onClicked: circleAction.triggered()
-
-            contentItem: MaterialSymbol {
-                text: circleAction.symbol
-                iconSize: 24
-                color: Appearance.colors.colOnSecondaryContainer
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-        }
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: circleAction.label
-            color: Appearance.colors.colOnLayer0
-            font.pixelSize: Appearance.font.pixelSize.smaller
-        }
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 15
@@ -229,12 +157,14 @@ Rectangle {
             }
 
             InfoRow {
+                Layout.fillWidth: true
                 label: "Battery"
                 value: BluetoothStatus.batteryLabel(root.device)
                 visible: value.length > 0
             }
 
             InfoRow {
+                Layout.fillWidth: true
                 label: "Device type"
                 value: BluetoothStatus.deviceTypeLabel(root.device?.icon ?? "")
             }

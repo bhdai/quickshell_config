@@ -38,7 +38,10 @@ ColumnLayout {
     Rectangle {
         id: controlPannel
 
-        height: mainLayout.implicitHeight + root.margins * 2
+        // implicitHeight, not height: a ColumnLayout assigns its children's `height` itself, so
+        // binding it here left the layout squeezing the card to its implicit zero on every
+        // relayout and the binding snapping it back — a visible jump each time a panel opened.
+        implicitHeight: mainLayout.implicitHeight + root.margins * 2
 
         radius: root.radius
         color: Appearance.m3colors.m3background

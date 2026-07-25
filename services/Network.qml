@@ -19,6 +19,8 @@ Singleton {
     readonly property list<WifiAccessPoint> wifiNetworks: []
     readonly property WifiAccessPoint active: wifiNetworks.find(n => n.active) ?? null
     property string wifiStatus: "disconnected"
+    // Filled by `refreshConnectionDetails` for the Wi-Fi detail subpage; empty until it asks.
+    property var connectionDetails: ({})
 
     property string networkName: ""
     property int networkStrength
@@ -49,6 +51,26 @@ Singleton {
         });
     }
 
+    function signalLabel(strength: int): string {
+        return NetworkParse.signalLabel(strength);
+    }
+
+    function frequencyLabel(mhz: int): string {
+        return NetworkParse.frequencyLabel(mhz);
+    }
+
+    function securityLabel(security: string): string {
+        return NetworkParse.securityLabel(security);
+    }
+
+    function meteredLabel(metered: string): string {
+        return NetworkParse.meteredLabel(metered);
+    }
+
+    function connectionStatusLine(details: var): string {
+        return NetworkParse.connectionStatusLine(details);
+    }
+
     function enableWifi(enabled = true): void {
         const cmd = enabled ? "on" : "off";
         enableWifiProc.exec(["nmcli", "radio", "wifi", cmd]);
@@ -69,9 +91,50 @@ Singleton {
         connectProc.exec(["nmcli", "dev", "wifi", "connect", accessPoint.ssid]);
     }
 
+    /**
+     * Resolves the saved profile behind `ssid` and hands its UUID to `callback`, which receives
+     * "" when the network has never been saved.
+     *
+     * Every per-network action goes through here rather than naming the profile by SSID: nmcli
+     * accepts a profile name, but a profile's name is only conventionally its SSID, and acting
+     * on the wrong profile is silent. The UUID is resolved per call rather than cached because
+     * a reconnect elsewhere can replace the profile behind an SSID.
+     *
+     * One lookup Process is shared, so a second request made before the first returns replaces
+     * it — the actions are all user-initiated taps, which do not overlap in practice.
+     */
+    function withConnectionUuid(ssid: string, callback: var): void {
+        connectionUuidProc.ssid = ssid;
+        connectionUuidProc.callback = callback;
+        connectionUuidProc.exec(["nmcli", "-g", "UUID,NAME,TYPE", "connection", "show"]);
+    }
+
     function disconnectWifiNetwork(): void {
-        if (active)
-            disconnectProc.exec(["nmcli", "connection", "down", active.ssid]);
+        const ssid = root.active?.ssid ?? "";
+        if (!ssid)
+            return;
+        root.withConnectionUuid(ssid, uuid => {
+            if (uuid)
+                disconnectProc.exec(["nmcli", "connection", "down", "uuid", uuid]);
+        });
+    }
+
+    // Deleting the profile drops the connection with it, so this is disconnect-and-forget in
+    // one call — there is no NetworkManager operation that forgets a network it is still on.
+    function forgetWifiNetwork(ssid: string): void {
+        root.withConnectionUuid(ssid, uuid => {
+            if (uuid)
+                forgetProc.exec(["nmcli", "connection", "delete", "uuid", uuid]);
+        });
+    }
+
+    function setAutoconnect(ssid: string, enabled: bool): void {
+        root.withConnectionUuid(ssid, uuid => {
+            if (!uuid)
+                return;
+            autoconnectProc.ssid = ssid;
+            autoconnectProc.exec(["nmcli", "connection", "modify", "uuid", uuid, "connection.autoconnect", enabled ? "yes" : "no"]);
+        });
     }
 
     /**
@@ -79,23 +142,40 @@ Singleton {
      * the editor opens that network's saved profile; without one it opens its connection
      * list. Detached because the editor is a window of the user's, not of the shell — a
      * config reload must not take it down with the Process that started it.
-     *
-     * The UUID is looked up at call time rather than cached: the profile behind an SSID can
-     * be replaced by a reconnect elsewhere, and a stale UUID would open the wrong network.
      */
     function openConnectionEditor(ssid = ""): void {
         if (!ssid) {
             Quickshell.execDetached(["nm-connection-editor"]);
             return;
         }
-        connectionUuidProc.ssid = ssid;
-        connectionUuidProc.exec(["nmcli", "-g", "UUID,NAME,TYPE", "connection", "show"]);
+        root.withConnectionUuid(ssid, uuid => {
+            // An unsaved network has no profile to edit, so the editor opens on its list.
+            Quickshell.execDetached(uuid ? ["nm-connection-editor", "-e", uuid] : ["nm-connection-editor"]);
+        });
+    }
+
+    /**
+     * Refreshes `connectionDetails` for `ssid`'s profile. Driven by the Wi-Fi detail subpage
+     * when it opens rather than by `update()`, so nothing runs for a page nobody is looking at.
+     */
+    function refreshConnectionDetails(ssid: string): void {
+        root.withConnectionUuid(ssid, uuid => {
+            if (!uuid) {
+                root.connectionDetails = ({});
+                return;
+            }
+            // Two commands because the MAC belongs to the interface, not to the profile, and the
+            // interface is only known from the profile's own output. `dev show` dumps every
+            // device rather than the one, so the pair can run without a shell round-trip between.
+            detailsProc.exec(["sh", "-c", "nmcli -t -f connection.autoconnect,connection.metered,GENERAL.DEVICES,GENERAL.STATE,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS,IP6.ADDRESS connection show uuid \"$1\"; nmcli -t -f GENERAL.DEVICE,GENERAL.HWADDR device show", "sh", uuid]);
+        });
     }
 
     Process {
         id: connectionUuidProc
 
         property string ssid
+        property var callback
 
         environment: ({
                 LANG: "C",
@@ -103,11 +183,38 @@ Singleton {
             })
         stdout: StdioCollector {
             onStreamFinished: {
-                const uuid = NetworkParse.findWifiConnectionUuid(text, connectionUuidProc.ssid);
-                // An unsaved network has no profile to edit, so the editor opens on its list.
-                Quickshell.execDetached(uuid ? ["nm-connection-editor", "-e", uuid] : ["nm-connection-editor"]);
+                connectionUuidProc.callback(NetworkParse.findWifiConnectionUuid(text, connectionUuidProc.ssid));
             }
         }
+    }
+
+    Process {
+        id: detailsProc
+
+        environment: ({
+                LANG: "C",
+                LC_ALL: "C"
+            })
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.connectionDetails = NetworkParse.parseConnectionDetails(text);
+            }
+        }
+    }
+
+    Process {
+        id: forgetProc
+        onExited: getNetworks.running = true
+    }
+
+    Process {
+        id: autoconnectProc
+
+        property string ssid
+
+        // The switch shows what NetworkManager stored, not what was asked for, so the write is
+        // read back rather than assumed.
+        onExited: root.refreshConnectionDetails(ssid)
     }
 
     function changePassword(network: WifiAccessPoint, password: string, username = ""): void {

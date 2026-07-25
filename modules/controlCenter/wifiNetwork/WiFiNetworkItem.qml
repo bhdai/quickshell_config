@@ -6,9 +6,9 @@ import QtQuick
 import QtQuick.Layouts
 
 /**
- * One network in the Wi-Fi panel's list. The connected network wears the accent pill and
- * hands its gear to the service's native editor; every other row connects on tap and grows
- * an inline password field when NetworkManager asks for secrets.
+ * One network in the Wi-Fi panel's list. The connected network wears the accent pill and opens
+ * its detail subpage from the gear; every other row connects on tap and grows an inline
+ * password field when NetworkManager asks for secrets.
  */
 SplitTargetRow {
     id: root
@@ -20,7 +20,9 @@ SplitTargetRow {
     readonly property bool connecting: Network.wifiConnectTarget === root.network
     readonly property color colForeground: root.connected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
 
-    // Only the connected network has something to configure, so it alone carries the gear.
+    signal openDetails
+
+    // Only the connected network has a detail page: every row on it describes a live connection.
     trailingVisible: root.connected
     colBackground: root.connected ? Appearance.colors.colPrimary : "transparent"
     colBackgroundHover: root.connected ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer1Hover
@@ -46,7 +48,7 @@ SplitTargetRow {
         Network.connectToWifiNetwork(root.network);
     }
 
-    onTrailingClicked: Network.openConnectionEditor(root.network?.ssid ?? "")
+    onTrailingClicked: root.openDetails()
 
     Item {
         anchors.fill: parent
