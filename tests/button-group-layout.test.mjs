@@ -43,11 +43,21 @@ test("pressing a button shrinks only its two neighbours", () => {
     );
 });
 
-test("pressing an edge button puts the whole growth on its single neighbour", () => {
+// Growth is per side, so an edge button — which has only one side to borrow from — grows
+// half as much rather than taking a double helping out of its one neighbour.
+test("pressing an edge button borrows from its one side only", () => {
     assert.deepEqual(
         allocateWidths(visible(6), 350, 10, 0, 8),
-        [58, 42, 50, 50, 50, 50],
+        [54, 46, 50, 50, 50, 50],
     );
+});
+
+test("an edge button's neighbour gives up exactly what a middle button's does", () => {
+    const edge = allocateWidths(visible(6), 350, 10, 0, 8);
+    const middle = allocateWidths(visible(6), 350, 10, 2, 8);
+
+    assert.equal(edge[1], middle[1]);
+    assert.equal(edge[1], middle[3]);
 });
 
 test("the row width is unchanged by a press", () => {
@@ -65,7 +75,7 @@ test("the row width is unchanged by a press", () => {
 test("hidden slots get no width and are skipped when finding neighbours", () => {
     assert.deepEqual(
         allocateWidths([true, false, true, true], 170, 10, 0, 8),
-        [58, 0, 42, 50],
+        [54, 0, 46, 50],
     );
 });
 

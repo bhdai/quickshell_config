@@ -6,7 +6,8 @@
  *
  * `visibility` holds one flag per row slot; hidden slots are allocated 0 and are skipped
  * when looking for a pressed button's neighbours. `pressedIndex` indexes the same slots
- * (-1 when nothing is held). `pressGrowth` is how much the held button wants to gain.
+ * (-1 when nothing is held). `pressGrowth` is what a button with a neighbour on either side
+ * gains; one at the row's edge borrows from its single side only and so gains half that.
  *
  * `pressGrowth` arrives already scaled by the press animation's progress, so this runs once
  * per frame and every frame has to hold the row together.
@@ -38,7 +39,10 @@ function allocateWidths(visibility, totalWidth, spacing, pressedIndex, pressGrow
             neighbours.push(shown[position + 1]);
     }
     if (neighbours.length > 0) {
-        const shrink = Math.min(pressGrowth / neighbours.length, base / 2);
+        // Growth is per side. A button at the row's edge has only one side to borrow from,
+        // so it grows half as much rather than taking a double helping out of its single
+        // neighbour, which read as a shove.
+        const shrink = Math.min(pressGrowth / 2, base / 2);
         for (const slot of neighbours)
             widths[slot] = base - shrink;
         widths[pressedIndex] = base + shrink * neighbours.length;
