@@ -131,6 +131,11 @@ observed it; both recommended it; #46 called it "non-negotiable".
   fatal error`. Any supervision or pre-lock fallback that retries into a stranded
   compositor will die noisily rather than degrade — relevant to
   [#52](https://github.com/bhdai/quickshell_config/issues/52).
+- **`secure` was seen `true` while `locked` was `false`, once.** On one R12 run the new
+  generation reported `locked=false secure=true` despite never having held the lock; a
+  repeat of the same row reported `secure=false`. Seen once and not reproduced, so it is
+  recorded rather than claimed — but anything that treats `secure` as a standalone
+  "the screen is protected" signal should read `locked` too.
 - **New generation before old teardown**, as #46 read it: the new `WlSessionLock` is
   created and its `locked` binding evaluated *before* the old generation is destroyed.
 - **The file watcher ignores some edits.** No reload fired for `touch` (mtime only) or
