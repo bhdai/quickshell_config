@@ -112,6 +112,24 @@ Feature loop:
 tracked by `quickshell_config.git`, so it reaches the dev clone the normal way (commit
 + pull), not by editing both copies.
 
+### Lock-screen work runs nested
+
+Step 2 above runs the dev clone as a client of your real Hyprland. For every other
+module that is fine. For anything that raises a `WlSessionLock` it is not: the lock
+covers your actual desktop, and a bug leaves you at a TTY.
+
+```
+./scripts/dev-nested.sh    # dev clone inside a nested Hyprland
+```
+
+`ext-session-lock-v1` binds a lock to the compositor that granted it, so a lock raised
+in there covers the nested window only. Iterate the same way — files still hot-reload
+on save — and close the window when a run goes wrong.
+
+What a hot reload does to an active lock is observed in
+`docs/research/reload-while-locked.md`; recovery from a session left locked with no
+client is in `docs/research/lock-client-death.md`.
+
 ## IPC (runtime control)
 
 Actions reachable from keybinds are exposed via `IpcHandler` and invoked from
