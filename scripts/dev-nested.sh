@@ -5,7 +5,12 @@
 # ext-session-lock-v1 binds a session lock to the compositor that granted it, so a
 # WlSessionLock raised in here covers this nested instance's own window and cannot
 # reach the desktop. That is what makes lock-screen work safe to iterate on: a wedged
-# nested compositor is closed, not recovered from a TTY.
+# nested compositor is killed, not recovered from a TTY.
+#
+# Kill it with Ctrl-C here, or `pkill -f qs-dev-nested` from anywhere. Closing the
+# nested window does *not* work: Hyprland's Wayland backend never acts on the
+# xdg_toplevel close request its own window receives, locked or not. Neither escape
+# needs the nested compositor to be responsive, which is the point.
 #
 #   ./scripts/dev-nested.sh              # run the dev clone this script lives in
 #   ./scripts/dev-nested.sh <path>       # run some other config directory
@@ -43,19 +48,23 @@ cleanup() {
 trap cleanup EXIT
 
 # HYPRLAND_INSTANCE_SIGNATURE is unset so the nested compositor mints its own instead
-# of inheriting the host's — otherwise hyprctl and Quickshell's Hyprland service both
-# talk to the outer session from inside the nested one.
+# of inheriting the host's, which is what makes the two instances addressable apart.
 env -u HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY="$HOST_DISPLAY" \
     Hyprland -c "$WORK/hypr.conf" > "$WORK/compositor.log" 2>&1 &
+HYPR_PID=$!
 
-# The nested compositor mints a fresh wayland-N socket rather than reusing a name we
-# could pass in, so it has to be discovered: newest socket that is not the host's.
+# The nested compositor mints both its wayland-N socket name and its instance
+# signature at startup, so neither can be passed in — both have to be read back out
+# of `hyprctl instances`, which lists every instance regardless of the signature in
+# the environment. Matching on the pid we just forked is what makes this unambiguous
+# when more than one nested compositor is up.
 NESTED=
+NESTED_SIG=
 for _ in $(seq 1 40); do
-    NESTED=$(ls -t "$XDG_RUNTIME_DIR" \
-        | grep '^wayland-[0-9]*$' \
-        | grep -v "^$HOST_DISPLAY\$" \
-        | head -1)
+    read -r NESTED NESTED_SIG < <(hyprctl instances 2>/dev/null | awk -v pid="$HYPR_PID" '
+        $1 == "instance" { sig = substr($2, 1, length($2) - 1) }
+        $1 == "pid:"     { mine = ($2 == pid) }
+        $1 == "wl" && mine { print $3, sig; exit }')
     [[ -n "$NESTED" ]] && break
     sleep 0.5
 done
@@ -69,6 +78,11 @@ fi
 sleep 2
 
 echo "nested compositor on $NESTED (host $HOST_DISPLAY)"
-echo "running $CONFIG — edits hot-reload as usual; close the window or Ctrl-C to stop"
+echo "running $CONFIG — edits hot-reload as usual"
+echo "Ctrl-C to stop, or \`pkill -f qs-dev-nested\` — the nested window ignores close"
 
-env WAYLAND_DISPLAY="$NESTED" qs -p "$CONFIG"
+# HYPRLAND_INSTANCE_SIGNATURE has to be overridden here too, not just unset for the
+# compositor: qs would otherwise inherit the *host's* signature, and every
+# Quickshell.Hyprland query and dispatch from inside the nested shell would land on
+# the real desktop instead of the one it is running in.
+env WAYLAND_DISPLAY="$NESTED" HYPRLAND_INSTANCE_SIGNATURE="$NESTED_SIG" qs -p "$CONFIG"
