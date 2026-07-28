@@ -124,7 +124,11 @@ covers your actual desktop, and a bug leaves you at a TTY.
 
 `ext-session-lock-v1` binds a lock to the compositor that granted it, so a lock raised
 in there covers the nested window only. Iterate the same way — files still hot-reload
-on save — and close the window when a run goes wrong.
+on save.
+
+When a run goes wrong, **Ctrl-C the script**, or `pkill -f qs-dev-nested` from any other
+terminal. Do not try to close the nested window: Hyprland's Wayland backend ignores the
+close request, so that does nothing whether or not a lock is up.
 
 What a hot reload does to an active lock is observed in
 `docs/research/reload-while-locked.md`; recovery from a session left locked with no
