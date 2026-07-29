@@ -35,14 +35,18 @@ Item {
         sourceSize.width: root.width
         sourceSize.height: root.height
 
-        // Roughly 14 px of blur at 1600x900 was the approved look; blurMax is the radius
-        // this maps that target onto, and `blur` the fraction of it in use.
+        // Far past the prototype's ~14 px at 1600x900: the photo is texture behind the
+        // composition, not a picture with a clock on it. blurMax is the radius `blur` is a
+        // fraction of, and 64 is MultiEffect's ceiling for it — blurMultiplier is what
+        // reaches beyond that, by widening the sample offsets rather than by adding
+        // downscale levels, so pushing it much further trades the smoothness for blocking.
         layer.enabled: true
         layer.effect: MultiEffect {
             source: wallpaper
             blurEnabled: true
-            blur: 0.75
-            blurMax: 32
+            blur: 1.0
+            blurMax: 64
+            blurMultiplier: 0.5
             saturation: -0.28
         }
     }
