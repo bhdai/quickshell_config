@@ -236,6 +236,7 @@ Singleton {
         readonly property real elevationMargin: 10
         readonly property real searchWidthCollapsed: 210
         readonly property real searchWidth: 450
+        readonly property real lockAvatar: 64
     }
 
     // Animation configuration
@@ -259,6 +260,21 @@ Singleton {
                 ColorAnimation {
                     duration: 200
                     easing.type: Easing.OutQuad
+                }
+            }
+        }
+        // A whole composition moving at once, rather than one element resizing: long
+        // enough to read as a single travelling shape. Same curve as elementMove, so the
+        // two are the same system at two scales.
+        readonly property QtObject elementMoveSlow: QtObject {
+            readonly property int duration: 400
+            readonly property int type: Easing.BezierSpline
+            readonly property var bezierCurve: [0.2, 0.0, 0.0, 1.0]
+            readonly property Component numberAnimation: Component {
+                NumberAnimation {
+                    duration: 400
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: [0.2, 0.0, 0.0, 1.0]
                 }
             }
         }
