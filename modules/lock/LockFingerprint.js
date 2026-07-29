@@ -32,8 +32,13 @@ var Tone = {
  * @param phase a LockLogic.Fingerprint value
  *
  * `visible` is false only for Absent, which covers no reader, no enrolment, a reader
- * unplugged mid-lock, and the permanent stop alike — the affordance goes away rather than
+ * unplugged mid-lock, and the permanent stop alike — the chip goes away rather than
  * greying out, because a disabled control offers something that cannot happen.
+ *
+ * The invitation and the refusal share an icon, which is the approved prototype's
+ * treatment: what separates them is the chip going red and jolting, so the refusal is
+ * still about the reader the user is touching rather than a different symbol appearing in
+ * its place.
  */
 function treatment(phase) {
     switch (phase) {
@@ -42,14 +47,16 @@ function treatment(phase) {
             visible: true,
             tone: Tone.Neutral,
             icon: "fingerprint",
-            copy: "Or touch the fingerprint reader"
+            shake: false,
+            copy: "Touch the fingerprint sensor"
         };
 
     case Phase.Rejected:
         return {
             visible: true,
             tone: Tone.Error,
-            icon: "fingerprint_off",
+            icon: "fingerprint",
+            shake: true,
             // Attempts are unlimited, so this says what happened without reading as a
             // dead end. It never appears in the password message area: that area has to
             // stay readable for the account-lockout text, which the result code cannot
@@ -62,6 +69,7 @@ function treatment(phase) {
             visible: true,
             tone: Tone.Success,
             icon: "check_circle",
+            shake: false,
             copy: "Fingerprint recognized. Unlocking…"
         };
 
@@ -69,7 +77,8 @@ function treatment(phase) {
         return {
             visible: false,
             tone: Tone.Neutral,
-            icon: "",
+            icon: "fingerprint_off",
+            shake: false,
             copy: ""
         };
     }

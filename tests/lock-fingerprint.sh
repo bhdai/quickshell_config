@@ -71,10 +71,18 @@ for phase in armed rejected recognized; do
 done
 
 # A refusal that looks like the invitation to touch is a refusal the user does not read.
-looks="$(grep -E 'phase=(armed|rejected|recognized) ' <<<"$results" | sed -n 's/.*\(tone=[^ ]* icon=[^ ]*\).*/\1/p')"
+# The invitation and the refusal share an icon on purpose, so the colour is what has to
+# carry it — this is the mapping as wired rather than as unit-tested.
+looks="$(grep -E 'phase=(armed|rejected|recognized) ' <<<"$results" | sed -n 's/.*\(tone=[^ ]* icon=[^ ]* shake=[^ ]*\).*/\1/p')"
 if [[ "$(sort -u <<<"$looks" | wc -l)" -ne 3 ]]; then
     echo "$results"
     echo "The three drawn states are not visibly distinct"
+    exit 1
+fi
+
+if [[ "$(read_field rejected shake)" != "true" ]]; then
+    echo "$results"
+    echo "The refusal did not arrive with its jolt"
     exit 1
 fi
 

@@ -155,7 +155,7 @@ WlSessionLockSurface {
         LockFingerprint {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: authArea.bottom
-            anchors.topMargin: Appearance.font.pixelSize.normal
+            anchors.topMargin: Appearance.font.pixelSize.smaller
 
             phase: Lock.fingerprintState
             opacity: root.revealed ? 1 : 0

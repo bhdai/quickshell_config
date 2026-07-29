@@ -32,7 +32,7 @@ ShellRoot {
                     affordance.phase = phase;
 
                     const treatment = affordance.treatment;
-                    console.log(`LOCK_FINGERPRINT phase=${phase} visible=${treatment.visible} tone=${treatment.tone} icon=${treatment.icon}`);
+                    console.log(`LOCK_FINGERPRINT phase=${phase} visible=${treatment.visible} tone=${treatment.tone} icon=${treatment.icon} shake=${treatment.shake}`);
                 }
 
                 // The size is reported separately and a frame later: a positioner's

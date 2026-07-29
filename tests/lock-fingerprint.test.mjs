@@ -33,10 +33,7 @@ test("absent renders nothing", () => {
 test("no reader and no enrolment leave nothing on screen to explain", () => {
     // Absent, not disabled: a greyed-out reader on a machine that has none is an
     // affordance offering something that cannot happen.
-    const absent = treatment(Phase.Absent);
-
-    assert.equal(absent.copy, "");
-    assert.equal(absent.icon, "");
+    assert.equal(treatment(Phase.Absent).copy, "");
 });
 
 test("every state but absent is drawn", () => {
@@ -50,13 +47,22 @@ test("every state but absent is drawn", () => {
 });
 
 test("a rejected scan reads as a refusal rather than as an invitation", () => {
+    // They share an icon by design — the refusal is about the reader being touched, not
+    // about a different symbol appearing — so colour and motion are what carry it.
     const armed = treatment(Phase.Armed);
     const rejected = treatment(Phase.Rejected);
 
     assert.equal(armed.tone, Tone.Neutral);
     assert.equal(rejected.tone, Tone.Error);
-    assert.notEqual(armed.icon, rejected.icon);
+    assert.equal(armed.shake, false);
+    assert.equal(rejected.shake, true);
     assert.notEqual(armed.copy, rejected.copy);
+});
+
+test("nothing but a refusal jolts", () => {
+    for (const phase of everyPhase.filter(p => p !== Phase.Rejected)) {
+        assert.equal(treatment(phase).shake, false);
+    }
 });
 
 test("a rejected scan still says to try again", () => {
