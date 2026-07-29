@@ -41,6 +41,12 @@ WlSessionLockSurface {
     Item {
         anchors.fill: parent
 
+        LockStatusCluster {
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: Appearance.font.pixelSize.hugeass
+        }
+
         LockClock {
             anchors.horizontalCenter: parent.horizontalCenter
             y: parent.height * root.clockCenterFraction - height / 2

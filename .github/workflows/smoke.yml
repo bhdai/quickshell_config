@@ -27,6 +27,8 @@ jobs:
         run: tests/brightness-without-ddcutil.sh
       - name: Test brightness sync with external writers
         run: tests/brightness-external-sync.sh
+      - name: Test the lock status cluster without UPower
+        run: tests/lock-status-cluster.sh
       - name: Load the shell
         env:
           WLR_BACKENDS: headless
