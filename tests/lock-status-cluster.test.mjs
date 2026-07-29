@@ -10,6 +10,7 @@ const servicesDir = path.join(repoRoot, "services");
 
 const cluster = read(lockDir, "LockStatusCluster.qml");
 const surface = read(lockDir, "LockSurface.qml");
+const statusIcons = read(repoRoot, "modules", "bar", "StatusIcons.qml");
 
 function withoutComments(source) {
     return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
@@ -39,6 +40,20 @@ test("the battery is the shared bar widget rather than a lock-owned copy", () =>
     assert.match(battery, /text:\s*Math\.round\(Battery\.percentage \* 100\)/);
 
     assert.doesNotMatch(withoutComments(cluster), /BatteryIndicator|MouseArea\s*\{/);
+});
+
+// The bar leaves the body size, the nob and the text style at the widget's defaults. Setting
+// any of them here is the lock screen drifting away from the bar rather than matching it.
+test("the battery body is left at the size the bar leaves it", () => {
+    const [battery] = blocks(cluster, "ClippedProgressBar");
+
+    assert.doesNotMatch(battery, /valueBarWidth:|valueBarHeight:|font:|radius:/);
+});
+
+// "The same as in the bar" has to be one number, not two that happen to agree today.
+test("both status clusters size their icons from one token", () => {
+    assert.match(cluster, /iconSize:\s*Appearance\.sizes\.statusIcon/);
+    assert.match(statusIcons, /iconSize:\s*Appearance\.sizes\.statusIcon/);
 });
 
 // Absence is ambiguous for a network: a missing icon and no connection look identical, so

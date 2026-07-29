@@ -29,8 +29,13 @@ import qs.services
 RowLayout {
     id: root
 
-    readonly property real iconSize: Appearance.font.pixelSize.huge
+    readonly property real iconSize: Appearance.sizes.statusIcon
     readonly property color foreground: Appearance.colors.colOnLayer0
+
+    // The bar's own bolt: it overhangs the battery body rather than sitting after it, which
+    // is why it is placed by anchors instead of by the layout.
+    readonly property real boltSize: 14
+    readonly property real boltOverlap: -5
 
     spacing: Appearance.font.pixelSize.normal
 
@@ -55,22 +60,17 @@ RowLayout {
             implicitHeight: batteryProgress.implicitHeight
 
             // The percentage is cut out of the filled body, so the icon and the number are
-            // one shape — the same battery the bar draws, at the lock screen's scale.
+            // one shape. Body size, nob and text style are the widget's own defaults, which
+            // is exactly what BatteryIndicator leaves them at — overriding any of them here
+            // would be the lock screen drifting away from the bar rather than matching it.
             ClippedProgressBar {
                 id: batteryProgress
 
                 anchors.verticalCenter: parent.verticalCenter
-                valueBarWidth: root.iconSize * 1.7
-                valueBarHeight: root.iconSize
                 value: Battery.percentage
                 text: Math.round(Battery.percentage * 100)
                 highlightColor: Battery.isCharging ? Appearance.colors.colBatteryCharging : (Battery.isCritical ? Appearance.colors.colBatteryCritical : root.foreground)
                 trackColor: ColorUtils.transparentize(root.foreground, 0.5)
-                font: Qt.font({
-                    family: Appearance.font.family.main,
-                    pixelSize: Appearance.font.pixelSize.smaller,
-                    weight: Font.DemiBold
-                })
                 showNob: !Battery.isCharging || Battery.percentage >= 1
                 nobFilled: Battery.percentage >= 1
             }
@@ -79,10 +79,11 @@ RowLayout {
             // exclusive above rather than both drawn.
             MaterialSymbol {
                 anchors.left: batteryProgress.right
+                anchors.leftMargin: root.boltOverlap
                 anchors.verticalCenter: batteryProgress.verticalCenter
                 visible: Battery.isCharging && Battery.percentage < 1
                 text: "bolt"
-                iconSize: root.iconSize * 0.7
+                iconSize: root.boltSize
                 fill: 1
                 color: root.foreground
             }
