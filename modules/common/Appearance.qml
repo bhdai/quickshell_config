@@ -242,6 +242,14 @@ Singleton {
         // about a factor already running, not a second thing to type into.
         readonly property real lockFingerprintChip: 44
         readonly property real lockPowerButton: 48
+        // The lock composition's own metrics, from the approved prototype. The clock is
+        // display type well outside the UI scale above, so it is sized here rather than
+        // squeezed into a name in font.pixelSize.
+        readonly property real lockClock: 300
+        readonly property real lockClockDate: 28
+        readonly property real lockClockGap: 26
+        // How far the prompt and the power controls travel as they fade in.
+        readonly property real lockRevealRise: 14
         // Shared by the bar's status icons and the lock screen's, so the same reading of
         // the same machine is the same size in both places rather than by coincidence.
         readonly property real statusIcon: 20
@@ -285,6 +293,24 @@ Singleton {
                     easing.bezierCurve: [0.2, 0.0, 0.0, 1.0]
                 }
             }
+        }
+        // A whole composition moving to a new position. Not the emphasized curve the tokens
+        // above share: that one's first control point sits at y=0, so the element hesitates
+        // before it moves — invisible on a button, plainly a lag on a shape the size of a
+        // lock screen clock. This one leaves immediately and coasts in.
+        readonly property QtObject compositionTravel: QtObject {
+            readonly property int duration: 380
+            readonly property int type: Easing.BezierSpline
+            readonly property var bezierCurve: [0.2, 0.8, 0.2, 1.0, 1, 1]
+        }
+        // Something arriving in place rather than travelling to it, over a composition that
+        // is still settling. Deliberately quicker than compositionTravel: without the
+        // contrast the two read as one slab moving at a single rate.
+        readonly property QtObject compositionAppear: QtObject {
+            readonly property int duration: 180
+            readonly property int riseDuration: 240
+            readonly property int type: Easing.BezierSpline
+            readonly property var bezierCurve: [0.2, 0.0, 0.0, 1.0, 1, 1]
         }
         readonly property QtObject elementMoveFast: QtObject {
             readonly property int duration: 100

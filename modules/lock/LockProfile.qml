@@ -70,18 +70,21 @@ Column {
         clip: true
         opacity: root.detailsVisible ? 1 : 0
 
+        // The appear tier, not the travel one: the copy collapses while the profile it sits
+        // under is still travelling, and matching the two would merge them into one movement.
         Behavior on implicitHeight {
             NumberAnimation {
-                duration: Appearance.animation.elementMoveSlow.duration
-                easing.type: Appearance.animation.elementMoveSlow.type
-                easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                duration: Appearance.animation.compositionAppear.riseDuration
+                easing.type: Appearance.animation.compositionAppear.type
+                easing.bezierCurve: Appearance.animation.compositionAppear.bezierCurve
             }
         }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Appearance.animation.elementMove.duration
-                easing.type: Appearance.animation.elementMove.type
+                duration: Appearance.animation.compositionAppear.duration
+                easing.type: Appearance.animation.compositionAppear.type
+                easing.bezierCurve: Appearance.animation.compositionAppear.bezierCurve
             }
         }
 

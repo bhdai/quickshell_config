@@ -33,12 +33,45 @@ WlSessionLockSurface {
     readonly property real profileTopFraction: root.revealed ? 0.56 : 0.78
     readonly property real authCenterFraction: 0.72
 
+    // The entrance, as one pair of drivers every part of the composition reads. This needs
+    // no lifecycle hook beyond construction, because the surface is constructed at the
+    // moment the lock is raised.
+    property real entranceScale: 0.9
+    property real entranceOpacity: 0
+
+    Component.onCompleted: {
+        root.entranceScale = 1;
+        root.entranceOpacity = 1;
+    }
+
+    Behavior on entranceScale {
+        NumberAnimation {
+            duration: Appearance.animation.compositionTravel.duration
+            easing.type: Appearance.animation.compositionTravel.type
+            easing.bezierCurve: Appearance.animation.compositionTravel.bezierCurve
+        }
+    }
+
+    Behavior on entranceOpacity {
+        NumberAnimation {
+            duration: Appearance.animation.compositionTravel.duration
+            easing.type: Appearance.animation.compositionTravel.type
+            easing.bezierCurve: Appearance.animation.compositionTravel.bezierCurve
+        }
+    }
+
+    // Outside the entrance on purpose. This is the opaque backstop the content animates
+    // over: fading or scaling it in with everything else would make the entrance a window
+    // onto the unlocked session for as long as it ran.
     LockBackground {
         anchors.fill: parent
     }
 
     Item {
         anchors.fill: parent
+
+        opacity: root.entranceOpacity
+        scale: root.entranceScale
 
         LockStatusCluster {
             anchors.top: parent.top
@@ -57,17 +90,17 @@ WlSessionLockSurface {
 
             Behavior on y {
                 NumberAnimation {
-                    duration: Appearance.animation.elementMoveSlow.duration
-                    easing.type: Appearance.animation.elementMoveSlow.type
-                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                    duration: Appearance.animation.compositionTravel.duration
+                    easing.type: Appearance.animation.compositionTravel.type
+                    easing.bezierCurve: Appearance.animation.compositionTravel.bezierCurve
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: Appearance.animation.elementMoveSlow.duration
-                    easing.type: Appearance.animation.elementMoveSlow.type
-                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                    duration: Appearance.animation.compositionTravel.duration
+                    easing.type: Appearance.animation.compositionTravel.type
+                    easing.bezierCurve: Appearance.animation.compositionTravel.bezierCurve
                 }
             }
         }
@@ -79,93 +112,106 @@ WlSessionLockSurface {
 
             Behavior on y {
                 NumberAnimation {
-                    duration: Appearance.animation.elementMoveSlow.duration
-                    easing.type: Appearance.animation.elementMoveSlow.type
-                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                    duration: Appearance.animation.compositionTravel.duration
+                    easing.type: Appearance.animation.compositionTravel.type
+                    easing.bezierCurve: Appearance.animation.compositionTravel.bezierCurve
                 }
             }
         }
 
-        LockAuthArea {
-            id: authArea
+        // The prompt and the chip under it are one thing arriving — as they are in the
+        // approved prototype, where the chip sits inside the auth area — so they fade and
+        // rise as one element, quicker than the composition still travelling behind them.
+        Item {
+            anchors.fill: parent
 
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * root.authCenterFraction - height / 2
-            width: Appearance.sizes.searchWidth
             opacity: root.revealed ? 1 : 0
-
-            prompt: Lock.prompt
-            echo: Lock.echoResponse
-            inputAvailable: Lock.acceptingInput
-            authenticating: Lock.authenticating
-            message: Lock.message
-            messageRole: Lock.messageRole
-            maskedLength: Lock.submittedLength
-
-            onSubmitted: Lock.submit()
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: Appearance.animation.elementMoveSlow.duration
-                    easing.type: Appearance.animation.elementMoveSlow.type
-                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                    duration: Appearance.animation.compositionAppear.duration
+                    easing.type: Appearance.animation.compositionAppear.type
+                    easing.bezierCurve: Appearance.animation.compositionAppear.bezierCurve
                 }
             }
 
-            // Two-way sync with the singleton's password: it is the single source of truth,
-            // so a second output's field shows what is typed on the first.
-            onTextChanged: if (Lock.password !== authArea.text)
-                Lock.password = authArea.text
+            // A transform rather than an offset in `y`: the position a layout produces has to
+            // stay the layout's, or a message growing the prompt would animate as a reveal.
+            transform: Translate {
+                y: root.revealed ? 0 : Appearance.sizes.lockRevealRise
 
-            // Every key press arrives here because the prompt holds the keyboard focus even
-            // at rest, transparent and all: the keystroke that asks for the prompt is typed
-            // into the field rather than being spent on opening it.
-            onKeyPressed: event => {
-                const action = LockReveal.keyAction(root.revealed, event.text, event.key === Qt.Key_Escape, Lock.password.length === 0);
-                switch (action) {
-                case LockReveal.Action.Reveal:
-                    Lock.authRevealed = true;
-                    break;
-                case LockReveal.Action.ClearPassword:
-                    Lock.password = "";
-                    event.accepted = true;
-                    break;
-                case LockReveal.Action.Rest:
-                    Lock.authRevealed = false;
-                    event.accepted = true;
-                    break;
-                }
-            }
-
-            Connections {
-                target: Lock
-
-                function onPasswordChanged() {
-                    if (authArea.text !== Lock.password) {
-                        authArea.text = Lock.password;
-                        authArea.cursorPosition = authArea.text.length;
+                Behavior on y {
+                    NumberAnimation {
+                        duration: Appearance.animation.compositionAppear.riseDuration
+                        easing.type: Appearance.animation.compositionAppear.type
+                        easing.bezierCurve: Appearance.animation.compositionAppear.bezierCurve
                     }
                 }
             }
-        }
 
-        // Under the prompt rather than inside it. The reader is armed for the whole of the
-        // lock and can win from the resting view without any of this being on screen, so
-        // this is feedback about a factor already running, not a control.
-        LockFingerprint {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: authArea.bottom
-            anchors.topMargin: Appearance.font.pixelSize.smaller
+            LockAuthArea {
+                id: authArea
 
-            phase: Lock.fingerprintState
-            opacity: root.revealed ? 1 : 0
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: parent.height * root.authCenterFraction - height / 2
+                width: Appearance.sizes.searchWidth
 
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: Appearance.animation.elementMoveSlow.duration
-                    easing.type: Appearance.animation.elementMoveSlow.type
-                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                prompt: Lock.prompt
+                echo: Lock.echoResponse
+                inputAvailable: Lock.acceptingInput
+                authenticating: Lock.authenticating
+                message: Lock.message
+                messageRole: Lock.messageRole
+                maskedLength: Lock.submittedLength
+
+                onSubmitted: Lock.submit()
+
+                // Two-way sync with the singleton's password: it is the single source of truth,
+                // so a second output's field shows what is typed on the first.
+                onTextChanged: if (Lock.password !== authArea.text)
+                    Lock.password = authArea.text
+
+                // Every key press arrives here because the prompt holds the keyboard focus even
+                // at rest, transparent and all: the keystroke that asks for the prompt is typed
+                // into the field rather than being spent on opening it.
+                onKeyPressed: event => {
+                    const action = LockReveal.keyAction(root.revealed, event.text, event.key === Qt.Key_Escape, Lock.password.length === 0);
+                    switch (action) {
+                    case LockReveal.Action.Reveal:
+                        Lock.authRevealed = true;
+                        break;
+                    case LockReveal.Action.ClearPassword:
+                        Lock.password = "";
+                        event.accepted = true;
+                        break;
+                    case LockReveal.Action.Rest:
+                        Lock.authRevealed = false;
+                        event.accepted = true;
+                        break;
+                    }
                 }
+
+                Connections {
+                    target: Lock
+
+                    function onPasswordChanged() {
+                        if (authArea.text !== Lock.password) {
+                            authArea.text = Lock.password;
+                            authArea.cursorPosition = authArea.text.length;
+                        }
+                    }
+                }
+            }
+
+            // Under the prompt rather than inside it. The reader is armed for the whole of the
+            // lock and can win from the resting view without any of this being on screen, so
+            // this is feedback about a factor already running, not a control.
+            LockFingerprint {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: authArea.bottom
+                anchors.topMargin: Appearance.font.pixelSize.smaller
+
+                phase: Lock.fingerprintState
             }
         }
 
@@ -183,9 +229,21 @@ WlSessionLockSurface {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: Appearance.animation.elementMoveSlow.duration
-                    easing.type: Appearance.animation.elementMoveSlow.type
-                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                    duration: Appearance.animation.compositionAppear.duration
+                    easing.type: Appearance.animation.compositionAppear.type
+                    easing.bezierCurve: Appearance.animation.compositionAppear.bezierCurve
+                }
+            }
+
+            transform: Translate {
+                y: root.revealed ? 0 : Appearance.sizes.lockRevealRise
+
+                Behavior on y {
+                    NumberAnimation {
+                        duration: Appearance.animation.compositionAppear.riseDuration
+                        easing.type: Appearance.animation.compositionAppear.type
+                        easing.bezierCurve: Appearance.animation.compositionAppear.bezierCurve
+                    }
                 }
             }
 
