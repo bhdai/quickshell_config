@@ -96,10 +96,19 @@ Singleton {
             priv.dispatch(LockLogic.Event.Denied);
     }
 
-    // Walking away must not leave half a password sitting on screen where the next person
-    // to touch the machine can count the characters. Silent by design: it writes no message,
-    // so a lockout notice underneath survives the clear.
     onPasswordChanged: {
+        // Typing is the start of a new attempt, and the last attempt's verdict is not about
+        // it — leaving it up would still be saying "password incorrect" about a password
+        // nobody has submitted yet. The account-lockout notice cannot be lost this way: that
+        // failure leaves the context un-armed, so there is nothing to type into.
+        if (root.password.length > 0) {
+            priv.message = "";
+            priv.messageRole = LockLogic.MessageRole.None;
+        }
+
+        // Walking away must not leave half a password sitting on screen where the next person
+        // to touch the machine can count the characters. Silent by design: it writes no
+        // message of its own.
         if (root.password.length > 0 && priv.lockState === LockLogic.State.Locked)
             idleClear.restart();
         else

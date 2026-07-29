@@ -35,10 +35,9 @@ test("each failure role has a state of its own", () => {
     assert.equal(fieldState(false, Role.Unavailable, false), State.Unavailable);
 });
 
-// The message is deliberately not on a timer, so it is still on screen when the user starts
-// over. A field that stays red under the characters being typed into it would say the new
-// attempt has already failed.
-test("typing again returns the field to ordinary dots while the message stays put", () => {
+// The field belongs to the attempt being typed, not to the one that ended: a field that
+// stayed red under the characters going into it would say the new attempt had already failed.
+test("typing again returns the field to ordinary dots, whatever the last attempt ended in", () => {
     for (const role of failureRoles) {
         assert.equal(fieldState(false, role, true), State.Typing);
     }

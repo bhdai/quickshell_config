@@ -254,22 +254,23 @@ Column {
         }
     }
 
-    Row {
+    // The icon is placed against the text rather than laid out beside it, so that the pair
+    // reads as one line of feedback wherever the text happens to end up. A row would centre
+    // the text and leave the symbol out at the edge of the field, where it reads as a widget
+    // of its own rather than as part of the sentence.
+    Item {
+        readonly property real statusSpacing: Appearance.font.pixelSize.smallest / 2
+
         width: parent.width
-        spacing: Appearance.font.pixelSize.smallest / 2
-
-        MaterialSymbol {
-            id: statusIcon
-
-            text: root.treatment.statusIcon
-            iconSize: Appearance.font.pixelSize.large
-            color: root.toneColor(root.treatment.tone)
-        }
+        implicitHeight: statusText.height
 
         Text {
-            // Sized rather than laid out, so that a long lockout message wraps to a second
-            // line and the row grows with it.
-            width: parent.width - statusIcon.width - parent.spacing
+            id: statusText
+
+            anchors.horizontalCenter: parent.horizontalCenter
+            // Room kept for the icon on both sides, so a long lockout message wraps clear of
+            // it instead of pushing it off the surface.
+            width: parent.width - 2 * (statusIcon.width + parent.statusSpacing)
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
 
@@ -280,6 +281,19 @@ Column {
             color: root.toneColor(root.treatment.tone)
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.small
+        }
+
+        MaterialSymbol {
+            id: statusIcon
+
+            // Against the text's own content rather than its box, which is wider than the
+            // sentence whenever the sentence is short.
+            x: statusText.x + (statusText.width - statusText.contentWidth) / 2 - width - parent.statusSpacing
+            anchors.verticalCenter: statusText.verticalCenter
+
+            text: root.treatment.statusIcon
+            iconSize: Appearance.font.pixelSize.large
+            color: root.toneColor(root.treatment.tone)
         }
     }
 }

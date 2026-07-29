@@ -45,9 +45,10 @@ var Role = {
  * @param messageRole the role of the message on screen (LockLogic.MessageRole)
  * @param hasText whether anything is entered
  *
- * Typing outranks the failure roles. The message is deliberately not on a timer, so it is
- * still there when the user starts over; a field that stayed red under the characters being
- * typed into it would say the new attempt had already failed.
+ * Typing outranks the failure roles: the field belongs to the attempt being typed rather than
+ * to the one that ended. The lock retires the message on the same keystroke, and deciding it
+ * here as well means the field cannot be caught red under characters the user is still
+ * entering while the two properties settle.
  */
 function fieldState(authenticating, messageRole, hasText) {
     if (authenticating)
