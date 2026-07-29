@@ -49,14 +49,26 @@ function press(action, pending) {
     };
 }
 
+// The glyphs the session screen already shows for these three actions, so the lock screen
+// is recognisably the same machine. It draws restart and shutdown from the shipped icon
+// assets and sleep from the icon font, and exactly one of the two functions below answers
+// for any given action.
+
 function symbol(action) {
     switch (action) {
     case Action.Suspend:
         return "dark_mode";
+    default:
+        return "";
+    }
+}
+
+function iconSource(action) {
+    switch (action) {
     case Action.Reboot:
-        return "restart_alt";
+        return "system-reboot-symbolic.svg";
     case Action.PowerOff:
-        return "power_settings_new";
+        return "system-shutdown-symbolic.svg";
     default:
         return "";
     }

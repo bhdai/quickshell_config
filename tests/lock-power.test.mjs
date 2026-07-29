@@ -5,9 +5,9 @@ import test from "node:test";
 import { loadQmlJs } from "./load-qml-js.mjs";
 import { blocks, read } from "./qml-source.mjs";
 
-const { Action, Actions, requiresConfirmation, press, symbol, label } = loadQmlJs(
+const { Action, Actions, requiresConfirmation, press, symbol, iconSource, label } = loadQmlJs(
     new URL("../modules/lock/LockPower.js", import.meta.url),
-    ["Action", "Actions", "requiresConfirmation", "press", "symbol", "label"],
+    ["Action", "Actions", "requiresConfirmation", "press", "symbol", "iconSource", "label"],
 );
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
@@ -58,11 +58,29 @@ test("suspend fires from a first press even while another control is armed, and 
     assert.deepEqual(press(Action.Suspend, Action.PowerOff), { pending: "", invoke: Action.Suspend });
 });
 
-test("every action has a symbol and a resting label", () => {
+// Restart and shutdown are shipped assets, sleep is an icon-font glyph, and the drawing
+// picks between them on exactly this — two answers for one action would draw both.
+test("every action has one icon and a resting label", () => {
     for (const action of Actions) {
-        assert.notEqual(symbol(action), "");
+        assert.notEqual(symbol(action) === "", iconSource(action) === "", `${action} has neither icon or both`);
         assert.notEqual(label(action, ""), "");
     }
+});
+
+// The same glyphs the session screen already shows for these three actions, read off that
+// screen rather than restated here: a second list would be free to drift.
+test("the icons are the session screen's, not a second set", () => {
+    const sessionScreen = read(repoRoot, "modules", "sessionScreen", "SessionScreen.qml");
+
+    const iconFor = name => {
+        const button = sessionScreen.match(new RegExp(`buttonIcon(Source)?: "([^"]+)"\\s*\\n\\s*buttonText: "${name}"`));
+        assert.ok(button, `the session screen has no ${name} button`);
+        return button[2];
+    };
+
+    assert.equal(symbol(Action.Suspend) || iconSource(Action.Suspend), iconFor("Sleep"));
+    assert.equal(symbol(Action.Reboot) || iconSource(Action.Reboot), iconFor("Reboot"));
+    assert.equal(symbol(Action.PowerOff) || iconSource(Action.PowerOff), iconFor("Shutdown"));
 });
 
 // The armed state has to be readable, or the second press is a guess. An unarmed control
@@ -99,6 +117,7 @@ test("the controls are lock-owned, built from the shared primitives", () => {
     assert.doesNotMatch(controls, /sessionScreen|SessionActionButton/);
     assert.ok(blocks(controls, "RippleButton").length > 0, "not built from RippleButton");
     assert.ok(blocks(controls, "MaterialSymbol").length > 0, "not built from MaterialSymbol");
+    assert.ok(blocks(controls, "CustomIcon").length > 0, "not built from CustomIcon");
 });
 
 test("the confirm state is owned by the controls rather than by the lock singleton", () => {

@@ -55,6 +55,7 @@ RowLayout {
             required property string modelData
 
             readonly property bool armed: root.pending === control.modelData
+            readonly property color foreground: control.armed ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnLayer2
 
             Layout.alignment: Qt.AlignVCenter
             spacing: Appearance.font.pixelSize.smallest / 2
@@ -74,12 +75,35 @@ RowLayout {
 
                 onClicked: root.press(control.modelData)
 
-                contentItem: MaterialSymbol {
-                    text: LockPower.symbol(control.modelData)
-                    iconSize: Appearance.font.pixelSize.hugeass
-                    color: control.armed ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnLayer2
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                // Two icon sources for the same reason the session button has two: restart
+                // and shutdown are shipped assets, sleep is an icon-font glyph, and exactly
+                // one of them answers for any one action.
+                contentItem: Item {
+                    Loader {
+                        anchors.centerIn: parent
+                        active: LockPower.iconSource(control.modelData) !== ""
+
+                        sourceComponent: CustomIcon {
+                            width: Appearance.font.pixelSize.hugeass
+                            height: Appearance.font.pixelSize.hugeass
+                            source: LockPower.iconSource(control.modelData)
+                            colorize: true
+                            color: control.foreground
+                        }
+                    }
+
+                    Loader {
+                        anchors.centerIn: parent
+                        active: LockPower.symbol(control.modelData) !== ""
+
+                        sourceComponent: MaterialSymbol {
+                            text: LockPower.symbol(control.modelData)
+                            iconSize: Appearance.font.pixelSize.hugeass
+                            color: control.foreground
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
                 }
             }
 
