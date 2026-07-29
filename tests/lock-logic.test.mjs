@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { loadQmlJs } from "./load-qml-js.mjs";
 
-const { State, Event, Effect, Result, PamError, MessageRole, Fingerprint, nextState, passwordAction, errorAction, displayMessage, fingerprintAction, fingerprintState } = loadQmlJs(new URL("../services/LockLogic.js", import.meta.url), ["State", "Event", "Effect", "Result", "PamError", "MessageRole", "Fingerprint", "nextState", "passwordAction", "errorAction", "displayMessage", "fingerprintAction", "fingerprintState"]);
+const { State, Event, Effect, Result, PamError, MessageRole, Fingerprint, nextState, passwordAction, errorAction, displayMessage, fingerprintAction, fingerprintState, fingerprintRetryDelay } = loadQmlJs(new URL("../services/LockLogic.js", import.meta.url), ["State", "Event", "Effect", "Result", "PamError", "MessageRole", "Fingerprint", "nextState", "passwordAction", "errorAction", "displayMessage", "fingerprintAction", "fingerprintState", "fingerprintRetryDelay"]);
 
 const everyState = Object.keys(State).map(k => State[k]);
 const lockedStates = [State.Locking, State.Locked, State.Authenticating];
@@ -294,14 +294,36 @@ test("a non-matching finger re-arms and stays retryable", () => {
     // the password lockout back into a stack that was kept free of it on purpose.
     const action = fingerprintAction(Result.MaxTries, true);
 
-    assert.deepEqual(action.effects, [Effect.ArmFingerprint]);
+    assert.ok(action.effects.includes(Effect.ArmFingerprint));
     assert.equal(action.feedback, Fingerprint.Rejected);
 });
 
-test("an error with no message this cycle stops the reader permanently", () => {
+test("a non-matching finger reveals the auth area", () => {
+    // The chip renders inside the revealed tier, so a refusal from the resting view is
+    // drawn at zero opacity and the finger reads as a dead sensor. Revealing puts the
+    // shake and the copy where they are legible, and lands the user on the factor that
+    // still works — the password — rather than reporting a dead end they cannot act on.
+    assert.ok(fingerprintAction(Result.MaxTries, true).effects.includes(Effect.RevealAuth));
+});
+
+test("only a refused finger reveals the auth area", () => {
+    // A win tears the screen down and every other outcome is the reader failing rather
+    // than the user being told no, so nothing else may open the prompt. A reader that
+    // vanishes must not pop the password field open on a screen nobody is standing at.
+    const others = [Result.Success, Result.Failed, Result.Error, "a-fifth-result-value"];
+
+    for (const result of others) {
+        for (const sawMessage of [true, false]) {
+            assert.ok(!fingerprintAction(result, sawMessage).effects.includes(Effect.RevealAuth), `${result} revealed`);
+        }
+    }
+});
+
+test("an error with no message this cycle stops the reader", () => {
     // The fork loop. Error conflates "you took thirty seconds" with "there is no
     // reader", and with no reader the module returns instantly — so re-arming blindly
-    // spins behind a locked screen.
+    // spins behind a locked screen. Stopping is what forbids the immediate re-arm; the
+    // applier still spends the backoff budget below before the stop becomes permanent.
     const action = fingerprintAction(Result.Error, false);
 
     assert.deepEqual(action.effects, [Effect.StopFingerprint]);
@@ -349,6 +371,41 @@ test("no fingerprint outcome touches the password context", () => {
             }
         }
     }
+});
+
+test("a stopped reader is retried on a backoff before it is given up on", () => {
+    // Measured on this machine: a release that timed out wedged the Prometheus, which
+    // then fell off the USB bus and re-enumerated about a second later. A stop that was
+    // permanent on the first refusal left the chip absent for the rest of that lock even
+    // though the reader was healthy again well within it.
+    const delays = [0, 1, 2].map(attempt => fingerprintRetryDelay(attempt));
+
+    assert.ok(delays.every(delay => delay > 0), `expected retries, got ${delays}`);
+    for (let i = 1; i < delays.length; i++) {
+        assert.ok(delays[i] > delays[i - 1], `attempt ${i} must wait longer than ${i - 1}`);
+    }
+});
+
+test("the fingerprint backoff is finite", () => {
+    // The budget is what keeps a genuinely missing quickshell-fprint policy from
+    // retrying forever behind a locked screen — the fork loop, slowed down but still a
+    // loop. A negative delay is the applier's signal to latch the stop for good.
+    const exhausted = fingerprintRetryDelay(3);
+
+    assert.ok(exhausted < 0, `expected exhaustion at attempt 3, got ${exhausted}`);
+    assert.ok(fingerprintRetryDelay(100) < 0);
+});
+
+test("the fingerprint backoff outlasts a reader re-enumerating", () => {
+    // The whole point of the budget: the observed gap between the reader disconnecting
+    // and fprintd seeing it again was about a second, so the schedule has to still be
+    // retrying well past that or it buys nothing.
+    let total = 0;
+    for (let attempt = 0; fingerprintRetryDelay(attempt) > 0; attempt++) {
+        total += fingerprintRetryDelay(attempt);
+    }
+
+    assert.ok(total >= 10000, `budget of ${total}ms is too short to outlast a re-enumeration`);
 });
 
 test("the affordance stays absent until a message has proven the reader", () => {

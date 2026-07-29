@@ -162,7 +162,12 @@ Singleton {
     Timer {
         id: fingerprintArm
 
-        interval: 250
+        // The gap for an ordinary re-arm. `interval` itself is written by both arm paths
+        // — the retry one substitutes a backoff — so it is held here rather than being
+        // the property's own default, which a single backoff would overwrite for good.
+        readonly property int promptInterval: 250
+
+        interval: promptInterval
         onTriggered: priv.armFingerprint()
     }
 
@@ -213,10 +218,16 @@ Singleton {
         // is not there.
         property bool fingerprintSawMessage: false
 
-        // Set when the loop has stopped for the rest of this lock session. Nothing but a
-        // new lock clears it: a stop means the evidence says the device is gone, and
-        // re-arming on that is the fork loop.
+        // Set once the retry budget below is spent, and so for the rest of this lock
+        // session. Nothing but a new lock clears it: by that point the evidence says the
+        // device is gone for good, and re-arming on that is the fork loop.
         property bool fingerprintStopped: false
+
+        // Re-arms spent against a reader that refused to start, this lock session. Reset
+        // by any message, because a module that spoke has claimed a working reader — so a
+        // wedge later in the same lock gets the whole budget again rather than the
+        // remainder of one spent on an unrelated stumble hours earlier.
+        property int fingerprintRetries: 0
 
         property string fingerprintFeedback: LockLogic.Fingerprint.Armed
 
@@ -239,6 +250,7 @@ Singleton {
                     root.authRevealed = false;
                     priv.fingerprintAvailable = false;
                     priv.fingerprintStopped = false;
+                    priv.fingerprintRetries = 0;
                     priv.fingerprintFeedback = LockLogic.Fingerprint.Armed;
                     persist.locked = true;
                     break;
@@ -264,7 +276,10 @@ Singleton {
                     priv.disarmFingerprint();
                     break;
                 case LockLogic.Effect.StopFingerprint:
-                    priv.fingerprintStopped = true;
+                    priv.stopOrRetryFingerprint();
+                    break;
+                case LockLogic.Effect.RevealAuth:
+                    root.authRevealed = true;
                     break;
                 }
             }
@@ -301,6 +316,9 @@ Singleton {
             if (priv.fingerprintStopped)
                 return;
 
+            // Explicit, because the retry path writes this same property: without it a
+            // scan following a backoff would inherit that backoff's interval.
+            fingerprintArm.interval = fingerprintArm.promptInterval;
             fingerprintArm.restart();
         }
 
@@ -314,12 +332,31 @@ Singleton {
             fingerprint.start();
 
             // A missing quickshell-fprint policy returns false having emitted nothing at
-            // all — no completion will ever arrive, so there is nothing to wait for and
-            // nothing to retry. The affordance stays absent and the password is untouched:
-            // the two factors are independent, and a missing file for one of them is the
-            // install step not having been run rather than an attack.
+            // all, so no completion will ever arrive and this is the only place that
+            // refusal is observable. It goes through the same budget as every other stop:
+            // the refusal is identical whether the policy is missing or the reader is
+            // mid-reset, and only spending the retries tells the two apart. The password
+            // is untouched either way — the factors are independent, and a missing file
+            // for one is the install step not having been run rather than an attack.
             if (!fingerprint.active)
+                priv.stopOrRetryFingerprint();
+        }
+
+        // A stop is a verdict on this attempt, not on the reader. Hardware that wedges
+        // comes back on its own — measured here, a reader that fell off the USB bus was
+        // re-enumerated about a second later — so the budget is spent before the chip is
+        // taken away for the rest of the lock. Exhausting it lands exactly where the
+        // unconditional stop used to.
+        function stopOrRetryFingerprint(): void {
+            const delay = LockLogic.fingerprintRetryDelay(priv.fingerprintRetries);
+            if (delay < 0) {
                 priv.fingerprintStopped = true;
+                return;
+            }
+
+            priv.fingerprintRetries += 1;
+            fingerprintArm.interval = delay;
+            fingerprintArm.restart();
         }
 
         function disarmFingerprint(): void {
@@ -450,6 +487,11 @@ Singleton {
             // a single factor, and with no prompt there is no such hazard to guard.
             priv.fingerprintSawMessage = true;
             priv.fingerprintAvailable = true;
+
+            // The module speaks only once it has claimed a working reader, so this is
+            // proof the hardware recovered and the spent retries were the wedge rather
+            // than a policy that will refuse forever.
+            priv.fingerprintRetries = 0;
         }
 
         onCompleted: result => {

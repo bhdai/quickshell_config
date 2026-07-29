@@ -35,6 +35,7 @@ const Effect = {
     ArmFingerprint: "armFingerprint",
     DisarmFingerprint: "disarmFingerprint",
     StopFingerprint: "stopFingerprint",
+    RevealAuth: "revealAuth",
 };
 
 // PamResult.Enum and PamError.Enum, as names rather than the numeric values, so
@@ -232,7 +233,13 @@ function fingerprintAction(result, sawMessageThisCycle) {
         // re-arms unconditionally: the fingerprint policy was deliberately kept free of
         // pam_faillock so that a password lockout cannot disable the reader, and a cap
         // counted here would smuggle that lockout back in through the side door.
-        return { event: null, effects: [Effect.ArmFingerprint], feedback: Fingerprint.Rejected };
+        //
+        // It reveals because the chip lives inside the revealed tier: from the resting
+        // view the shake and the copy would render at zero opacity, and a refused finger
+        // would be indistinguishable from a dead sensor. This is the only outcome that
+        // reveals — it is the only one where the user was told no rather than the reader
+        // failing, and the reveal lands them on the factor that still works.
+        return { event: null, effects: [Effect.ArmFingerprint, Effect.RevealAuth], feedback: Fingerprint.Rejected };
 
     case Result.Error:
         return sawMessageThisCycle ? { event: null, effects: [Effect.ArmFingerprint], feedback: Fingerprint.Armed } : { event: null, effects: [Effect.StopFingerprint], feedback: Fingerprint.Absent };
@@ -243,6 +250,29 @@ function fingerprintAction(result, sawMessageThisCycle) {
         // something whose meaning is not known on this build.
         return { event: null, effects: [Effect.StopFingerprint], feedback: Fingerprint.Absent };
     }
+}
+
+// Backoff before re-arming a reader that refused to start, in milliseconds per attempt.
+// Finite because an unslowed retry is the fork loop again: a missing quickshell-fprint
+// policy refuses instantly and forever, and only exhausting a budget distinguishes that
+// from hardware that is coming back.
+const FingerprintRetryDelays = [2000, 5000, 10000];
+
+/**
+ * How long to wait before the nth re-arm of a stopped reader, or a negative number once
+ * the budget is spent and the stop should become permanent for this lock session.
+ *
+ * The budget exists because a stop is not proof the reader is gone for good. Measured on
+ * this machine: a `ReleaseDevice` that timed out wedged the Prometheus, which dropped off
+ * the USB bus and re-enumerated under a new device number about a second later. fprintd
+ * reported no device for that window, so the first refusal arrived while the hardware was
+ * merely mid-reset — and a stop that was permanent on it left the chip absent for the rest
+ * of a lock the reader was healthy for.
+ *
+ * @param attempt how many re-arms have already been spent this lock session, from 0
+ */
+function fingerprintRetryDelay(attempt) {
+    return attempt < FingerprintRetryDelays.length ? FingerprintRetryDelays[attempt] : -1;
 }
 
 /**
