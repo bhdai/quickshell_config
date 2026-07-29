@@ -22,7 +22,7 @@ WrapperMouseArea {
     WrapperRectangle {
         id: backgroundRect
 
-        readonly property int iconSize: 20
+        readonly property int iconSize: Appearance.sizes.statusIcon
         readonly property string iconColor: controlCenter.isOpen ? Appearance.m3colors.m3onPrimaryFixed : Appearance.colors.colOnLayer0
 
         implicitHeight: 30
