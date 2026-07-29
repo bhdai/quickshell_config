@@ -46,6 +46,12 @@ Singleton {
     // edits the same string and mirrored monitors stay in sync while typing.
     property string password: ""
 
+    // Whether the surfaces are showing the authentication area or resting. View state
+    // rather than lock state, held here for the same reason the password is: the mirrored
+    // output reveals and dismisses with the one holding keyboard focus. Nothing reads it
+    // on the way to a grant.
+    property bool authRevealed: false
+
     readonly property bool acceptingInput: priv.lockState === LockLogic.State.Locked && priv.promptReady && pam.active
     readonly property bool authenticating: priv.lockState === LockLogic.State.Authenticating
 
@@ -128,6 +134,7 @@ Singleton {
                 switch (effect) {
                 case LockLogic.Effect.RaiseLock:
                     priv.granted = false;
+                    root.authRevealed = false;
                     persist.locked = true;
                     break;
                 case LockLogic.Effect.ReleaseLock:
