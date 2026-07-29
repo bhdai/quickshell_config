@@ -170,6 +170,38 @@ WlSessionLockSurface {
             }
         }
 
+        LockPowerControls {
+            id: powerControls
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: Appearance.font.pixelSize.hugeass
+
+            opacity: root.revealed ? 1 : 0
+            // Absent rather than merely transparent: an invisible control still takes the
+            // press that is supposed to open the prompt.
+            visible: opacity > 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Appearance.animation.elementMoveSlow.duration
+                    easing.type: Appearance.animation.elementMoveSlow.type
+                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                }
+            }
+
+            // Backing out of the prompt backs out of the arming with it, so a shutdown
+            // armed and then dismissed is not still armed the next time it reveals.
+            Connections {
+                target: root
+
+                function onRevealedChanged(): void {
+                    if (!root.revealed)
+                        powerControls.pending = "";
+                }
+            }
+        }
+
         // Above the composition so that a click anywhere at rest opens the prompt, and
         // disabled once it is open so the field and its controls get their own clicks.
         MouseArea {

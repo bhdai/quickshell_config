@@ -237,6 +237,7 @@ Singleton {
         readonly property real searchWidthCollapsed: 210
         readonly property real searchWidth: 450
         readonly property real lockAvatar: 64
+        readonly property real lockPowerButton: 48
         // Shared by the bar's status icons and the lock screen's, so the same reading of
         // the same machine is the same size in both places rather than by coincidence.
         readonly property real statusIcon: 20
