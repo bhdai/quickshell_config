@@ -25,20 +25,28 @@ test("the battery renders only when a laptop battery is present", () => {
     const gated = blocks(cluster, "Loader").filter(block => /active:\s*Battery\.available/.test(block));
 
     assert.equal(gated.length, 1);
-    assert.match(gated[0], /Battery\.symbol/);
     assert.match(gated[0], /Battery\.percentage/);
 });
 
-test("the battery shows its percentage as well as an icon", () => {
-    assert.match(cluster, /Math\.round\(Battery\.percentage \* 100\)/);
+// The bar's battery, from the widget the bar composes it from — not a second drawing of the
+// same thing, and not BatteryIndicator itself, whose MouseArea would be a dead zone on a
+// surface where a click anywhere is what opens the password prompt.
+test("the battery is the shared bar widget rather than a lock-owned copy", () => {
+    const [battery] = blocks(cluster, "ClippedProgressBar");
+
+    assert.ok(battery, "the battery is not drawn with ClippedProgressBar");
+    assert.match(battery, /value:\s*Battery\.percentage/);
+    assert.match(battery, /text:\s*Math\.round\(Battery\.percentage \* 100\)/);
+
+    assert.doesNotMatch(withoutComments(cluster), /BatteryIndicator|MouseArea\s*\{/);
 });
 
 // Absence is ambiguous for a network: a missing icon and no connection look identical, so
 // the icon always renders and NetworkParse's own fallback carries the disconnected case.
 test("the network icon is never gated behind a condition", () => {
-    const [icon] = blocks(cluster, "CustomIcon");
+    const [icon] = blocks(cluster, "CustomIcon").filter(block => /Network\.symbol/.test(block));
 
-    assert.match(icon, /source:\s*Network\.symbol/);
+    assert.ok(icon, "the network icon is not a CustomIcon");
     assert.doesNotMatch(icon, /^\s*(visible|active|enabled):/m);
 
     const gatedLoaders = blocks(cluster, "Loader").filter(block => /Network\./.test(block));
@@ -63,6 +71,15 @@ test("no network name reaches the lock surface", () => {
 test("the keyboard layout is seeded on the compositor-confirmed lock", () => {
     assert.match(cluster, /Lock\.secure/);
     assert.match(cluster, /KeyboardLayout\.refresh\(\)/);
+});
+
+// The repo already ships this glyph, and drawing it the same way as the network icon keeps
+// the two halves of the cluster one system rather than one icon set beside another.
+test("the keyboard icon is the shipped asset, drawn like the network icon", () => {
+    const [icon] = blocks(cluster, "CustomIcon").filter(block => /input-keyboard-symbolic/.test(block));
+
+    assert.ok(icon, "the keyboard icon is not the shipped input-keyboard-symbolic asset");
+    assert.match(icon, /colorize: true/);
 });
 
 test("the layout indicator reads the service rather than running its own query", () => {

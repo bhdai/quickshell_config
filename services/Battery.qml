@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Services.UPower
 import QtQuick
 import Quickshell.Io
-import "BatteryFormat.js" as BatteryFormat
 
 Singleton {
     property bool available: UPower.displayDevice.isLaptopBattery
@@ -13,13 +12,6 @@ Singleton {
     property bool isCharging: chargeState == UPowerDeviceState.Charging
     property bool isPluggedIn: isCharging || chargeState == UPowerDeviceState.PendingCharge
     property real percentage: UPower.displayDevice?.percentage ?? 1
-
-    // The Material Symbols icon for the current level, for callers that draw the battery as
-    // a glyph rather than as the bar's own filled shape.
-    readonly property string symbol: BatteryFormat.pickBatterySymbol({
-        percentage: percentage,
-        charging: isCharging
-    })
     readonly property bool allowAutomaticSuspend: true
 
     property bool isLow: available && (percentage <= 0.5)
