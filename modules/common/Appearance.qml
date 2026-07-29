@@ -238,6 +238,9 @@ Singleton {
         readonly property real searchWidth: 450
         readonly property real lockAvatar: 64
         readonly property real lockPasswordField: 56
+        // Shorter than the field above it on purpose: the fingerprint chip is feedback
+        // about a factor already running, not a second thing to type into.
+        readonly property real lockFingerprintChip: 44
         readonly property real lockPowerButton: 48
         // Shared by the bar's status icons and the lock screen's, so the same reading of
         // the same machine is the same size in both places rather than by coincidence.

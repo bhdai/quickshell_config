@@ -149,6 +149,26 @@ WlSessionLockSurface {
             }
         }
 
+        // Under the prompt rather than inside it. The reader is armed for the whole of the
+        // lock and can win from the resting view without any of this being on screen, so
+        // this is feedback about a factor already running, not a control.
+        LockFingerprint {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: authArea.bottom
+            anchors.topMargin: Appearance.font.pixelSize.smaller
+
+            phase: Lock.fingerprintState
+            opacity: root.revealed ? 1 : 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Appearance.animation.elementMoveSlow.duration
+                    easing.type: Appearance.animation.elementMoveSlow.type
+                    easing.bezierCurve: Appearance.animation.elementMoveSlow.bezierCurve
+                }
+            }
+        }
+
         LockPowerControls {
             id: powerControls
 

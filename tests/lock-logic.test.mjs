@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { loadQmlJs } from "./load-qml-js.mjs";
 
-const { State, Event, Effect, Result, PamError, MessageRole, nextState, passwordAction, errorAction, displayMessage } = loadQmlJs(new URL("../services/LockLogic.js", import.meta.url), ["State", "Event", "Effect", "Result", "PamError", "MessageRole", "nextState", "passwordAction", "errorAction", "displayMessage"]);
+const { State, Event, Effect, Result, PamError, MessageRole, Fingerprint, nextState, passwordAction, errorAction, displayMessage, fingerprintAction, fingerprintState } = loadQmlJs(new URL("../services/LockLogic.js", import.meta.url), ["State", "Event", "Effect", "Result", "PamError", "MessageRole", "Fingerprint", "nextState", "passwordAction", "errorAction", "displayMessage", "fingerprintAction", "fingerprintState"]);
 
 const everyState = Object.keys(State).map(k => State[k]);
 const lockedStates = [State.Locking, State.Locked, State.Authenticating];
@@ -24,10 +24,13 @@ test("a lock request is idempotent in every already-locked state", () => {
     }
 });
 
-test("secure arms the password context", () => {
+test("secure arms both factors", () => {
+    // Not `locked`: before the compositor confirms it stopped routing input to normal
+    // clients, a touch on the reader would authenticate against a screen that is not yet
+    // covering the desktop.
     assert.deepEqual(nextState(State.Locking, Event.Secure), {
         next: State.Locked,
-        effects: [Effect.Arm],
+        effects: [Effect.Arm, Effect.ArmFingerprint],
     });
 });
 
@@ -36,14 +39,14 @@ test("secure re-rising while already locked asks to arm again", () => {
     // and idempotence is the applier's job.
     assert.deepEqual(nextState(State.Locked, Event.Secure), {
         next: State.Locked,
-        effects: [Effect.Arm],
+        effects: [Effect.Arm, Effect.ArmFingerprint],
     });
 });
 
-test("secure losing confirmation disarms and returns to locking", () => {
+test("secure losing confirmation disarms both factors and returns to locking", () => {
     assert.deepEqual(nextState(State.Locked, Event.Insecure), {
         next: State.Locking,
-        effects: [Effect.Disarm],
+        effects: [Effect.Disarm, Effect.DisarmFingerprint],
     });
 });
 
@@ -87,11 +90,11 @@ test("a failure returns every locked state to locked", () => {
     }
 });
 
-test("a compositor denial releases the lock state and disarms", () => {
+test("a compositor denial releases the lock state and disarms both factors", () => {
     for (const state of everyState) {
         assert.deepEqual(nextState(state, Event.Denied), {
             next: State.Unlocked,
-            effects: [Effect.Disarm, Effect.ReleaseLock],
+            effects: [Effect.Disarm, Effect.DisarmFingerprint, Effect.ReleaseLock],
         });
     }
 });
@@ -245,4 +248,129 @@ test("each pam error is described distinctly", () => {
     const messages = [PamError.StartFailed, PamError.TryAuthFailed, PamError.InternalError].map(e => errorAction(e).message);
 
     assert.equal(new Set(messages).size, messages.length);
+});
+
+test("a matched finger unlocks from either state a scan can complete in", () => {
+    const action = fingerprintAction(Result.Success, true);
+    assert.equal(action.event, Event.FingerprintSuccess);
+
+    // The password machine may be resting or mid-authentication when the finger lands;
+    // both are a genuine PAM success against the fingerprint policy.
+    for (const state of [State.Locked, State.Authenticating]) {
+        assert.deepEqual(nextState(state, Event.FingerprintSuccess), {
+            next: State.Unlocked,
+            effects: [Effect.Grant],
+        });
+    }
+});
+
+test("a fingerprint success outside a confirmed lock is refused", () => {
+    // Locking means the compositor has not confirmed it is covering the desktop, and
+    // Unlocked means something already won. Neither may be unlocked again.
+    for (const state of [State.Unlocked, State.Locking]) {
+        assert.deepEqual(nextState(state, Event.FingerprintSuccess), {
+            next: state,
+            effects: [],
+        });
+    }
+});
+
+test("no fingerprint result other than success reaches the grant", () => {
+    const nonSuccess = [Result.Failed, Result.MaxTries, Result.Error, "a-fifth-result-value"];
+
+    for (const result of nonSuccess) {
+        for (const sawMessage of [true, false]) {
+            const action = fingerprintAction(result, sawMessage);
+
+            assert.equal(action.event, null);
+            assert.ok(!action.effects.includes(Effect.Grant));
+        }
+    }
+});
+
+test("a non-matching finger re-arms and stays retryable", () => {
+    // Under max-tries=1 the module reports MaxTries for "that finger did not match",
+    // and there is deliberately no attempt cap in QML: a counter here would smuggle
+    // the password lockout back into a stack that was kept free of it on purpose.
+    const action = fingerprintAction(Result.MaxTries, true);
+
+    assert.deepEqual(action.effects, [Effect.ArmFingerprint]);
+    assert.equal(action.feedback, Fingerprint.Rejected);
+});
+
+test("an error with no message this cycle stops the reader permanently", () => {
+    // The fork loop. Error conflates "you took thirty seconds" with "there is no
+    // reader", and with no reader the module returns instantly — so re-arming blindly
+    // spins behind a locked screen.
+    const action = fingerprintAction(Result.Error, false);
+
+    assert.deepEqual(action.effects, [Effect.StopFingerprint]);
+    assert.ok(!action.effects.includes(Effect.ArmFingerprint));
+    assert.equal(action.feedback, Fingerprint.Absent);
+});
+
+test("an error with a message this cycle re-arms", () => {
+    // A message proves the module claimed the reader, which leaves the timeout as the
+    // only thing the error can have been. Arrival is the discriminator and not content:
+    // the timeout string is syslog-only and never reaches the message property.
+    const action = fingerprintAction(Result.Error, true);
+
+    assert.deepEqual(action.effects, [Effect.ArmFingerprint]);
+});
+
+test("a reader unplugged mid-scan costs exactly one wasted attempt", () => {
+    // The message for the pending scan already arrived, so that cycle retries; the
+    // retry claims nothing and gets no message, and that one stops.
+    assert.deepEqual(fingerprintAction(Result.Error, true).effects, [Effect.ArmFingerprint]);
+    assert.deepEqual(fingerprintAction(Result.Error, false).effects, [Effect.StopFingerprint]);
+});
+
+test("an unrecognised fingerprint result stops quietly", () => {
+    for (const sawMessage of [true, false]) {
+        const action = fingerprintAction("a-fifth-result-value", sawMessage);
+
+        assert.deepEqual(action.effects, [Effect.StopFingerprint]);
+        assert.equal(action.feedback, Fingerprint.Absent);
+    }
+});
+
+test("a plain fingerprint failure stops rather than retrying", () => {
+    assert.deepEqual(fingerprintAction(Result.Failed, true).effects, [Effect.StopFingerprint]);
+});
+
+test("no fingerprint outcome touches the password context", () => {
+    const passwordEffects = [Effect.Arm, Effect.Disarm, Effect.SendResponse, Effect.ReleaseLock];
+    const results = [Result.Success, Result.Failed, Result.MaxTries, Result.Error, "a-fifth-result-value"];
+
+    for (const result of results) {
+        for (const sawMessage of [true, false]) {
+            for (const effect of fingerprintAction(result, sawMessage).effects) {
+                assert.ok(!passwordEffects.includes(effect), `${result} produced ${effect}`);
+            }
+        }
+    }
+});
+
+test("the affordance stays absent until a message has proven the reader", () => {
+    assert.equal(fingerprintState(false, false, Fingerprint.Absent), Fingerprint.Absent);
+    assert.equal(fingerprintState(true, false, Fingerprint.Absent), Fingerprint.Armed);
+});
+
+test("a stopped reader is absent however it was proven", () => {
+    for (const feedback of Object.keys(Fingerprint).map(k => Fingerprint[k])) {
+        assert.equal(fingerprintState(true, true, feedback), Fingerprint.Absent);
+    }
+});
+
+test("feedback shows through only while the reader is live", () => {
+    assert.equal(fingerprintState(true, false, Fingerprint.Rejected), Fingerprint.Rejected);
+    assert.equal(fingerprintState(true, false, Fingerprint.Armed), Fingerprint.Armed);
+});
+
+test("a win has no feedback of its own to leave behind", () => {
+    // The grant releases the lock in the same handler, so there is no frame in which a
+    // "recognized" treatment could be drawn — and a state nothing can show is a branch
+    // the next reader would have to prove unreachable.
+    assert.equal(fingerprintAction(Result.Success, true).feedback, Fingerprint.Armed);
+    assert.ok(!Object.keys(Fingerprint).map(k => Fingerprint[k]).includes("recognized"));
 });

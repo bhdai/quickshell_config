@@ -15,7 +15,14 @@ import "LockLogic.js" as LockLogic
  * WlSessionLock, so there is no object on which the view layer could set `locked`;
  * the only clear is `priv.grant()`, which is reachable only from a PamResult.Success.
  *
- * Two behaviours that are correct but surprising, recorded rather than fixed:
+ * Two contexts run here, against two policies, at the same time. That is a hard
+ * constraint rather than a preference: pam_fprintd blocks in its D-Bus verify loop for up
+ * to ninety seconds without ever calling the conversation function, so under one combined
+ * policy the password could not be submitted while a scan was still running. First success
+ * wins, the latch makes it the only one, and the two never touch otherwise — a rejected
+ * finger does not abort the password conversation, clear its field or steal its focus.
+ *
+ * Three behaviours that are correct but surprising, recorded rather than fixed:
  *
  * - An expired password still unlocks. PamContext calls pam_authenticate and nothing
  *   else, so the account stack never runs and expiry is never evaluated. That is right
@@ -25,6 +32,10 @@ import "LockLogic.js" as LockLogic
  *   collected, so assigning "" drops the reference and leaves the old bytes for the
  *   collector. No option available in QML does better; the password is dropped as
  *   early as possible instead.
+ * - The fingerprint context holds the reader claimed for the whole lock, re-claiming it
+ *   every scan cycle. No other fingerprint consumer can use the device while the screen
+ *   is locked. That is the price of "touch the reader to wake and unlock in one motion",
+ *   which is the best property this design has.
  */
 Singleton {
     id: root
@@ -64,6 +75,12 @@ Singleton {
 
     readonly property bool acceptingInput: priv.lockState === LockLogic.State.Locked && priv.promptReady && pam.active
     readonly property bool authenticating: priv.lockState === LockLogic.State.Authenticating
+
+    // What the fingerprint affordance should show, as a LockLogic.Fingerprint. Absent
+    // until the reader has proven itself by talking, so a machine without one — or
+    // without an enrolment, or with fprintd down — offers nothing rather than offering
+    // something that cannot happen.
+    readonly property string fingerprintState: LockLogic.fingerprintState(priv.fingerprintAvailable, priv.fingerprintStopped, priv.fingerprintFeedback)
 
     // Prompt text and echo behaviour come from the conversation, so changing the PAM
     // policy does not require changing the UI.
@@ -136,6 +153,29 @@ Singleton {
         onTriggered: root.password = ""
     }
 
+    // Every arm of the reader goes through here rather than starting it inline. Restarting
+    // a context from inside its own completion handler is reentrancy resting on emission
+    // order, and the delay bounds the blast radius if the stop-or-retry classification is
+    // ever wrong: an unbounded fork loop becomes a few attempts a second, which is a bug
+    // you notice in the journal rather than a wedged laptop behind a locked screen. It is
+    // invisible either way — lifting and replacing a finger takes far longer.
+    Timer {
+        id: fingerprintArm
+
+        interval: 250
+        onTriggered: priv.armFingerprint()
+    }
+
+    // A rejected scan re-arms immediately, and the module greets the new cycle within
+    // milliseconds, so without this the feedback would be replaced by "touch the reader"
+    // before it could be read.
+    Timer {
+        id: fingerprintFeedbackHold
+
+        interval: 2000
+        onTriggered: priv.fingerprintFeedback = LockLogic.Fingerprint.Armed
+    }
+
     // The machine and the grant live in an unnamed child so that nothing outside this
     // file can name them. `Lock.submit()` is the whole of the view layer's reach.
     QtObject {
@@ -161,6 +201,25 @@ Singleton {
 
         property string lastErrorMessage: ""
 
+        // Whether the reader has ever spoken this lock. The module sends its prompt only
+        // after enumerating devices, finding an enrolled finger and claiming the reader,
+        // so one message is the whole of the availability check — no D-Bus probe, no
+        // subprocess on the lock path, and no staleness window. Sticky, so the affordance
+        // does not blink out between scan cycles.
+        property bool fingerprintAvailable: false
+
+        // Whether a message arrived since this scan cycle was armed. Resets on every arm,
+        // and is the only thing that separates a thirty-second timeout from a reader that
+        // is not there.
+        property bool fingerprintSawMessage: false
+
+        // Set when the loop has stopped for the rest of this lock session. Nothing but a
+        // new lock clears it: a stop means the evidence says the device is gone, and
+        // re-arming on that is the fork loop.
+        property bool fingerprintStopped: false
+
+        property string fingerprintFeedback: LockLogic.Fingerprint.Armed
+
         // The last non-prompt message PAM sent this cycle. Kept because it is the only
         // evidence account lockout exists: the stack refuses with a plain failure and
         // explains itself here and nowhere else.
@@ -178,6 +237,9 @@ Singleton {
                 case LockLogic.Effect.RaiseLock:
                     priv.granted = false;
                     root.authRevealed = false;
+                    priv.fingerprintAvailable = false;
+                    priv.fingerprintStopped = false;
+                    priv.fingerprintFeedback = LockLogic.Fingerprint.Armed;
                     persist.locked = true;
                     break;
                 case LockLogic.Effect.ReleaseLock:
@@ -194,6 +256,15 @@ Singleton {
                     break;
                 case LockLogic.Effect.Grant:
                     priv.grant();
+                    break;
+                case LockLogic.Effect.ArmFingerprint:
+                    priv.requestFingerprintArm();
+                    break;
+                case LockLogic.Effect.DisarmFingerprint:
+                    priv.disarmFingerprint();
+                    break;
+                case LockLogic.Effect.StopFingerprint:
+                    priv.fingerprintStopped = true;
                     break;
                 }
             }
@@ -226,6 +297,42 @@ Singleton {
                 pam.abort();
         }
 
+        function requestFingerprintArm(): void {
+            if (priv.fingerprintStopped)
+                return;
+
+            fingerprintArm.restart();
+        }
+
+        function armFingerprint(): void {
+            // Idempotent for the same reason arm() is: `secure` rises again on every
+            // preserved hot reload.
+            if (priv.fingerprintStopped || fingerprint.active)
+                return;
+
+            priv.fingerprintSawMessage = false;
+            fingerprint.start();
+
+            // A missing quickshell-fprint policy returns false having emitted nothing at
+            // all — no completion will ever arrive, so there is nothing to wait for and
+            // nothing to retry. The affordance stays absent and the password is untouched:
+            // the two factors are independent, and a missing file for one of them is the
+            // install step not having been run rather than an attack.
+            if (!fingerprint.active)
+                priv.fingerprintStopped = true;
+        }
+
+        function disarmFingerprint(): void {
+            fingerprintArm.stop();
+            fingerprintFeedbackHold.stop();
+
+            // abort() severs the conversation's signals before deleting it and SIGKILLs
+            // the PAM child, so nothing arrives afterwards and no generation counter is
+            // needed to reject it.
+            if (fingerprint.active)
+                fingerprint.abort();
+        }
+
         function sendResponse(): void {
             pam.respond(root.password);
             priv.respondedThisCycle = true;
@@ -240,6 +347,11 @@ Singleton {
 
             priv.granted = true;
             priv.disarm();
+            priv.disarmFingerprint();
+
+            // Before the lock is released, so a fingerprint win never hands back a desktop
+            // with a half-typed password still sitting in the field of a surface that is
+            // about to be destroyed.
             root.password = "";
             root.submittedLength = 0;
             priv.message = "";
@@ -319,6 +431,41 @@ Singleton {
         // double-fires the machine.
         onError: error => {
             priv.lastErrorMessage = LockLogic.errorAction(priv.errorName(error)).message;
+        }
+    }
+
+    PamContext {
+        id: fingerprint
+
+        // A separate root-owned policy, carrying pam_fprintd with max-tries=1 and
+        // deliberately no failure counter: a password lockout must not be able to disable
+        // the reader. The retry loop lives in QML instead, which is what stops the module
+        // blocking for ninety seconds in one call.
+        config: "quickshell-fprint"
+
+        onPamMessage: {
+            // Never responded to, and there is nothing here to respond to: this stack has
+            // no response-requiring prompt. The generic "one response per prompt" rule the
+            // password context follows exists to stop a multi-prompt stack degrading into
+            // a single factor, and with no prompt there is no such hazard to guard.
+            priv.fingerprintSawMessage = true;
+            priv.fingerprintAvailable = true;
+        }
+
+        onCompleted: result => {
+            const action = LockLogic.fingerprintAction(priv.resultName(result), priv.fingerprintSawMessage);
+
+            priv.fingerprintFeedback = action.feedback;
+            if (action.feedback === LockLogic.Fingerprint.Rejected)
+                fingerprintFeedbackHold.restart();
+
+            // Only a win is dispatched. A failed scan leaves the password machine exactly
+            // where it was — mid-authentication if a response is in flight, resting
+            // otherwise — and writes nothing into its message.
+            if (action.event)
+                priv.dispatch(action.event);
+
+            priv.applyEffects(action.effects);
         }
     }
 
