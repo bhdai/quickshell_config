@@ -17,20 +17,40 @@ function sizeToken(name) {
 }
 
 // The approved prototype's numbers (prototypes/auth-interaction-states at 4168ad1,
-// prototype.css:107-117), with its `clamp(120px, 18vw, 300px)` resolved for the 1920-wide
-// panel this shell runs on. Frozen here because the shipped clock drifted to a third of it.
+// prototype.css:107-117): `clamp(120px, 18vw, 300px)` for the time and
+// `clamp(18px, 1.6vw, 28px)` for the date.
 test("the clock's type metrics are the prototype's", () => {
-    assert.equal(sizeToken("lockClock"), 300);
-    assert.equal(sizeToken("lockClockDate"), 28);
+    assert.equal(sizeToken("lockClockMin"), 120);
+    assert.equal(sizeToken("lockClockMax"), 300);
+    assert.equal(sizeToken("lockClockDateMin"), 18);
+    assert.equal(sizeToken("lockClockDateMax"), 28);
     assert.equal(sizeToken("lockClockGap"), 26);
 });
 
-test("the clock takes its size, date size and gap from those tokens", () => {
+// A flat size is a size tuned on one panel. The bounds are the prototype's, and so is what
+// sits between them: a fraction of the width of the output the clock is composed on.
+test("the clock is sized from the output between those bounds", () => {
+    assert.match(clock, /property real availableWidth/);
+    assert.match(clock, /readonly property real timeFraction: 0\.18\b/);
+    assert.match(clock, /readonly property real dateFraction: 0\.016\b/);
+    assert.match(clock, /timeSize: Math\.max\(Appearance\.sizes\.lockClockMin, Math\.min\(root\.availableWidth \* root\.timeFraction, Appearance\.sizes\.lockClockMax\)\)/);
+    assert.match(clock, /dateSize: Math\.max\(Appearance\.sizes\.lockClockDateMin, Math\.min\(root\.availableWidth \* root\.dateFraction, Appearance\.sizes\.lockClockDateMax\)\)/);
+});
+
+test("the clock takes its size, date size and gap from those", () => {
     const [time, date] = blocks(clock, "Text");
 
-    assert.match(time, /font\.pixelSize: Appearance\.sizes\.lockClock\b/);
-    assert.match(date, /font\.pixelSize: Appearance\.sizes\.lockClockDate\b/);
+    assert.match(time, /font\.pixelSize: root\.timeSize\b/);
+    assert.match(date, /font\.pixelSize: root\.dateSize\b/);
     assert.match(clock, /spacing: Appearance\.sizes\.lockClockGap\b/);
+});
+
+// The surface is the only thing that knows how wide the output is, and a clock left at the
+// default width would fall to the lower bound on every screen.
+test("the surface hands the clock the width it is composed on", () => {
+    const [instantiation] = blocks(read(lockDir, "LockSurface.qml"), "LockClock");
+
+    assert.match(instantiation, /availableWidth: parent\.width\b/);
 });
 
 // At 300px the time is display type, not large body text. Without the negative tracking it
@@ -39,8 +59,17 @@ test("the clock takes its size, date size and gap from those tokens", () => {
 test("the time carries the prototype's tracking and leading", () => {
     const [time] = blocks(clock, "Text");
 
-    assert.match(time, /font\.letterSpacing: -0\.09 \* Appearance\.sizes\.lockClock\b/);
+    assert.match(time, /font\.letterSpacing: -0\.09 \* root\.timeSize\b/);
     assert.match(time, /lineHeight: 0\.86\b/);
+});
+
+// A distance field is cached at one base size and scaled to whatever the text asks for,
+// which at display size — and again through the reveal's `scale` — reads as a blown-up
+// bitmap rather than as type.
+test("the time is drawn from curves rather than from a scaled distance field", () => {
+    const [time] = blocks(clock, "Text");
+
+    assert.match(time, /renderType: Text\.CurveRendering\b/);
 });
 
 // "hh:mm" holds its character count, but a proportional font gives each digit its own

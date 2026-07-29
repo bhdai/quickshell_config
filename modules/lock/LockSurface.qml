@@ -83,6 +83,10 @@ WlSessionLockSurface {
             anchors.horizontalCenter: parent.horizontalCenter
             y: parent.height * root.clockCenterFraction - height / 2
 
+            // Display type sized from the output rather than from a number tuned on one
+            // panel, so the composition reads the same on every screen it covers.
+            availableWidth: parent.width
+
             // One element shrinking as it travels. `scale` is about the item's centre, so
             // positioning by the unscaled height still lands the visual centre on the
             // fraction above.

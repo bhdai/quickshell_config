@@ -244,9 +244,13 @@ Singleton {
         readonly property real lockPowerButton: 48
         // The lock composition's own metrics, from the approved prototype. The clock is
         // display type well outside the UI scale above, so it is sized here rather than
-        // squeezed into a name in font.pixelSize.
-        readonly property real lockClock: 300
-        readonly property real lockClockDate: 28
+        // squeezed into a name in font.pixelSize. It is sized from the output's width
+        // between these bounds, so the same clock reads the same on a 1280 panel as on a
+        // 4K one instead of being a fixed slab that only suits the display it was tuned on.
+        readonly property real lockClockMin: 120
+        readonly property real lockClockMax: 300
+        readonly property real lockClockDateMin: 18
+        readonly property real lockClockDateMax: 28
         readonly property real lockClockGap: 26
         // How far the prompt and the power controls travel as they fade in.
         readonly property real lockRevealRise: 14
