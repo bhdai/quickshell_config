@@ -42,13 +42,12 @@ test("every state but absent is drawn", () => {
 
         assert.equal(drawn.visible, true);
         assert.notEqual(drawn.copy, "");
-        assert.notEqual(drawn.icon, "");
     }
 });
 
 test("a rejected scan reads as a refusal rather than as an invitation", () => {
-    // They share an icon by design — the refusal is about the reader being touched, not
-    // about a different symbol appearing — so colour and motion are what carry it.
+    // The icon is the same one in both — the refusal is about the reader under the
+    // finger, not about a different symbol appearing — so colour and motion carry it.
     const armed = treatment(Phase.Armed);
     const rejected = treatment(Phase.Rejected);
 
@@ -70,24 +69,37 @@ test("a rejected scan still says to try again", () => {
     assert.match(treatment(Phase.Rejected).copy, /try again/i);
 });
 
-test("a recognised scan says the machine is opening", () => {
-    const recognized = treatment(Phase.Recognized);
+test("there is no state for a win", () => {
+    // The grant releases the lock in the same handler that would set one, so a success
+    // treatment would be a branch no frame could ever show. Asserted rather than left to
+    // a comment: the copy for it is written down in the spec and is easy to add back.
+    assert.ok(!everyPhase.includes("recognized"));
 
-    assert.equal(recognized.tone, Tone.Success);
-    assert.match(recognized.copy, /unlocking/i);
-});
-
-test("the three drawn states are three distinct treatments", () => {
-    const looks = everyPhase.filter(p => p !== Phase.Absent).map(p => {
-        const drawn = treatment(p);
-        return `${drawn.tone}/${drawn.icon}`;
-    });
-
-    assert.equal(new Set(looks).size, looks.length);
+    for (const drawn of everyPhase.map(treatment)) {
+        assert.doesNotMatch(drawn.copy, /unlocking/i);
+    }
 });
 
 test("an unrecognised state falls back to drawing nothing", () => {
-    assert.deepEqual(treatment("a-fifth-state"), treatment(Phase.Absent));
+    assert.deepEqual(treatment("a-fourth-state"), treatment(Phase.Absent));
+});
+
+test("the chip draws the bundled fingerprint asset rather than a font glyph", () => {
+    // The shipped SVG, colorised onto the palette like the status cluster's icons. It is
+    // the same drawing in every state, which is why it is not part of a treatment.
+    const [icon] = blocks(affordance, "CustomIcon");
+
+    assert.match(icon, /source: "auth-fingerprint-symbolic"/);
+    assert.match(icon, /colorize: true/);
+    assert.equal(blocks(affordance, "MaterialSymbol").length, 0);
+});
+
+test("the chip's contents are centred by the layout rather than by cross-anchoring", () => {
+    // A Row sets only `x`, so its children have to anchor to each other, and the taller
+    // icon then hangs above the row's own box and takes the visible content up with it.
+    assert.equal(blocks(affordance, "RowLayout").length, 1);
+    assert.equal((affordance.match(/Layout\.alignment: Qt\.AlignVCenter/g) ?? []).length, 2);
+    assert.doesNotMatch(affordance, /anchors\.verticalCenter: \w+\.verticalCenter/);
 });
 
 // The rest is wiring, and it is asserted here because none of it is visible on a screen:

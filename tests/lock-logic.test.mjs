@@ -364,6 +364,13 @@ test("a stopped reader is absent however it was proven", () => {
 
 test("feedback shows through only while the reader is live", () => {
     assert.equal(fingerprintState(true, false, Fingerprint.Rejected), Fingerprint.Rejected);
-    assert.equal(fingerprintState(true, false, Fingerprint.Recognized), Fingerprint.Recognized);
     assert.equal(fingerprintState(true, false, Fingerprint.Armed), Fingerprint.Armed);
+});
+
+test("a win has no feedback of its own to leave behind", () => {
+    // The grant releases the lock in the same handler, so there is no frame in which a
+    // "recognized" treatment could be drawn — and a state nothing can show is a branch
+    // the next reader would have to prove unreachable.
+    assert.equal(fingerprintAction(Result.Success, true).feedback, Fingerprint.Armed);
+    assert.ok(!Object.keys(Fingerprint).map(k => Fingerprint[k]).includes("recognized"));
 });

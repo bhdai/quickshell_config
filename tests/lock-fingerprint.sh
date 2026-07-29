@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# The fingerprint affordance is built only when a lock is raised, and its rejected and
-# recognized treatments only when a reader has answered, so nothing else in CI ever
-# constructs them. This builds it offscreen and walks it through all four states.
+# The fingerprint affordance is built only when a lock is raised, and its rejected
+# treatment only when a reader has answered and refused, so nothing else in CI ever
+# constructs them. This builds it offscreen and walks it through every state.
 
 set -euo pipefail
 
@@ -21,6 +21,9 @@ chmod 700 "$test_dir/runtime"
 ln -s "$repo_root/modules/common" "$test_dir/config/modules/common"
 ln -s "$repo_root/modules/lock/LockFingerprint.qml" "$test_dir/config/modules/lock/LockFingerprint.qml"
 ln -s "$repo_root/modules/lock/LockFingerprint.js" "$test_dir/config/modules/lock/LockFingerprint.js"
+# CustomIcon resolves bundled names against the config root, so without this the chip
+# builds and reports every treatment correctly while drawing no icon at all.
+ln -s "$repo_root/assets" "$test_dir/config/assets"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"
 
 if ! QT_QPA_PLATFORM=offscreen \
@@ -42,7 +45,9 @@ fi
 # treatments below would all look right while the line rendered nothing. The IPC socket is
 # not one of ours: quickshell fails to bind it when the runtime path is long, which says
 # nothing about the QML.
-if grep -v 'quickshell\.ipc' "$test_dir/quickshell.log" | grep -qE 'ERROR|TypeError|ReferenceError|Unable to assign'; then
+# `Cannot open` is in the list because a mistyped bundled icon name is not a QML error:
+# the chip lays out, reports its treatment, and draws a hole where the fingerprint goes.
+if grep -v 'quickshell\.ipc' "$test_dir/quickshell.log" | grep -qE 'ERROR|TypeError|ReferenceError|Unable to assign|Cannot open'; then
     cat "$test_dir/quickshell.log"
     echo "The fingerprint affordance loaded with errors"
     exit 1
@@ -54,7 +59,7 @@ read_field() {
 
 # Absent covers no reader, no enrolment and a reader unplugged mid-lock alike, and an
 # unknown state falls back to it. Nothing is offered in any of them.
-for phase in absent a-fifth-state; do
+for phase in absent a-fourth-state; do
     if [[ "$(read_field "$phase" visible)" != "false" ]]; then
         echo "$results"
         echo "The affordance drew itself in the $phase state"
@@ -62,7 +67,7 @@ for phase in absent a-fifth-state; do
     fi
 done
 
-for phase in armed rejected recognized; do
+for phase in armed rejected; do
     if [[ "$(read_field "$phase" visible)" != "true" ]]; then
         echo "$results"
         echo "The affordance did not draw itself in the $phase state"
@@ -71,12 +76,12 @@ for phase in armed rejected recognized; do
 done
 
 # A refusal that looks like the invitation to touch is a refusal the user does not read.
-# The invitation and the refusal share an icon on purpose, so the colour is what has to
-# carry it — this is the mapping as wired rather than as unit-tested.
-looks="$(grep -E 'phase=(armed|rejected|recognized) ' <<<"$results" | sed -n 's/.*\(tone=[^ ]* icon=[^ ]* shake=[^ ]*\).*/\1/p')"
-if [[ "$(sort -u <<<"$looks" | wc -l)" -ne 3 ]]; then
+# Both draw the same icon on purpose, so colour and motion are all there is to carry it —
+# this is the mapping as wired rather than as unit-tested.
+looks="$(grep -E 'phase=(armed|rejected) ' <<<"$results" | sed -n 's/.*\(tone=[^ ]* shake=[^ ]*\).*/\1/p')"
+if [[ "$(sort -u <<<"$looks" | wc -l)" -ne 2 ]]; then
     echo "$results"
-    echo "The three drawn states are not visibly distinct"
+    echo "The two drawn states are not visibly distinct"
     exit 1
 fi
 

@@ -62,11 +62,14 @@ const MessageRole = {
 // What the fingerprint affordance is showing. Not a lock state: the reader is armed for
 // the whole of `secure` and runs alongside whatever the password machine is doing, so it
 // has no say in the enum above and cannot hold the machine anywhere.
+//
+// There is deliberately no state for a win. The grant runs in the same handler that would
+// set it and releases the lock synchronously, so the surface is gone before a frame could
+// be drawn — a "fingerprint recognized" treatment would be a branch nothing can ever see.
 const Fingerprint = {
     Absent: "absent",
     Armed: "armed",
     Rejected: "rejected",
-    Recognized: "recognized",
 };
 
 /**
@@ -220,7 +223,9 @@ function displayMessage(action, conversationMessage, errorMessage) {
 function fingerprintAction(result, sawMessageThisCycle) {
     switch (result) {
     case Result.Success:
-        return { event: Event.FingerprintSuccess, effects: [], feedback: Fingerprint.Recognized };
+        // The feedback is the resting one because the win has none to give: the grant
+        // tears the affordance down along with the lock before anything could render.
+        return { event: Event.FingerprintSuccess, effects: [], feedback: Fingerprint.Armed };
 
     case Result.MaxTries:
         // Under max-tries=1 this is "that finger did not match" and nothing else. It
@@ -252,7 +257,7 @@ function fingerprintState(available, stopped, feedback) {
     if (stopped || !available)
         return Fingerprint.Absent;
 
-    return feedback === Fingerprint.Rejected || feedback === Fingerprint.Recognized ? feedback : Fingerprint.Armed;
+    return feedback === Fingerprint.Rejected ? Fingerprint.Rejected : Fingerprint.Armed;
 }
 
 /**

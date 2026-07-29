@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
@@ -19,7 +20,8 @@ import "LockFingerprint.js" as LockFingerprint
  * There is no scanning state. The approved prototype has one, but nothing on this path can
  * report it: the result codes say only how a completed scan ended, and the message that
  * would carry "a finger is on the sensor" is exactly the translated, device-specific text
- * this screen refuses to render.
+ * this screen refuses to render. There is no success state either — the grant releases the
+ * lock synchronously, so the surface is gone before one could be drawn.
  */
 Item {
     id: root
@@ -32,39 +34,18 @@ Item {
     implicitWidth: chip.implicitWidth
     implicitHeight: Appearance.sizes.lockFingerprintChip
 
-    // Colour roles onto the palette. The chip is drawn over a blurred wallpaper rather
-    // than over a solid layer, so its resting fill is translucent — enough to hold the
-    // text legibly without becoming a second solid slab under the password field.
     function toneText(tone: string): color {
-        switch (tone) {
-        case LockFingerprint.Tone.Error:
-            return Appearance.colors.colError;
-        case LockFingerprint.Tone.Success:
-            return Appearance.colors.colOnPrimaryContainer;
-        default:
-            return Appearance.colors.colOnLayer0;
-        }
+        return tone === LockFingerprint.Tone.Error ? Appearance.colors.colError : Appearance.colors.colOnLayer0;
     }
 
     // The one place the icon outranks the text it sits beside: an accent fingerprint on an
     // otherwise quiet chip is what makes it read as an offer rather than as a label.
     function toneIcon(tone: string): color {
-        return tone === LockFingerprint.Tone.Neutral ? Appearance.colors.colPrimary : root.toneText(tone);
+        return tone === LockFingerprint.Tone.Error ? Appearance.colors.colError : Appearance.colors.colPrimary;
     }
 
     function toneBorder(tone: string): color {
-        switch (tone) {
-        case LockFingerprint.Tone.Error:
-            return Appearance.colors.colError;
-        case LockFingerprint.Tone.Success:
-            return Appearance.colors.colPrimary;
-        default:
-            return ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.3);
-        }
-    }
-
-    function toneFill(tone: string): color {
-        return tone === LockFingerprint.Tone.Success ? Appearance.colors.colPrimaryContainer : ColorUtils.applyAlpha(Appearance.colors.colLayer1, 0.56);
+        return tone === LockFingerprint.Tone.Error ? Appearance.colors.colError : ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.3);
     }
 
     // Read from the phase rather than from the `treatment` binding, which is a separate
@@ -84,7 +65,10 @@ Item {
         implicitWidth: line.implicitWidth + 2 * Appearance.font.pixelSize.small
         implicitHeight: Appearance.sizes.lockFingerprintChip
         radius: Appearance.rounding.full
-        color: root.toneFill(root.treatment.tone)
+
+        // Translucent rather than solid: the chip sits over a blurred wallpaper, and a
+        // second opaque slab under the password field would read as a second control.
+        color: ColorUtils.applyAlpha(Appearance.colors.colLayer1, 0.56)
         border.width: 1
         border.color: root.toneBorder(root.treatment.tone)
 
@@ -102,13 +86,6 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Appearance.animation.elementMove.duration
-                easing.type: Appearance.animation.elementMove.type
-            }
-        }
-
-        Behavior on color {
-            ColorAnimation {
                 duration: Appearance.animation.elementMove.duration
                 easing.type: Appearance.animation.elementMove.type
             }
@@ -144,28 +121,27 @@ Item {
             }
         }
 
-        Row {
+        // A layout rather than a Row: a Row sets only `x`, so its children have to be
+        // cross-anchored to each other, and the taller icon then hangs above the row's own
+        // box and takes the visible content up with it.
+        RowLayout {
             id: line
 
             anchors.centerIn: parent
             spacing: Appearance.font.pixelSize.smallest
 
-            MaterialSymbol {
-                anchors.verticalCenter: copy.verticalCenter
-                text: root.treatment.icon
-                iconSize: Appearance.font.pixelSize.hugeass
-                color: root.toneIcon(root.treatment.tone)
+            CustomIcon {
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: Appearance.font.pixelSize.hugeass
+                Layout.preferredHeight: Appearance.font.pixelSize.hugeass
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Appearance.animation.elementMove.duration
-                        easing.type: Appearance.animation.elementMove.type
-                    }
-                }
+                source: "auth-fingerprint-symbolic"
+                colorize: true
+                color: root.toneIcon(root.treatment.tone)
             }
 
             Text {
-                id: copy
+                Layout.alignment: Qt.AlignVCenter
 
                 text: root.treatment.copy
                 color: root.toneText(root.treatment.tone)
