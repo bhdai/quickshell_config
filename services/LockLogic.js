@@ -151,6 +151,28 @@ function passwordAction(result, respondedThisCycle) {
 }
 
 /**
+ * What to display for a completed conversation, given the descriptor from
+ * `passwordAction` and whatever text arrived on the way: `conversationMessage` is
+ * the last non-prompt message PAM sent this cycle, `errorMessage` the description
+ * of a PamError signal.
+ *
+ * Account lockout has no result code of its own — pam_faillock refuses with a
+ * plain failure and says why only in the message text — so anything PAM actually
+ * said outranks the generic copy for the result. Without that, "Password
+ * incorrect. Try again." paints over the one sentence explaining that trying
+ * again is not what is wrong, and the user retypes and never learns why.
+ *
+ * The role stays the result's own: the message says what happened, the result
+ * says how bad it is, and only the result is trustworthy enough to colour by.
+ */
+function displayMessage(action, conversationMessage, errorMessage) {
+    return {
+        message: conversationMessage || errorMessage || action.message,
+        messageRole: action.messageRole,
+    };
+}
+
+/**
  * Describes a PamError for display. Diagnostic only — PamContext always emits a
  * completion carrying PamResult.Error after this signal, and that completion is
  * the single terminal transition. Returning an event here would double-fire the

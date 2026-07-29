@@ -31,6 +31,8 @@ jobs:
         run: tests/lock-status-cluster.sh
       - name: Test the lock screen power controls
         run: tests/lock-power-controls.sh
+      - name: Test the lock screen password states
+        run: tests/lock-auth-area.sh
       - name: Load the shell
         env:
           WLR_BACKENDS: headless

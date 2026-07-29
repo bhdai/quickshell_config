@@ -85,6 +85,17 @@ test("every animation in the lock module is timed from an Appearance token", () 
     assert.deepEqual(offenders, []);
 });
 
+// The prompt is where an unlock would be worth smuggling in, so it is the one component with
+// no way to reach the lock at all: it is handed what to show and reports what the user did.
+// That is also what lets a test drive all six states with no PAM behind it.
+test("the password prompt reads no singleton", () => {
+    // Comments stripped: the file says what it does not reach, and saying so is not reaching.
+    const prompt = lockQml("LockAuthArea.qml").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+
+    assert.doesNotMatch(prompt, /^import qs\.services$/m);
+    assert.doesNotMatch(prompt, /\bLock\./);
+});
+
 test("the surface hardcodes no colour", () => {
     const offenders = [];
 
