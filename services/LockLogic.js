@@ -20,6 +20,7 @@ const Event = {
     Insecure: "insecure",
     Submit: "submit",
     Success: "success",
+    FingerprintSuccess: "fingerprintSuccess",
     Failure: "failure",
     Denied: "denied",
 };
@@ -31,6 +32,9 @@ const Effect = {
     SendResponse: "sendResponse",
     Grant: "grant",
     ReleaseLock: "releaseLock",
+    ArmFingerprint: "armFingerprint",
+    DisarmFingerprint: "disarmFingerprint",
+    StopFingerprint: "stopFingerprint",
 };
 
 // PamResult.Enum and PamError.Enum, as names rather than the numeric values, so
@@ -55,6 +59,16 @@ const MessageRole = {
     Unavailable: "unavailable",
 };
 
+// What the fingerprint affordance is showing. Not a lock state: the reader is armed for
+// the whole of `secure` and runs alongside whatever the password machine is doing, so it
+// has no say in the enum above and cannot hold the machine anywhere.
+const Fingerprint = {
+    Absent: "absent",
+    Armed: "armed",
+    Rejected: "rejected",
+    Recognized: "recognized",
+};
+
 /**
  * The state machine. Returns { next, effects } — the caller applies the effects
  * in order and stores `next`.
@@ -70,10 +84,15 @@ function nextState(state, event) {
     case Event.Secure:
         // A preserved hot reload re-raises secure, so this is reachable from any
         // state and must always land on the same one.
-        return transition(State.Locked, [Effect.Arm]);
+        //
+        // Both factors arm here rather than on `locked` or on surface construction.
+        // Before the compositor confirms it has stopped routing input to ordinary
+        // clients, a touch on the reader would authenticate against a screen that is
+        // not yet covering the desktop.
+        return transition(State.Locked, [Effect.Arm, Effect.ArmFingerprint]);
 
     case Event.Insecure:
-        return state === State.Unlocked ? transition(state, [Effect.Disarm]) : transition(State.Locking, [Effect.Disarm]);
+        return state === State.Unlocked ? transition(state, [Effect.Disarm, Effect.DisarmFingerprint]) : transition(State.Locking, [Effect.Disarm, Effect.DisarmFingerprint]);
 
     case Event.Submit:
         return state === State.Locked ? transition(State.Authenticating, [Effect.SendResponse]) : transition(state);
@@ -83,13 +102,21 @@ function nextState(state, event) {
         // state is a late or duplicate signal and must not unlock.
         return state === State.Authenticating ? transition(State.Unlocked, [Effect.Grant]) : transition(state);
 
+    case Event.FingerprintSuccess:
+        // The reader is not part of the password machine's flow, so a win can land in
+        // either state a scan can complete in. It cannot land in Locking — the reader is
+        // only armed once secure, and losing secure aborts the context — and a success
+        // there would be a grant against a screen the compositor is not confirming, so
+        // the pair is named rather than everything-but-Unlocked.
+        return state === State.Locked || state === State.Authenticating ? transition(State.Unlocked, [Effect.Grant]) : transition(state);
+
     case Event.Failure:
         return state === State.Unlocked ? transition(state) : transition(State.Locked);
 
     case Event.Denied:
         // The compositor refused or dropped the lock. Nothing authenticated, so
         // the persisted request is released rather than granted.
-        return transition(State.Unlocked, [Effect.Disarm, Effect.ReleaseLock]);
+        return transition(State.Unlocked, [Effect.Disarm, Effect.DisarmFingerprint, Effect.ReleaseLock]);
 
     default:
         return transition(state);
@@ -170,6 +197,62 @@ function displayMessage(action, conversationMessage, errorMessage) {
         message: conversationMessage || errorMessage || action.message,
         messageRole: action.messageRole,
     };
+}
+
+/**
+ * What to do with a completed fingerprint conversation. Runs against its own policy in
+ * its own context, concurrently with the password one, because `pam_fprintd` blocks in
+ * its D-Bus verify loop without ever calling the conversation function — under a single
+ * combined policy the password field could not be submitted while a scan was pending.
+ *
+ * `sawMessageThisCycle` is whether the module said anything since this context was armed,
+ * and it carries the whole of the fork-loop hazard. `Error` conflates "you took thirty
+ * seconds" with "there is no reader", and with no reader the module returns instantly, so
+ * re-arming blindly on it spins behind a locked screen. The module sends its prompt only
+ * after enumerating devices, finding an enrolled finger and claiming the reader, so a
+ * message having arrived is proof the device was there and leaves the timeout as the only
+ * thing the error can have been. Arrival rather than content, because the timeout string
+ * is syslog-only and never reaches the message property.
+ *
+ * Returns { event, effects, feedback }: `event` is null for everything but a win, since a
+ * failed scan must not move the password machine.
+ */
+function fingerprintAction(result, sawMessageThisCycle) {
+    switch (result) {
+    case Result.Success:
+        return { event: Event.FingerprintSuccess, effects: [], feedback: Fingerprint.Recognized };
+
+    case Result.MaxTries:
+        // Under max-tries=1 this is "that finger did not match" and nothing else. It
+        // re-arms unconditionally: the fingerprint policy was deliberately kept free of
+        // pam_faillock so that a password lockout cannot disable the reader, and a cap
+        // counted here would smuggle that lockout back in through the side door.
+        return { event: null, effects: [Effect.ArmFingerprint], feedback: Fingerprint.Rejected };
+
+    case Result.Error:
+        return sawMessageThisCycle ? { event: null, effects: [Effect.ArmFingerprint], feedback: Fingerprint.Armed } : { event: null, effects: [Effect.StopFingerprint], feedback: Fingerprint.Absent };
+
+    default:
+        // Including Failed, which this stack has no way to produce: one module, and a
+        // finger it refuses comes back as MaxTries. Stop quietly rather than retry
+        // something whose meaning is not known on this build.
+        return { event: null, effects: [Effect.StopFingerprint], feedback: Fingerprint.Absent };
+    }
+}
+
+/**
+ * What the affordance shows, given whether a message has ever proven the reader exists,
+ * whether the retry loop has stopped for this lock session, and the feedback from the
+ * last completed scan.
+ *
+ * Availability is sticky once proven so that the affordance does not blink out between
+ * scan cycles, and only a stop takes it away.
+ */
+function fingerprintState(available, stopped, feedback) {
+    if (stopped || !available)
+        return Fingerprint.Absent;
+
+    return feedback === Fingerprint.Rejected || feedback === Fingerprint.Recognized ? feedback : Fingerprint.Armed;
 }
 
 /**

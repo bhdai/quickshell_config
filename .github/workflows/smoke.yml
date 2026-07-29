@@ -33,6 +33,8 @@ jobs:
         run: tests/lock-power-controls.sh
       - name: Test the lock screen password states
         run: tests/lock-auth-area.sh
+      - name: Test the lock screen fingerprint affordance
+        run: tests/lock-fingerprint.sh
       - name: Load the shell
         env:
           WLR_BACKENDS: headless
