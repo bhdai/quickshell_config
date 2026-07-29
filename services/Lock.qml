@@ -40,11 +40,21 @@ Singleton {
 
     readonly property string lockState: priv.lockState
     readonly property string message: priv.message
-    readonly property bool messageIsProblem: priv.messageRole !== LockLogic.MessageRole.None
+
+    // How the message should read, as a LockLogic.MessageRole. It is the result code the
+    // surface treats the outcome by, never the message text: lockout copy is translated and
+    // reworded by whatever module sent it, so matching on it would break outside an English
+    // locale, while the code is the same value on every machine.
+    readonly property string messageRole: priv.messageRole
 
     // The password lives here rather than on a surface so that every output's field
     // edits the same string and mirrored monitors stay in sync while typing.
     property string password: ""
+
+    // How many characters went out with the last response. The password is dropped at
+    // submit rather than kept until the result arrives, so this is what lets the field
+    // keep showing its dots while authentication is in flight. Length only, never content.
+    property int submittedLength: 0
 
     // Whether the surfaces are showing the authentication area or resting. View state
     // rather than lock state, held here for the same reason the password is: the mirrored
@@ -86,6 +96,16 @@ Singleton {
             priv.dispatch(LockLogic.Event.Denied);
     }
 
+    // Walking away must not leave half a password sitting on screen where the next person
+    // to touch the machine can count the characters. Silent by design: it writes no message,
+    // so a lockout notice underneath survives the clear.
+    onPasswordChanged: {
+        if (root.password.length > 0 && priv.lockState === LockLogic.State.Locked)
+            idleClear.restart();
+        else
+            idleClear.stop();
+    }
+
     // Reload matches this object by its index among the singleton's children. Adding a
     // child above it while the screen is locked drops the persisted state, and the lock
     // goes with it.
@@ -96,6 +116,15 @@ Singleton {
         // opens the screen: the new generation constructs the property as false and the
         // binding writes it straight through to the compositor. Observed, twice, in #57.
         property bool locked: false
+    }
+
+    // Declared below PersistentProperties rather than above it, because that object is
+    // matched across a reload by its index among these children.
+    Timer {
+        id: idleClear
+
+        interval: 10000
+        onTriggered: root.password = ""
     }
 
     // The machine and the grant live in an unnamed child so that nothing outside this
@@ -122,6 +151,11 @@ Singleton {
         property bool promptReady: false
 
         property string lastErrorMessage: ""
+
+        // The last non-prompt message PAM sent this cycle. Kept because it is the only
+        // evidence account lockout exists: the stack refuses with a plain failure and
+        // explains itself here and nowhere else.
+        property string conversationMessage: ""
 
         function dispatch(event: string): void {
             const transition = LockLogic.nextState(priv.lockState, event);
@@ -164,6 +198,7 @@ Singleton {
             priv.respondedThisCycle = false;
             priv.promptReady = false;
             priv.lastErrorMessage = "";
+            priv.conversationMessage = "";
             pam.start();
 
             // A bad policy path or an unresolvable user logs and returns without emitting
@@ -186,6 +221,7 @@ Singleton {
             pam.respond(root.password);
             priv.respondedThisCycle = true;
             priv.promptReady = false;
+            root.submittedLength = root.password.length;
             root.password = "";
         }
 
@@ -196,6 +232,7 @@ Singleton {
             priv.granted = true;
             priv.disarm();
             root.password = "";
+            root.submittedLength = 0;
             priv.message = "";
             priv.messageRole = LockLogic.MessageRole.None;
             persist.locked = false;
@@ -253,6 +290,7 @@ Singleton {
 
             // Non-prompt messages carry what the result code cannot, notably the account
             // lockout text and how long it lasts.
+            priv.conversationMessage = pam.message;
             priv.message = pam.message;
             priv.messageRole = pam.messageIsError ? LockLogic.MessageRole.Error : LockLogic.MessageRole.None;
         }
@@ -260,8 +298,10 @@ Singleton {
         onCompleted: result => {
             const action = LockLogic.passwordAction(priv.resultName(result), priv.respondedThisCycle);
             priv.dispatch(action.event);
-            priv.message = priv.lastErrorMessage || action.message;
-            priv.messageRole = action.messageRole;
+
+            const display = LockLogic.displayMessage(action, priv.conversationMessage, priv.lastErrorMessage);
+            priv.message = display.message;
+            priv.messageRole = display.messageRole;
             priv.applyEffects(action.effects);
         }
 

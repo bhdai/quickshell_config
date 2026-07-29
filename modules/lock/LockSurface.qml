@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell.Wayland
 import qs.modules.common
-import qs.modules.common.widgets
 import qs.services
 import "LockReveal.js" as LockReveal
 
@@ -87,14 +86,23 @@ WlSessionLockSurface {
             }
         }
 
-        Column {
+        LockAuthArea {
             id: authArea
 
             anchors.horizontalCenter: parent.horizontalCenter
             y: parent.height * root.authCenterFraction - height / 2
             width: Appearance.sizes.searchWidth
-            spacing: Appearance.font.pixelSize.normal
             opacity: root.revealed ? 1 : 0
+
+            prompt: Lock.prompt
+            echo: Lock.echoResponse
+            inputAvailable: Lock.acceptingInput
+            authenticating: Lock.authenticating
+            message: Lock.message
+            messageRole: Lock.messageRole
+            maskedLength: Lock.submittedLength
+
+            onSubmitted: Lock.submit()
 
             Behavior on opacity {
                 NumberAnimation {
@@ -104,69 +112,40 @@ WlSessionLockSurface {
                 }
             }
 
-            MaterialTextField {
-                id: passwordField
+            // Two-way sync with the singleton's password: it is the single source of truth,
+            // so a second output's field shows what is typed on the first.
+            onTextChanged: if (Lock.password !== authArea.text)
+                Lock.password = authArea.text
 
-                width: parent.width
-                enabled: Lock.acceptingInput
-                echoMode: Lock.echoResponse ? TextInput.Normal : TextInput.Password
-                placeholderText: Lock.prompt
-                focus: true
-
-                onAccepted: Lock.submit()
-
-                // Two-way sync with the singleton's password: it is the single source of
-                // truth, so a second output's field shows what is typed on the first.
-                onTextChanged: if (Lock.password !== text)
-                    Lock.password = text
-
-                // The field keeps focus while the screen is at rest, invisible and all, so
-                // that the keystroke which asks for the prompt is typed into it rather
-                // than being spent on opening it.
-                Keys.onPressed: event => {
-                    const action = LockReveal.keyAction(root.revealed, event.text, event.key === Qt.Key_Escape, Lock.password.length === 0);
-                    switch (action) {
-                    case LockReveal.Action.Reveal:
-                        Lock.authRevealed = true;
-                        break;
-                    case LockReveal.Action.ClearPassword:
-                        Lock.password = "";
-                        event.accepted = true;
-                        break;
-                    case LockReveal.Action.Rest:
-                        Lock.authRevealed = false;
-                        event.accepted = true;
-                        break;
-                    }
+            // Every key press arrives here because the prompt holds the keyboard focus even
+            // at rest, transparent and all: the keystroke that asks for the prompt is typed
+            // into the field rather than being spent on opening it.
+            onKeyPressed: event => {
+                const action = LockReveal.keyAction(root.revealed, event.text, event.key === Qt.Key_Escape, Lock.password.length === 0);
+                switch (action) {
+                case LockReveal.Action.Reveal:
+                    Lock.authRevealed = true;
+                    break;
+                case LockReveal.Action.ClearPassword:
+                    Lock.password = "";
+                    event.accepted = true;
+                    break;
+                case LockReveal.Action.Rest:
+                    Lock.authRevealed = false;
+                    event.accepted = true;
+                    break;
                 }
-
-                Connections {
-                    target: Lock
-
-                    function onPasswordChanged() {
-                        if (passwordField.text !== Lock.password) {
-                            passwordField.text = Lock.password;
-                            passwordField.cursorPosition = passwordField.text.length;
-                        }
-                    }
-
-                    function onAcceptingInputChanged() {
-                        if (Lock.acceptingInput)
-                            passwordField.forceActiveFocus();
-                    }
-                }
-
-                Component.onCompleted: passwordField.forceActiveFocus()
             }
 
-            Text {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
-                text: Lock.authenticating ? "Authenticating…" : Lock.message
-                color: Lock.messageIsProblem ? Appearance.colors.colError : Appearance.colors.colOnSurfaceVariant
-                font.family: Appearance.font.family.main
-                font.pixelSize: Appearance.font.pixelSize.normal
+            Connections {
+                target: Lock
+
+                function onPasswordChanged() {
+                    if (authArea.text !== Lock.password) {
+                        authArea.text = Lock.password;
+                        authArea.cursorPosition = authArea.text.length;
+                    }
+                }
             }
         }
 
@@ -202,15 +181,27 @@ WlSessionLockSurface {
             }
         }
 
-        // Above the composition so that a click anywhere at rest opens the prompt, and
-        // disabled once it is open so the field and its controls get their own clicks.
+        // Above the composition so that a click anywhere at rest opens the prompt. Once it is
+        // open the press is passed on instead of eaten, so the field and the power controls
+        // under this still get their own clicks.
         MouseArea {
             anchors.fill: parent
-            enabled: !root.revealed
 
-            onPressed: {
+            // Hover costs something and is only wanted when there is focus to restore, which
+            // is also what keeps this from sitting between the pointer and a power control's
+            // own hover feedback for the rest of the time.
+            hoverEnabled: Lock.acceptingInput && !authArea.inputFocused
+
+            onPositionChanged: authArea.restoreFocus()
+
+            onPressed: mouse => {
+                // Read before the reveal, not after: the press that opens the prompt is spent
+                // on opening it, or a click landing where the confirm control is about to
+                // appear would submit an empty password on the way past.
+                mouse.accepted = !root.revealed;
+
                 Lock.authRevealed = true;
-                passwordField.forceActiveFocus();
+                authArea.restoreFocus();
             }
         }
     }

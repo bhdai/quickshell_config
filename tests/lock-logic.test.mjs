@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { loadQmlJs } from "./load-qml-js.mjs";
 
-const { State, Event, Effect, Result, PamError, MessageRole, nextState, passwordAction, errorAction } = loadQmlJs(new URL("../services/LockLogic.js", import.meta.url), ["State", "Event", "Effect", "Result", "PamError", "MessageRole", "nextState", "passwordAction", "errorAction"]);
+const { State, Event, Effect, Result, PamError, MessageRole, nextState, passwordAction, errorAction, displayMessage } = loadQmlJs(new URL("../services/LockLogic.js", import.meta.url), ["State", "Event", "Effect", "Result", "PamError", "MessageRole", "nextState", "passwordAction", "errorAction", "displayMessage"]);
 
 const everyState = Object.keys(State).map(k => State[k]);
 const lockedStates = [State.Locking, State.Locked, State.Authenticating];
@@ -190,6 +190,55 @@ test("every pam error is diagnostic only and leaves the machine locked", () => {
             assert.equal(nextState(state, passwordAction(Result.Error, true).event).next, State.Locked);
         }
     }
+});
+
+// Account lockout has no result code of its own — pam_faillock refuses with a plain failure
+// and says why only in the text it sent during the conversation. "Password incorrect. Try
+// again." painted over that is the one outcome where the user retypes forever and never
+// learns that retyping is not the problem.
+test("what pam actually said outranks the generic copy for the result", () => {
+    const rejection = passwordAction(Result.Failed, true);
+    const lockout = "Account locked due to 3 failed logins";
+
+    assert.deepEqual(displayMessage(rejection, lockout, ""), {
+        message: lockout,
+        messageRole: rejection.messageRole,
+    });
+});
+
+test("with nothing said, the generic copy for the result stands", () => {
+    for (const result of [Result.Failed, Result.MaxTries, Result.Error]) {
+        const action = passwordAction(result, true);
+
+        assert.deepEqual(displayMessage(action, "", ""), {
+            message: action.message,
+            messageRole: action.messageRole,
+        });
+    }
+});
+
+test("a pam error describes itself where the conversation said nothing", () => {
+    const action = passwordAction(Result.Error, true);
+    const diagnostic = errorAction(PamError.StartFailed).message;
+
+    assert.equal(displayMessage(action, "", diagnostic).message, diagnostic);
+});
+
+// The module's own words beat our description of the machinery: "the system auth stack
+// failed" is what we can infer, the message is what the stack itself reported.
+test("the conversation outranks the pam error too", () => {
+    const action = passwordAction(Result.Error, true);
+
+    assert.equal(displayMessage(action, "Account locked", errorAction(PamError.TryAuthFailed).message).message, "Account locked");
+});
+
+test("a success displays nothing", () => {
+    const success = passwordAction(Result.Success, true);
+
+    assert.deepEqual(displayMessage(success, "", ""), {
+        message: "",
+        messageRole: MessageRole.None,
+    });
 });
 
 test("each pam error is described distinctly", () => {
