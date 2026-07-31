@@ -33,6 +33,26 @@ test("Appearance.animation carries both expressive easing tokens", () => {
     }
 });
 
+// Qt rejects a bezier curve that is not whole cubic segments ending at (1,1) by discarding it
+// outright — no warning, and easing.type stays BezierSpline, so the animation silently runs
+// linear. Nothing at the call site can see that, which is why it is asserted on the source.
+test("every declared bezier curve is a shape Qt will accept", () => {
+    const source = readFileSync(appearance, "utf8");
+    const malformed = [];
+
+    source.split("\n").forEach((line, index) => {
+        const declaration = line.match(/bezierCurve:\s*\[([^\]]*)\]/);
+        if (!declaration)
+            return;
+
+        const curve = declaration[1].split(",").map(Number);
+        if (curve.length % 6 !== 0 || curve.at(-2) !== 1 || curve.at(-1) !== 1)
+            malformed.push(`Appearance.qml:${index + 1} [${curve.join(", ")}]`);
+    });
+
+    assert.deepEqual(malformed, []);
+});
+
 test("no QML file inlines a token curve as a literal", () => {
     const offenders = [];
 

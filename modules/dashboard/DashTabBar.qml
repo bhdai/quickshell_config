@@ -22,6 +22,9 @@ Item {
 
     // M3's minimum indicator length, for a label narrower than the indicator can be.
     readonly property real minimumIndicator: 24
+    // The lane at the bottom the indicator and the divider share. The tabs stop above it, so
+    // a tab's state layer never draws over the indicator or the rule under it.
+    readonly property real indicatorHeight: 3
     // For the offscreen geometry fixture: whether the indicator ends up on the active label
     // is a measurement, not something a source assertion can see.
     readonly property Item indicatorItem: indicator
@@ -40,7 +43,10 @@ Item {
 
     Row {
         id: row
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: root.height - root.indicatorHeight
 
         Repeater {
             id: repeater
@@ -57,8 +63,8 @@ Item {
                 readonly property real labelWidth: label.implicitWidth
 
                 width: row.width / repeater.count
-                height: root.height
-                buttonRadius: 0
+                height: row.height
+                buttonRadius: Appearance.rounding.small
                 colBackground: "transparent"
                 colBackgroundHover: Appearance.colors.colLayer1Hover
                 onClicked: root.selected(modelData.toLowerCase())
@@ -105,8 +111,8 @@ Item {
     Rectangle {
         id: indicator
         anchors.bottom: parent.bottom
-        height: 3
-        radius: 1.5
+        height: root.indicatorHeight
+        radius: height / 2
         color: Appearance.colors.colPrimary
 
         // Both x and width animate: the indicator is as wide as the active label, and no
@@ -120,21 +126,39 @@ Item {
             return null;
         }
 
-        width: activeTab ? Math.max(root.minimumIndicator, activeTab.labelWidth) : 0
-        x: activeTab ? activeTab.labelX + (activeTab.labelWidth - width) / 2 : 0
+        // Both targets are a function of the active label alone. Deliberately not
+        // `x: … - width / 2`: an x binding that reads the animating width re-targets its own
+        // animation on every frame the width advances, so the slide chases a destination that
+        // keeps moving and never runs its curve to a clean arrival.
+        readonly property real targetWidth: activeTab ? Math.max(root.minimumIndicator, activeTab.labelWidth) : 0
+        readonly property real targetX: activeTab ? activeTab.labelX + (activeTab.labelWidth - targetWidth) / 2 : 0
+
+        // The card is destroyed and rebuilt every time the dashboard opens, so the first
+        // placement is not a move. Without this the indicator slides in from the row's left
+        // edge on every open.
+        property bool placed: false
+        Component.onCompleted: Qt.callLater(() => indicator.placed = true)
+
+        width: targetWidth
+        x: targetX
 
         Behavior on x {
+            enabled: indicator.placed
             NumberAnimation {
                 duration: Appearance.animation.elementMove.duration
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
             }
         }
+        // Overshoots its new length and settles back, which is what makes a travelling
+        // indicator read as one shape stretching between the labels rather than a block of a
+        // new size appearing in a new place.
         Behavior on width {
+            enabled: indicator.placed
             NumberAnimation {
                 duration: Appearance.animation.elementMove.duration
                 easing.type: Easing.BezierSpline
-                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+                easing.bezierCurve: Appearance.animation.expressiveFastSpatial
             }
         }
     }

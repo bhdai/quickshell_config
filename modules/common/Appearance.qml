@@ -269,7 +269,7 @@ Singleton {
         readonly property QtObject elementMove: QtObject {
             readonly property int duration: 200
             readonly property int type: Easing.OutQuad
-            readonly property var bezierCurve: [0.2, 0.0, 0.0, 1.0]
+            readonly property var bezierCurve: [0.2, 0.0, 0.0, 1.0, 1, 1]
             readonly property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: 200
@@ -289,12 +289,12 @@ Singleton {
         readonly property QtObject elementMoveSlow: QtObject {
             readonly property int duration: 400
             readonly property int type: Easing.BezierSpline
-            readonly property var bezierCurve: [0.2, 0.0, 0.0, 1.0]
+            readonly property var bezierCurve: [0.2, 0.0, 0.0, 1.0, 1, 1]
             readonly property Component numberAnimation: Component {
                 NumberAnimation {
                     duration: 400
                     easing.type: Easing.BezierSpline
-                    easing.bezierCurve: [0.2, 0.0, 0.0, 1.0]
+                    easing.bezierCurve: [0.2, 0.0, 0.0, 1.0, 1, 1]
                 }
             }
         }
