@@ -27,6 +27,8 @@ jobs:
         run: tests/brightness-without-ddcutil.sh
       - name: Test brightness sync with external writers
         run: tests/brightness-external-sync.sh
+      - name: Test the dashboard geometry
+        run: tests/dashboard-geometry.sh
       - name: Test the lock screen clock
         run: tests/lock-clock.sh
       - name: Test the lock status cluster without UPower

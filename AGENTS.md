@@ -141,7 +141,8 @@ Hyprland with `qs ipc call <target> <function>`. When adding a feature that need
 a keybind, expose it as an `IpcHandler` target.
 
 Existing targets: `session`, `gamingMode`, `brightness`, `powerProfile`, `zoom`,
-`warp`, `launcher`. Some toggles also use a Hyprland global (`quickshell:<name>`).
+`warp`, `launcher`, `dashboard`. Some toggles also use a Hyprland global
+(`quickshell:<name>`).
 
 ## Type reference
 
