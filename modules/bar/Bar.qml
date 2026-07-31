@@ -7,9 +7,20 @@ import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.functions
+import qs.modules.dashboard
 
 Scope {
     id: bar
+
+    // One dashboard for the session, not one per output: it owns an IPC target, and every
+    // bar's clock toggles the same surface.
+    //
+    // Not `id: dashboard`. TimeWidget has a property of that name, and an object's own
+    // scope wins over the file's ids — so `dashboard: dashboard` below would bind the
+    // widget to itself and leave it holding null.
+    Dashboard {
+        id: dashboardPopup
+    }
 
     Connections {
         target: Hyprland
@@ -82,7 +93,9 @@ Scope {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 8
 
-                    TimeWidget {}
+                    TimeWidget {
+                        dashboard: dashboardPopup
+                    }
                 }
 
                 // right section

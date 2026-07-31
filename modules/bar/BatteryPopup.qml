@@ -148,6 +148,32 @@ Scope {
                             font.pixelSize: 13
                         }
                     }
+
+                    // Uptime moved here when the dashboard dropped the duplicated clock:
+                    // it belongs with the other facts about how long this machine has been
+                    // running rather than beside a calendar.
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialSymbol {
+                            iconSize: 18
+                            text: "timer"
+                            color: Appearance.colors.colSubtext
+                        }
+
+                        Text {
+                            text: "Uptime:"
+                            color: Appearance.colors.colSubtext
+                            font.pixelSize: 13
+                        }
+
+                        Text {
+                            text: Time.uptime
+                            color: Appearance.colors.colOnLayer0
+                            font.pixelSize: 13
+                        }
+                    }
                 }
             }
         }
