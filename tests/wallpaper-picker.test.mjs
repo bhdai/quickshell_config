@@ -11,6 +11,7 @@ const pane = read(dashboardDir, "WallpaperPane.qml");
 const tile = read(dashboardDir, "WallpaperTile.qml");
 const card = read(dashboardDir, "DashboardCard.qml");
 const dashboard = read(dashboardDir, "Dashboard.qml");
+const tabBar = read(dashboardDir, "DashTabBar.qml");
 
 // Two enumerators of the same directory would eventually disagree about what is in it and in
 // what order, and the grid and IPC cycling would then be picking from different lists.
@@ -52,16 +53,44 @@ test("thumbnails decode asynchronously into a bounded texture, clipped by the sh
 
 test("a click focuses the tile and applies through the one service mutation IPC uses", () => {
     const [area] = blocks(tile, "MouseArea");
+    const [activate] = blocks(tile, "function activate(): void");
+    const [keys] = blocks(tile, "Keys.onPressed: event =>");
 
     assert.match(area, /onClicked/);
     const focus = area.indexOf("forceActiveFocus()");
-    const apply = area.search(/Wallpaper\.set\(/);
+    const apply = area.search(/root\.activate\(\)/);
     assert.notEqual(focus, -1, "clicking a tile does not focus it");
-    assert.notEqual(apply, -1, "clicking a tile does not reach the Wallpaper service");
+    assert.notEqual(apply, -1, "clicking a tile does not use the shared activation path");
     assert.ok(focus < apply, "the tile applies before it takes focus");
+    assert.match(activate, /Wallpaper\.set\(root\.path\)/);
+    assert.match(keys, /root\.activate\(\)/);
+    assert.equal(tile.match(/Wallpaper\.set\(/g)?.length, 1,
+        "an input method bypasses the shared activation path");
 
     // Applying is the whole interaction: the popup stays open and nothing else is written.
     assert.doesNotMatch(tile, /isOpen|close\(\)|stateAdapter|writeAdapter/);
+});
+
+test("the active Wallpaper tab and any tile form the two-stop Tab loop", () => {
+    const [tabKeys] = blocks(tabBar, "Keys.onPressed: event =>");
+    const [tileKeys] = blocks(tile, "Keys.onPressed: event =>");
+
+    assert.match(tabKeys, /Qt\.Key_Tab/);
+    assert.match(tabKeys, /focusEntry\(\)/);
+    assert.match(tabBar, /Keys\.priority: Keys\.BeforeItem/);
+    assert.match(tileKeys, /Qt\.Key_Tab/);
+    assert.match(tileKeys, /Qt\.Key_Backtab/);
+    assert.match(tileKeys, /tabRequested\(\)/);
+    assert.match(tile, /Keys\.priority: Keys\.BeforeItem/);
+});
+
+test("tiles bind only the specified arrows and activation keys", () => {
+    const [keys] = blocks(tile, "Keys.onPressed: event =>");
+
+    for (const key of ["Left", "Right", "Up", "Down", "Return", "Enter", "Space"])
+        assert.match(keys, new RegExp(`Qt\\.Key_${key}`), `missing ${key}`);
+    for (const key of ["H", "J", "K", "L", "PageUp", "PageDown", "Home", "End"])
+        assert.doesNotMatch(keys, new RegExp(`Qt\\.Key_${key}\\b`), `added ${key}`);
 });
 
 // A tile that painted itself applied on click would lie for as long as the decode takes, and
@@ -75,6 +104,18 @@ test("hover, focus, pending and applied are four distinct treatments", () => {
     const treatments = [/containsMouse/, /activeFocus/, /root\.pending/, /root\.applied/];
     for (const treatment of treatments)
         assert.match(tile, treatment, `the tile has no ${treatment} treatment`);
+});
+
+test("focus and applied rings use the same tile bounds", () => {
+    const rings = blocks(tile, "Rectangle");
+    const applied = rings.find(block => /visible: root\.applied/.test(block));
+    const focused = rings.find(block => /visible: root\.activeFocus/.test(block));
+
+    assert.match(applied, /anchors\.fill: parent/);
+    assert.match(focused, /anchors\.fill: parent/);
+    assert.doesNotMatch(focused, /anchors\.margins/);
+    assert.match(applied, /radius: Appearance\.rounding\.small/);
+    assert.match(focused, /radius: Appearance\.rounding\.small/);
 });
 
 // An applied wallpaper from outside the library has no cell, and #96 refuses to invent one.

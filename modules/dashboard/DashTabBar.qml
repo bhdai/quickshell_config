@@ -13,6 +13,10 @@ Item {
 
     property var tabs: ["Calendar", "Wallpaper"]
     property string current: "calendar"
+    property Item gridFocusTarget: null
+
+    readonly property Item currentItem: indicator.activeTab
+    readonly property bool activeTabFocused: currentItem?.activeFocus ?? false
 
     signal selected(string tab)
 
@@ -21,6 +25,16 @@ Item {
     // For the offscreen geometry fixture: whether the indicator ends up on the active label
     // is a measurement, not something a source assertion can see.
     readonly property Item indicatorItem: indicator
+
+    function focusCurrentTab(): bool {
+        if (!root.currentItem)
+            return false;
+        root.currentItem.forceActiveFocus();
+        return true;
+    }
+
+    onCurrentChanged: Qt.callLater(root.focusCurrentTab)
+    Component.onCompleted: Qt.callLater(root.focusCurrentTab)
 
     implicitHeight: Metrics.TABBAR_H
 
@@ -48,6 +62,16 @@ Item {
                 colBackground: "transparent"
                 colBackgroundHover: Appearance.colors.colLayer1Hover
                 onClicked: root.selected(modelData.toLowerCase())
+
+                Keys.priority: Keys.BeforeItem
+                Keys.onPressed: event => {
+                    if (!tab.active || root.current !== "wallpaper" || !root.gridFocusTarget)
+                        return;
+                    if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+                        event.accepted = true;
+                        root.gridFocusTarget.focusEntry();
+                    }
+                }
 
                 contentItem: Text {
                     id: label

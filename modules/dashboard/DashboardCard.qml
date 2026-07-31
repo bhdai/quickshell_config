@@ -18,6 +18,7 @@ Rectangle {
     // to measure.
     readonly property Item paneItem: paneLoader.item
     readonly property Item tabBarItem: tabBar
+    readonly property bool activeTabFocused: tabBar.activeTabFocused
 
     signal tabSelected(string tab)
 
@@ -39,6 +40,7 @@ Rectangle {
         anchors.rightMargin: Metrics.PAD
         tabs: root.tabs
         current: root.currentTab
+        gridFocusTarget: root.currentTab === "wallpaper" ? paneLoader.item : null
         onSelected: tab => root.tabSelected(tab)
     }
 
@@ -87,6 +89,8 @@ Rectangle {
 
     Component {
         id: wallpaperComponent
-        WallpaperPane {}
+        WallpaperPane {
+            tabTarget: tabBar
+        }
     }
 }

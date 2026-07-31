@@ -1,12 +1,14 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common
 import qs.services
 
 ShellRoot {
     id: root
 
     property var wallpaperService: Wallpaper
+    property var materialTheme: MaterialThemeLoader
     readonly property string scenario: Quickshell.env("WALLPAPER_TEST_SCENARIO") ?? ""
     readonly property string goodPath: Quickshell.env("WALLPAPER_TEST_GOOD") ?? ""
     readonly property string secondPath: Quickshell.env("WALLPAPER_TEST_SECOND") ?? ""
@@ -260,7 +262,7 @@ ShellRoot {
                     root.phase = 1;
                     Wallpaper.set(root.secondPath);
                 } else if (root.colorEvents().includes("END " + root.secondPath)) {
-                    root.finish(`palette-global current=${Wallpaper.get()} events=${root.colorEvents()}`);
+                    root.finish(`palette-global current=${Wallpaper.get()} primary=${Appearance.m3colors.m3primary} events=${root.colorEvents()}`);
                 }
                 return;
             }
@@ -301,7 +303,7 @@ ShellRoot {
                     root.phase = 3;
                     Wallpaper.set(root.thirdPath);
                 } else if (root.phase === 3 && events.includes("END " + root.thirdPath)) {
-                    root.finish(`palette-latest current=${Wallpaper.get()} events=${events}`);
+                    root.finish(`palette-latest current=${Wallpaper.get()} primary=${Appearance.m3colors.m3primary} events=${events}`);
                 }
                 return;
             }

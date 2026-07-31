@@ -31,6 +31,8 @@ jobs:
         run: tests/wallpaper-service.sh
       - name: Test the dashboard geometry
         run: tests/dashboard-geometry.sh
+      - name: Test wallpaper keyboard interactions
+        run: tests/dashboard-wallpaper-interaction.sh
       - name: Test the lock screen clock
         run: tests/lock-clock.sh
       - name: Test the lock status cluster without UPower

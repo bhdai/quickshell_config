@@ -14,7 +14,10 @@ mkdir -p "$test_dir/config/services" "$test_dir/config/modules/common" \
     "$test_dir/empty-library" "$test_dir/one-library"
 ln -s "$repo_root/services/Wallpaper.qml" "$test_dir/config/services/Wallpaper.qml"
 ln -s "$repo_root/services/WallpaperLogic.js" "$test_dir/config/services/WallpaperLogic.js"
+ln -s "$repo_root/services/MaterialThemeLoader.qml" "$test_dir/config/services/MaterialThemeLoader.qml"
+ln -s "$repo_root/modules/common/Appearance.qml" "$test_dir/config/modules/common/Appearance.qml"
 ln -s "$repo_root/modules/common/functions" "$test_dir/config/modules/common/functions"
+ln -s "$repo_root/modules/common/widgets" "$test_dir/config/modules/common/widgets"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"
 ln -s "$fixture_dir/apply-colors.sh" "$test_dir/config/scripts/colors/apply-colors.sh"
 ln -s "$fixture_dir/notify-send" "$test_dir/bin/notify-send"
@@ -234,7 +237,7 @@ mkdir -p "$(dirname "$palette_global_state")"
 printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
     "$test_dir/images/first.png" "$test_dir/library" >"$palette_global_state"
 run_case palette-global
-grep -qF "WALLPAPER_RESULT palette-global current=$test_dir/images/second.png events=START $test_dir/images/second.png,END $test_dir/images/second.png" "$test_dir/palette-global.log"
+grep -qF "WALLPAPER_RESULT palette-global current=$test_dir/images/second.png primary=#123456 events=START $test_dir/images/second.png,END $test_dir/images/second.png" "$test_dir/palette-global.log"
 
 palette_same_state="$test_dir/state-palette-same-path/quickshell/user/wallpaper.json"
 mkdir -p "$(dirname "$palette_same_state")"
@@ -256,7 +259,7 @@ mkdir -p "$(dirname "$palette_latest_state")"
 printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
     "$test_dir/images/first.png" "$test_dir/library" >"$palette_latest_state"
 run_case palette-latest
-grep -qF "WALLPAPER_RESULT palette-latest current=$test_dir/images/third.png events=START $test_dir/images/second.png,END $test_dir/images/second.png,START $test_dir/images/third.png,END $test_dir/images/third.png" "$test_dir/palette-latest.log"
+grep -qF "WALLPAPER_RESULT palette-latest current=$test_dir/images/third.png primary=#654321 events=START $test_dir/images/second.png,END $test_dir/images/second.png,START $test_dir/images/third.png,END $test_dir/images/third.png" "$test_dir/palette-latest.log"
 if grep -qF "OVERLAP" "$test_dir/palette-latest-colors.log"; then
     echo "Palette commands overlapped"
     exit 1

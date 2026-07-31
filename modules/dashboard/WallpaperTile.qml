@@ -16,7 +16,12 @@ import "dashboard_metrics.js" as Metrics
 Item {
     id: root
 
+    required property int tileIndex
     required property string path
+
+    signal focusClaimed(int tileIndex, string tilePath)
+    signal moveRequested(string direction)
+    signal tabRequested()
 
     readonly property bool applied: root.path.length > 0 && root.path === Wallpaper.wallpaper
     readonly property bool pending: root.path.length > 0 && root.path === Wallpaper.pendingPath
@@ -25,6 +30,45 @@ Item {
     // row empty rather than stretch the cells it does have.
     width: Metrics.CELL_W
     height: Metrics.CELL_H
+
+    function activate(): void {
+        Wallpaper.set(root.path);
+    }
+
+    onActiveFocusChanged: {
+        if (root.activeFocus)
+            root.focusClaimed(root.tileIndex, root.path);
+    }
+
+    Keys.priority: Keys.BeforeItem
+    Keys.onPressed: event => {
+        switch (event.key) {
+        case Qt.Key_Left:
+            root.moveRequested("left");
+            break;
+        case Qt.Key_Right:
+            root.moveRequested("right");
+            break;
+        case Qt.Key_Up:
+            root.moveRequested("up");
+            break;
+        case Qt.Key_Down:
+            root.moveRequested("down");
+            break;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+        case Qt.Key_Space:
+            root.activate();
+            break;
+        case Qt.Key_Tab:
+        case Qt.Key_Backtab:
+            root.tabRequested();
+            break;
+        default:
+            return;
+        }
+        event.accepted = true;
+    }
 
     ClippingRectangle {
         anchors.fill: parent
@@ -81,13 +125,10 @@ Item {
         border.color: Appearance.colors.colPrimary
     }
 
-    // Inset, so the applied ring and the focus ring read as two rings on the same tile
-    // rather than one ring in an ambiguous colour.
     Rectangle {
         anchors.fill: parent
-        anchors.margins: 4
         visible: root.activeFocus
-        radius: Appearance.rounding.small - 4
+        radius: Appearance.rounding.small
         color: "transparent"
         border.width: 2
         border.color: Appearance.colors.colSecondary
@@ -101,7 +142,7 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onClicked: {
             root.forceActiveFocus();
-            Wallpaper.set(root.path);
+            root.activate();
         }
     }
 }
