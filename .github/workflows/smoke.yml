@@ -98,6 +98,9 @@ jobs:
           qs log --no-color "$qslog" >quickshell.log
           cat quickshell.log
 
-          if grep -qE 'ERROR|Failed to load configuration' quickshell.log; then
+          # A binding loop is only a warning, so the shell still loads and every other gate
+          # still passes while the looping property sits at null. It is never environmental
+          # the way this container's absent DBus services are, so it fails the load.
+          if grep -qE 'ERROR|Failed to load configuration|Binding loop detected' quickshell.log; then
             exit 1
           fi

@@ -58,10 +58,19 @@ test("the popup the dashboard replaces is gone", () => {
 
 test("the bar clock drives the one dashboard rather than owning a popup", () => {
     const clock = read(barDir, "TimeWidget.qml");
+    const bar = read(barDir, "Bar.qml");
 
     assert.match(clock, /required property Dashboard dashboard/);
     assert.match(clock, /root\.dashboard\.toggle\(\)/);
-    assert.match(read(barDir, "Bar.qml"), /Dashboard \{\s*id: dashboard\s*\}/);
+
+    const [, id] = bar.match(/Dashboard \{\s*id: (\w+)\s*\}/) ?? [];
+    assert.ok(id, "the bar does not declare one Dashboard");
+    // An object's own scope wins over the file's ids, so an id matching the property name
+    // makes `dashboard: dashboard` bind the widget to itself and hold null. That is a
+    // binding-loop warning and five throwing bindings, not a load failure, so nothing else
+    // in the suite would notice.
+    assert.notEqual(id, "dashboard", "the Dashboard id shadows TimeWidget's own property");
+    assert.match(bar, new RegExp(`TimeWidget \\{\\s*dashboard: ${id}\\s*\\}`));
 });
 
 // The bar already shows the time the click came from, so the popup no longer repeats it.
