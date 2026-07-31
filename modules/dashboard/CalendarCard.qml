@@ -15,11 +15,18 @@ Rectangle {
     readonly property var viewingDate: CalendarLayout.getDateInXMonthsTime(monthShift)
     readonly property var calendarLayout: CalendarLayout.getCalendarLayout(viewingDate, monthShift === 0)
 
-    // What the card would be if nothing squeezed it, and the two things the geometry
-    // fixture has to measure rather than infer: that the month is six rows and that the
-    // Today control keeps its row while it is inactive.
+    // A calendar column is only a column if every cell in it is the same width. Left to
+    // fill, each cell keeps its own implicit width first and splits only the leftover, so a
+    // two-digit day, a one-digit day and a weekday label all end up different sizes and
+    // nothing lines up under its heading. The row is divided seven ways instead.
+    readonly property real cellWidth: content.width / 7
+
+    // What the card would be if nothing squeezed it, and the things the geometry fixture
+    // has to measure rather than infer: that the month is six rows of aligned columns, and
+    // that the Today control keeps its row while it is inactive.
     readonly property real naturalHeight: content.implicitHeight + 24
     readonly property Item weekGrid: grid
+    readonly property Item weekdayHeadings: weekdayRow
     readonly property Item todayControl: todayButton
 
     color: Appearance.colors.colLayer1
@@ -75,6 +82,7 @@ Rectangle {
         }
 
         RowLayout {
+            id: weekdayRow
             Layout.fillWidth: true
             spacing: 0
 
@@ -82,7 +90,7 @@ Rectangle {
                 model: CalendarLayout.weekDays
                 delegate: Text {
                     required property var modelData
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: root.cellWidth
                     text: modelData.day
                     font.family: Appearance.font.family.main
                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -118,7 +126,7 @@ Rectangle {
                             readonly property bool isToday: dayData.today === 1
                             readonly property bool isOtherMonth: dayData.today === -1
 
-                            Layout.fillWidth: true
+                            Layout.preferredWidth: root.cellWidth
                             implicitHeight: 36
                             buttonRadius: Appearance.rounding.small
                             toggled: isToday

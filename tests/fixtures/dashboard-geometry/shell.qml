@@ -43,14 +43,21 @@ ShellRoot {
                 walk(calendar);
 
                 const rows = new Set(cells.map(cell => Math.round(cell.mapToItem(calendar, 0, 0).y))).size;
+                const widths = new Set(cells.map(cell => Math.round(cell.width)));
                 const today = calendar.todayControl;
+
+                // A day cell has to sit under its own weekday heading. Both are reported
+                // as left edges within the card so one string can show them disagreeing.
+                const lefts = item => [...new Set(item.children.filter(child => child.width > 0).map(child => Math.round(child.mapToItem(calendar, 0, 0).x)))].sort((a, b) => a - b);
+                const columns = lefts(calendar.weekGrid.children.find(child => child.width > 0));
+                const headings = lefts(calendar.weekdayHeadings);
 
                 const measure = shift => {
                     pane.monthShift = shift;
                     return `${card.width}x${card.height}`;
                 };
 
-                console.log(`DASHBOARD card=${card.width}x${card.height} pane=${pane.width}x${pane.height}` + ` band=${pane.band.width}x${pane.band.height} calendar=${calendar.x},${calendar.y} ${calendar.width}x${calendar.height}` + ` tiles=${pane.tileColumn.x},${pane.tileColumn.y} ${pane.tileColumn.width}x${pane.tileColumn.height}` + ` natural=${calendar.naturalHeight} cells=${cells.length} rows=${rows}` + ` today=${today.height}@${today.opacity}`);
+                console.log(`DASHBOARD card=${card.width}x${card.height} pane=${pane.width}x${pane.height}` + ` band=${pane.band.width}x${pane.band.height} calendar=${calendar.x},${calendar.y} ${calendar.width}x${calendar.height}` + ` tiles=${pane.tileColumn.x},${pane.tileColumn.y} ${pane.tileColumn.width}x${pane.tileColumn.height}` + ` natural=${calendar.naturalHeight} cells=${cells.length} rows=${rows}` + ` today=${today.height}@${today.opacity}` + ` cellwidths=${[...widths].join("/")} columns=${columns.join(",")} headings=${headings.join(",")}`);
 
                 // Navigating months must not resize anything, and the Today control must
                 // hold its row rather than appear and shove the grid.

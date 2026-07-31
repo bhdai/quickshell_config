@@ -62,13 +62,29 @@ for expected in "card=700x507" \
     "calendar=0,80 332x347" \
     "tiles=344,80 332x347" \
     "cells=42 rows=6" \
-    "today=28@0"; do
+    "today=28@0" \
+    "cellwidths=44"; do
     if ! grep -qF "$expected" <<<"$results"; then
         echo "$results"
         echo "The dashboard does not match the accepted geometry: expected $expected"
         exit 1
     fi
 done
+
+# A month is only a grid if every day sits under its own heading. Cells left to fill keep
+# their own implicit width first and split only the leftover, which gives a two-digit day, a
+# one-digit day and a weekday label three different widths — measured here as twelve distinct
+# cell widths and two column runs that disagree from the second column on. Both sides are
+# reported as left edges within the card so a failure shows which way they drifted.
+columns="$(grep -o 'columns=[0-9,]*' <<<"$results" | head -1 | cut -d= -f2)"
+headings="$(grep -o 'headings=[0-9,]*' <<<"$results" | head -1 | cut -d= -f2)"
+if [[ "$columns" != "$headings" ]]; then
+    echo "$results"
+    echo "The day columns do not line up under the weekday headings:"
+    echo "  columns  $columns"
+    echo "  headings $headings"
+    exit 1
+fi
 
 # What the calendar column wants, against the 347 it is given. It has to fit rather than be
 # compressed into place — restoring the Today row's old 4px top margin puts it at 351, which
