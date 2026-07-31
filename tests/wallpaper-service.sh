@@ -9,16 +9,20 @@ qs_bin="$(command -v qs)"
 trap 'rm -rf "$test_dir"' EXIT
 
 mkdir -p "$test_dir/config/services" "$test_dir/config/modules/common" \
+    "$test_dir/config/scripts/colors" "$test_dir/bin" \
     "$test_dir/home/.config" "$test_dir/images" "$test_dir/library" \
     "$test_dir/empty-library" "$test_dir/one-library"
 ln -s "$repo_root/services/Wallpaper.qml" "$test_dir/config/services/Wallpaper.qml"
 ln -s "$repo_root/services/WallpaperLogic.js" "$test_dir/config/services/WallpaperLogic.js"
 ln -s "$repo_root/modules/common/functions" "$test_dir/config/modules/common/functions"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"
+ln -s "$fixture_dir/apply-colors.sh" "$test_dir/config/scripts/colors/apply-colors.sh"
+ln -s "$fixture_dir/notify-send" "$test_dir/bin/notify-send"
 
 printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' \
     | base64 -d >"$test_dir/images/first.png"
 cp "$test_dir/images/first.png" "$test_dir/images/second.png"
+cp "$test_dir/images/first.png" "$test_dir/images/third.png"
 printf '%s\n' 'not an image' >"$test_dir/images/bad.png"
 
 cp "$test_dir/images/first.png" "$test_dir/library/z.PNG"
@@ -36,19 +40,35 @@ run_case() {
     local state_dir="$test_dir/state-$scenario"
     local runtime_dir="$test_dir/runtime-$scenario"
     local log="$test_dir/$scenario.log"
+    local color_log="$test_dir/$scenario-colors.log"
+    local notify_log="$test_dir/$scenario-notifications.log"
+    local color_delay=0.05
+    local color_fail=
+
+    if [[ "$scenario" == "palette-latest" ]]; then
+        color_delay=0.4
+    elif [[ "$scenario" == "palette-failure" ]]; then
+        color_fail="$test_dir/images/second.png"
+    fi
 
     mkdir -p "$state_dir/quickshell/user" "$runtime_dir"
     chmod 700 "$runtime_dir"
 
-    if ! HOME="$test_dir/home" \
+    if ! PATH="$test_dir/bin:$PATH" \
+        HOME="$test_dir/home" \
         XDG_CONFIG_HOME="$test_dir/home/.config" \
         XDG_RUNTIME_DIR="$runtime_dir" \
         XDG_STATE_HOME="$state_dir" \
         WALLPAPER_TEST_SCENARIO="$scenario" \
         WALLPAPER_TEST_GOOD="$test_dir/images/first.png" \
         WALLPAPER_TEST_SECOND="$test_dir/images/second.png" \
+        WALLPAPER_TEST_THIRD="$test_dir/images/third.png" \
         WALLPAPER_TEST_BAD="$test_dir/images/bad.png" \
         WALLPAPER_TEST_INSERTED="$test_dir/library/c.png" \
+        WALLPAPER_TEST_COLOR_LOG="$color_log" \
+        WALLPAPER_TEST_COLOR_DELAY="$color_delay" \
+        WALLPAPER_TEST_COLOR_FAIL="$color_fail" \
+        WALLPAPER_TEST_NOTIFY_LOG="$notify_log" \
         QT_QPA_PLATFORM=offscreen \
         WAYLAND_DISPLAY= \
         timeout 8 "$qs_bin" --no-color -p "$test_dir/config" >"$log" 2>&1; then
@@ -209,4 +229,46 @@ run_case library
 grep -qF "WALLPAPER_LIBRARY initial=a.jpg,b.BMP,m.jpeg,z.PNG" "$test_dir/library.log"
 grep -qF "WALLPAPER_RESULT library=a.jpg,b.BMP,c.png,m.jpeg,z.PNG" "$test_dir/library.log"
 
-echo "Wallpaper state, validation, and live library behavior passed"
+palette_global_state="$test_dir/state-palette-global/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$palette_global_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$palette_global_state"
+run_case palette-global
+grep -qF "WALLPAPER_RESULT palette-global current=$test_dir/images/second.png events=START $test_dir/images/second.png,END $test_dir/images/second.png" "$test_dir/palette-global.log"
+
+palette_same_state="$test_dir/state-palette-same-path/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$palette_same_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$palette_same_state"
+run_case palette-same-path
+grep -qF "WALLPAPER_RESULT palette-same-path current=$test_dir/images/first.png events=START $test_dir/images/first.png,END $test_dir/images/first.png" "$test_dir/palette-same-path.log"
+
+palette_override_state="$test_dir/state-palette-override/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$palette_override_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$palette_override_state"
+run_case palette-override
+grep -qF "WALLPAPER_RESULT palette-override current=$test_dir/images/first.png events=" "$test_dir/palette-override.log"
+[[ ! -e "$test_dir/palette-override-colors.log" ]]
+
+palette_latest_state="$test_dir/state-palette-latest/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$palette_latest_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$palette_latest_state"
+run_case palette-latest
+grep -qF "WALLPAPER_RESULT palette-latest current=$test_dir/images/third.png events=START $test_dir/images/second.png,END $test_dir/images/second.png,START $test_dir/images/third.png,END $test_dir/images/third.png" "$test_dir/palette-latest.log"
+if grep -qF "OVERLAP" "$test_dir/palette-latest-colors.log"; then
+    echo "Palette commands overlapped"
+    exit 1
+fi
+
+palette_failure_state="$test_dir/state-palette-failure/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$palette_failure_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$palette_failure_state"
+run_case palette-failure
+grep -qF "WALLPAPER_RESULT palette-failure current=$test_dir/images/second.png" "$test_dir/palette-failure.log"
+grep -qF "Wallpaper: palette generation failed: fake palette failure for $test_dir/images/second.png" "$test_dir/palette-failure.log"
+grep -qF "Wallpaper set|Colours unchanged|-u|critical|-a|Shell" "$test_dir/palette-failure-notifications.log"
+
+echo "Wallpaper state, validation, live library, and palette behavior passed"

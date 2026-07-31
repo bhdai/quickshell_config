@@ -37,6 +37,7 @@ Singleton {
     property string pendingPath: ""
     property bool pendingForMonitor: false
     property string pendingMonitor: ""
+    property string pendingPalettePath: ""
 
     function get(): string {
         return stateAdapter.wallpaper;
@@ -166,6 +167,22 @@ Singleton {
         }
     }
 
+    function startPalette(path: string): void {
+        paletteProcess.command = [
+            FileUtils.trimFileProtocol(Quickshell.shellPath("scripts/colors/apply-colors.sh")),
+            path
+        ];
+        paletteProcess.running = true;
+    }
+
+    function requestPalette(path: string): void {
+        if (paletteProcess.running) {
+            root.pendingPalettePath = path;
+            return;
+        }
+        root.startPalette(path);
+    }
+
     function commitPending(): void {
         const path = root.pendingPath;
         if (!path || !root.writesEnabled)
@@ -185,6 +202,7 @@ Singleton {
         } else {
             stateAdapter.wallpaper = path;
             root.warnIfGlobalHidden();
+            root.requestPalette(path);
         }
         root.saveState();
     }
@@ -243,6 +261,35 @@ Singleton {
                 root.savePending = false;
                 stateFile.writeAdapter();
             }
+        }
+    }
+
+    Process {
+        id: paletteProcess
+
+        stderr: StdioCollector {
+            id: paletteStderr
+        }
+
+        onExited: exitCode => {
+            if (exitCode !== 0) {
+                const error = paletteStderr.text.trim();
+                console.warn("Wallpaper: palette generation failed:", error);
+                Quickshell.execDetached([
+                    "notify-send",
+                    "Wallpaper set",
+                    "Colours unchanged",
+                    "-u",
+                    "critical",
+                    "-a",
+                    "Shell"
+                ]);
+            }
+
+            const next = root.pendingPalettePath;
+            root.pendingPalettePath = "";
+            if (next)
+                root.startPalette(next);
         }
     }
 
