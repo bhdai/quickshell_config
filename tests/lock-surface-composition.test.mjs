@@ -39,14 +39,18 @@ test("the wallpaper decodes asynchronously at screen size", () => {
 });
 
 test("the wallpaper comes from one swappable property, with no discovery or config parsing", () => {
+    const surface = lockQml("LockSurface.qml");
+    const [background] = blocks(surface, "LockBackground");
     const declarations = lockQmlFiles()
         .flatMap(name => lockQml(name).split("\n").map(line => ({ name, line })))
         .filter(({ line }) => /property\s+url\s+source/.test(line));
 
+    assert.match(background, /source: Wallpaper\.forMonitor\(root\.screen\.name\)/);
     assert.deepEqual(declarations.map(({ name }) => name), ["LockBackground.qml"]);
+    assert.doesNotMatch(lockQml("LockBackground.qml"), /Directories|Pictures\/wall/);
 
-    // Comments stripped: naming hyprpaper as the thing kept in sync by hand is the point,
-    // reading its config to find out is what must not happen.
+    // Comments stripped: renderer contracts may explain the boundary, but service I/O
+    // inside the lock module would violate it.
     for (const name of lockQmlFiles()) {
         const code = lockQml(name).replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
         assert.doesNotMatch(code, /Process\s*\{|FileView\s*\{|\.conf/, `${name} discovers the wallpaper`);

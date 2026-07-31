@@ -68,6 +68,18 @@ test("the root mounts the wallpaper module and the service owns all wallpaper IO
     assert.doesNotMatch(module, /FileView|JsonAdapter|FolderListModel|IpcHandler/);
 });
 
+test("wallpaper IPC exposes only the six string-returning public operations", () => {
+    const service = read(repoRoot, "services", "Wallpaper.qml");
+    const [handler] = blocks(service, "IpcHandler");
+    const functions = [...handler.matchAll(/function\s+(\w+)\([^)]*\): string/g)]
+        .map(match => match[1]);
+
+    assert.deepEqual(functions, ["get", "set", "next", "prev", "setFor", "clearFor"]);
+    for (const name of functions)
+        assert.match(handler, new RegExp(`function ${name}[^}]+return root\\.${name}\\(`));
+    assert.doesNotMatch(handler, /stateAdapter|validationImage|libraryModel|writeAdapter/);
+});
+
 test("the wallpaper smoke fixture uses only tools installed by the smoke job", () => {
     const fixture = read(repoRoot, "tests", "wallpaper-service.sh");
 
