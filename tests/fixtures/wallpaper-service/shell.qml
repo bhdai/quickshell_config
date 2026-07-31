@@ -10,8 +10,10 @@ ShellRoot {
     readonly property string scenario: Quickshell.env("WALLPAPER_TEST_SCENARIO") ?? ""
     readonly property string goodPath: Quickshell.env("WALLPAPER_TEST_GOOD") ?? ""
     readonly property string secondPath: Quickshell.env("WALLPAPER_TEST_SECOND") ?? ""
+    readonly property string thirdPath: Quickshell.env("WALLPAPER_TEST_THIRD") ?? ""
     readonly property string badPath: Quickshell.env("WALLPAPER_TEST_BAD") ?? ""
     readonly property string insertedPath: Quickshell.env("WALLPAPER_TEST_INSERTED") ?? ""
+    readonly property string colorLogPath: Quickshell.env("WALLPAPER_TEST_COLOR_LOG") ?? ""
     readonly property string statePath: `${Quickshell.env("XDG_STATE_HOME")}/quickshell/user/wallpaper.json`
     property int attempts: 0
     property int phase: 0
@@ -30,10 +32,22 @@ ShellRoot {
         Qt.quit();
     }
 
+    function colorEvents(): string {
+        colorLog.reload();
+        return colorLog.text().trim().replace(/\n/g, ",");
+    }
+
     FileView {
         id: stateEditor
         path: Qt.resolvedUrl(root.statePath)
         atomicWrites: true
+    }
+
+    FileView {
+        id: colorLog
+        path: Qt.resolvedUrl(root.colorLogPath)
+        blockLoading: true
+        printErrors: false
     }
 
     Process {
@@ -238,6 +252,67 @@ ShellRoot {
                 const next = Wallpaper.next();
                 const prev = Wallpaper.prev();
                 root.finish(`noop-cycle next=${next} prev=${prev} current=${Wallpaper.get()}`);
+                return;
+            }
+
+            if (root.scenario === "palette-global") {
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    Wallpaper.set(root.secondPath);
+                } else if (root.colorEvents().includes("END " + root.secondPath)) {
+                    root.finish(`palette-global current=${Wallpaper.get()} events=${root.colorEvents()}`);
+                }
+                return;
+            }
+
+            if (root.scenario === "palette-same-path") {
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    Wallpaper.set(root.goodPath);
+                } else if (root.colorEvents().includes("END " + root.goodPath)) {
+                    root.finish(`palette-same-path current=${Wallpaper.get()} events=${root.colorEvents()}`);
+                }
+                return;
+            }
+
+            if (root.scenario === "palette-override") {
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    Wallpaper.setFor("DP-1", root.secondPath);
+                } else if (root.phase === 1
+                        && Wallpaper.forMonitor("DP-1") === root.secondPath) {
+                    root.phase = 2;
+                    Wallpaper.clearFor("DP-1");
+                } else if (root.phase === 2 && root.attempts > 12) {
+                    root.finish(`palette-override current=${Wallpaper.get()} events=${root.colorEvents()}`);
+                }
+                return;
+            }
+
+            if (root.scenario === "palette-latest") {
+                const events = root.colorEvents();
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    Wallpaper.set(root.secondPath);
+                } else if (root.phase === 1 && events.includes("START " + root.secondPath)) {
+                    root.phase = 2;
+                    Wallpaper.set(root.goodPath);
+                } else if (root.phase === 2 && Wallpaper.get() === root.goodPath) {
+                    root.phase = 3;
+                    Wallpaper.set(root.thirdPath);
+                } else if (root.phase === 3 && events.includes("END " + root.thirdPath)) {
+                    root.finish(`palette-latest current=${Wallpaper.get()} events=${events}`);
+                }
+                return;
+            }
+
+            if (root.scenario === "palette-failure") {
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    Wallpaper.set(root.secondPath);
+                } else if (root.colorEvents().includes("FAIL " + root.secondPath)) {
+                    root.finish(`palette-failure current=${Wallpaper.get()} events=${root.colorEvents()}`);
+                }
             }
         }
     }

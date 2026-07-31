@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+printf '%s|%s|%s|%s|%s|%s\n' "$@" >>"${WALLPAPER_TEST_NOTIFY_LOG:?}"

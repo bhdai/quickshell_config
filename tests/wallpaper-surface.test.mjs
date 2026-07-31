@@ -33,16 +33,32 @@ test("the wallpaper panel is a full-output click-through background surface", ()
     assert.doesNotMatch(mask, /\b(item|width|height|regions)\s*:/);
 });
 
-test("the hard-cut image is asynchronous, uncached, cropped, and decode-bounded", () => {
-    const [image] = blocks(module, "Image");
+test("each wallpaper surface owns two equivalent bounded image layers", () => {
+    const images = blocks(module, "Image");
 
-    assert.match(image, /anchors\.fill: parent/);
-    assert.match(image, /source: wallpaperWindow\.target/);
-    assert.match(image, /asynchronous: true/);
-    assert.match(image, /cache: false/);
-    assert.match(image, /fillMode: Image\.PreserveAspectCrop/);
-    assert.match(image, /sourceSize\.width: wallpaperWindow\.width/);
-    assert.match(image, /sourceSize\.height: wallpaperWindow\.height/);
+    assert.equal(images.length, 2);
+    for (const image of images) {
+        assert.match(image, /anchors\.fill: parent/);
+        assert.match(image, /asynchronous: true/);
+        assert.match(image, /cache: false/);
+        assert.match(image, /fillMode: Image\.PreserveAspectCrop/);
+        assert.match(image, /sourceSize\.width: wallpaperWindow\.width/);
+        assert.match(image, /sourceSize\.height: wallpaperWindow\.height/);
+    }
+});
+
+test("wallpaper surfaces dissolve only a ready incoming image and release the retired one", () => {
+    assert.match(module, /readonly property int transitionDuration: 400/);
+    assert.match(module, /property string displayed:/);
+    assert.match(module, /Easing\.Linear/);
+    assert.equal(
+        [...module.matchAll(/enabled: wallpaperWindow\.transitioning/g)].length,
+        2
+    );
+    assert.match(module, /status === Image\.Ready/);
+    assert.match(module, /status === Image\.Error/);
+    assert.match(module, /console\.warn\("Wallpaper: image decode failed:"/);
+    assert.match(module, /source = ""/);
 });
 
 test("only a reappearing output gets one bounded reattach", () => {

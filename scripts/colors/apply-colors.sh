@@ -12,11 +12,6 @@
 #   0    Success — colors.json written
 #   1    Error — missing argument, matugen not found, or generation failed
 #
-# On first run (or when ~/.config/matugen/config.toml is absent), this script
-# bootstraps the matugen configuration and installs the quickshell colors
-# template. On subsequent runs it checks whether the [templates.m3colors]
-# section is already present and appends it if not.
-#
 # The generated palette is written to:
 #   $XDG_STATE_HOME/quickshell/user/generated/colors.json
 # (Typically ~/.local/state/quickshell/user/generated/colors.json)
@@ -27,13 +22,13 @@ set -euo pipefail
 # Constants
 # ==============================================================================
 
-MATUGEN_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/matugen"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"
+USER_STATE_DIR="$STATE_DIR/quickshell/user"
+MATUGEN_CONFIG_DIR="$USER_STATE_DIR/matugen"
 MATUGEN_CONFIG_FILE="$MATUGEN_CONFIG_DIR/config.toml"
 MATUGEN_TEMPLATE_DIR="$MATUGEN_CONFIG_DIR/templates"
 MATUGEN_TEMPLATE_FILE="$MATUGEN_TEMPLATE_DIR/colors.json"
-
-STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"
-OUTPUT_DIR="$STATE_DIR/quickshell/user/generated"
+OUTPUT_DIR="$USER_STATE_DIR/generated"
 OUTPUT_FILE="$OUTPUT_DIR/colors.json"
 
 # ==============================================================================
@@ -129,58 +124,23 @@ TEMPLATE_CONTENT='{
   "tertiary_fixed_dim": "{{colors.tertiary_fixed_dim.default.hex}}"
 }'
 
-# ==============================================================================
-# Bootstrap matugen configuration
-# ==============================================================================
-#
-# The [templates.m3colors] section tells matugen where to read the template
-# and where to write the rendered output. We create it on first run and
-# append it if the config file exists without that section.
-
-bootstrap_matugen_config() {
-    # Create template dir unconditionally — mkdir -p is idempotent.
-    mkdir -p "$MATUGEN_TEMPLATE_DIR"
-
-    # Always (re)write the template so it stays in sync with this script.
-    printf '%s\n' "$TEMPLATE_CONTENT" > "$MATUGEN_TEMPLATE_FILE"
-
-    if [[ ! -f "$MATUGEN_CONFIG_FILE" ]]; then
-        # First-time setup: write a complete, minimal config.toml.
-        echo "First-time setup: creating matugen configuration at $MATUGEN_CONFIG_FILE"
-        cat > "$MATUGEN_CONFIG_FILE" << 'EOF'
-[config]
-version_check = false
-
-[templates.m3colors]
-input_path = '~/.config/matugen/templates/colors.json'
-output_path = '~/.local/state/quickshell/user/generated/colors.json'
-EOF
-    elif ! grep -qF '[templates.m3colors]' "$MATUGEN_CONFIG_FILE"; then
-        # Config exists but is missing the m3colors section — append it.
-        echo "Appending [templates.m3colors] to existing $MATUGEN_CONFIG_FILE"
-        cat >> "$MATUGEN_CONFIG_FILE" << 'EOF'
-
-[templates.m3colors]
-input_path = '~/.config/matugen/templates/colors.json'
-output_path = '~/.local/state/quickshell/user/generated/colors.json'
-EOF
-    fi
-}
-
-bootstrap_matugen_config
-
-# ==============================================================================
-# Ensure output directory exists
-# ==============================================================================
-
-mkdir -p "$OUTPUT_DIR"
+mkdir -p "$MATUGEN_TEMPLATE_DIR" "$OUTPUT_DIR"
+printf '%s\n' "$TEMPLATE_CONTENT" > "$MATUGEN_TEMPLATE_FILE"
+printf '%s\n' \
+    '[config]' \
+    'version_check = false' \
+    '' \
+    '[templates.m3colors]' \
+    "input_path = '$MATUGEN_TEMPLATE_FILE'" \
+    "output_path = '$OUTPUT_FILE'" > "$MATUGEN_CONFIG_FILE"
 
 # ==============================================================================
 # Run matugen to generate the palette
 # ==============================================================================
 
 echo "Generating Material 3 palette from: $WALLPAPER"
-matugen image "$WALLPAPER" --mode dark
+matugen image "$WALLPAPER" --mode dark --source-color-index 0 \
+    --config "$MATUGEN_CONFIG_FILE"
 
 # ==============================================================================
 # Verify output was written

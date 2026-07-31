@@ -25,6 +25,8 @@ export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 
 HOST_DISPLAY=$WAYLAND_DISPLAY
 WORK=$(mktemp -d /tmp/qs-dev-nested.XXXXXX)
+NESTED_STATE="$WORK/state"
+mkdir -p "$NESTED_STATE"
 
 # disable_autoreload keeps Hyprland's own config watcher from adding a second reload
 # path on top of Quickshell's, which matters when what you are testing *is* reload
@@ -85,4 +87,5 @@ echo "Ctrl-C to stop, or \`pkill -f qs-dev-nested\` — the nested window ignore
 # compositor: qs would otherwise inherit the *host's* signature, and every
 # Quickshell.Hyprland query and dispatch from inside the nested shell would land on
 # the real desktop instead of the one it is running in.
-env WAYLAND_DISPLAY="$NESTED" HYPRLAND_INSTANCE_SIGNATURE="$NESTED_SIG" qs -p "$CONFIG"
+env WAYLAND_DISPLAY="$NESTED" HYPRLAND_INSTANCE_SIGNATURE="$NESTED_SIG" \
+    XDG_STATE_HOME="$NESTED_STATE" qs -p "$CONFIG"
