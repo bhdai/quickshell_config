@@ -1,3 +1,4 @@
 
 .qmlls.ini
 docs/
+.playwright-mcp/

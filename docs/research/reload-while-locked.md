@@ -4,8 +4,9 @@ Settles the contradiction between
 [#46](https://github.com/bhdai/quickshell_config/issues/46) (read from
 `session_lock.cpp`) and [#48](https://github.com/bhdai/quickshell_config/issues/48)
 (read from `rootwrapper.cpp`) about whether a QML hot reload can unlock a locked
-screen. Everything below is observed, not inferred; the harness is in
-[`spikes/reload-lock/`](../../spikes/reload-lock/).
+screen. Everything below is observed, not inferred. The throwaway harness is
+preserved at
+[`spikes/reload-lock/`](https://github.com/bhdai/quickshell_config/tree/798bd1eb480b1078d92af71e7c5555eb3af6ec82/spikes/reload-lock).
 
 Quickshell 0.3.0, Hyprland 0.56.0, 2026-07-28.
 
