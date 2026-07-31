@@ -20,4 +20,13 @@ if [[ "${WALLPAPER_TEST_COLOR_FAIL:-}" == "$1" ]]; then
     exit 7
 fi
 
+palette_dir="${XDG_STATE_HOME:?}/quickshell/user/generated"
+mkdir -p "$palette_dir"
+case "$1" in
+    *second.png) primary="#123456" ;;
+    *third.png) primary="#654321" ;;
+    *) primary="#abcdef" ;;
+esac
+printf '{"primary":"%s"}\n' "$primary" >"$palette_dir/colors.json.next"
+mv "$palette_dir/colors.json.next" "$palette_dir/colors.json"
 printf 'END %s\n' "$1" >>"$log"

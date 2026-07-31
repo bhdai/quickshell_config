@@ -24,8 +24,7 @@ Singleton {
     property string filePath: Directories.generatedMaterialThemePath
 
     // Force-reload the palette file and reapply all colors. Called implicitly
-    // when watchChanges fires, but exposed so callers can trigger it explicitly
-    // (e.g., from a shell entry point after apply-colors.sh finishes).
+    // when watchChanges fires, and explicitly after matugen publishes a new file.
     function reapplyTheme(): void {
         themeFileView.reload();
     }
@@ -58,6 +57,13 @@ Singleton {
         }
     }
 
+    Connections {
+        target: Wallpaper
+        function onPaletteGenerated(): void {
+            root.reapplyTheme();
+        }
+    }
+
     // ===========================================================================
     // Internal implementation
     // ===========================================================================
@@ -70,21 +76,10 @@ Singleton {
         path: Qt.resolvedUrl(root.filePath)
         watchChanges: true
 
-        // When the file is modified on disk, reload it and arm the debounce
-        // timer. Reading immediately on onFileChanged risks catching a partial
-        // write while matugen is still flushing — the timer prevents that.
-        onFileChanged: {
-            themeFileView.reload();
-            delayedFileRead.restart();
-        }
+        // Reading immediately on onFileChanged risks catching a partial write.
+        onFileChanged: delayedFileRead.restart()
 
-        // onLoadedChanged fires once after the initial load (and after each
-        // explicit reload()). Apply colors as soon as the content is available.
-        onLoadedChanged: {
-            if (themeFileView.loaded) {
-                root.applyColors(themeFileView.text());
-            }
-        }
+        onLoaded: root.applyColors(themeFileView.text())
 
         onLoadFailed: {
             console.warn("MaterialThemeLoader: colors.json not found, using default palette");
@@ -98,8 +93,6 @@ Singleton {
         interval: 100
         repeat: false
 
-        onTriggered: {
-            root.applyColors(themeFileView.text());
-        }
+        onTriggered: themeFileView.reload()
     }
 }

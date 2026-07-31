@@ -39,6 +39,9 @@ Singleton {
     property string pendingMonitor: ""
     property string pendingPalettePath: ""
 
+    // Emitted only after the colour script has finished publishing a complete palette.
+    signal paletteGenerated()
+
     function get(): string {
         return stateAdapter.wallpaper;
     }
@@ -284,6 +287,9 @@ Singleton {
                     "-a",
                     "Shell"
                 ]);
+            } else {
+                // Matugen replaces its output inode, which FileView's watch does not see.
+                root.paletteGenerated();
             }
 
             const next = root.pendingPalettePath;
