@@ -10,16 +10,15 @@ import "dashboard_metrics.js" as Metrics
  * The surface behind the bar clock. It owns the fixed window, the focus grab, which
  * destination is showing, and the `dashboard` IPC target.
  *
- * Calendar is the only destination in this slice; the tab bar is already the real one, so
- * the picker ticket adds a name to `tabs` and a branch to the pane loader rather than
- * rebuilding this surface.
+ * Calendar and Wallpaper are the destinations. A further one is a name in `tabs` and a
+ * branch in the card's pane loader; nothing here is per-destination.
  */
 Scope {
     id: root
 
     property bool isOpen: false
     // Labels, lowercased to their IPC names. `currentTab` is always one of them.
-    readonly property var tabs: ["Calendar"]
+    readonly property var tabs: ["Calendar", "Wallpaper"]
     property string currentTab: "calendar"
 
     // Every entry point through the bar lands on Calendar, whatever a previous IPC call

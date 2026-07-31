@@ -11,13 +11,16 @@ import "dashboard_metrics.js" as Metrics
 Item {
     id: root
 
-    property var tabs: ["Calendar"]
+    property var tabs: ["Calendar", "Wallpaper"]
     property string current: "calendar"
 
     signal selected(string tab)
 
     // M3's minimum indicator length, for a label narrower than the indicator can be.
     readonly property real minimumIndicator: 24
+    // For the offscreen geometry fixture: whether the indicator ends up on the active label
+    // is a measurement, not something a source assertion can see.
+    readonly property Item indicatorItem: indicator
 
     implicitHeight: Metrics.TABBAR_H
 

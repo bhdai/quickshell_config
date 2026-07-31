@@ -12,10 +12,12 @@ import "dashboard_metrics.js" as Metrics
 Rectangle {
     id: root
 
-    property var tabs: ["Calendar"]
+    property var tabs: ["Calendar", "Wallpaper"]
     property string currentTab: "calendar"
-    // What the pane loader built, for the offscreen geometry fixture to measure.
+    // What the pane loader built and the row above it, for the offscreen geometry fixture
+    // to measure.
     readonly property Item paneItem: paneLoader.item
+    readonly property Item tabBarItem: tabBar
 
     signal tabSelected(string tab)
 
@@ -53,7 +55,15 @@ Rectangle {
         Loader {
             id: paneLoader
             anchors.fill: parent
-            sourceComponent: root.currentTab === "calendar" ? calendarComponent : null
+            sourceComponent: {
+                switch (root.currentTab) {
+                case "calendar":
+                    return calendarComponent;
+                case "wallpaper":
+                    return wallpaperComponent;
+                }
+                return null;
+            }
 
             opacity: 0
             Component.onCompleted: opacity = 1
@@ -73,5 +83,10 @@ Rectangle {
     Component {
         id: calendarComponent
         CalendarPane {}
+    }
+
+    Component {
+        id: wallpaperComponent
+        WallpaperPane {}
     }
 }
