@@ -6,6 +6,7 @@ import qs.modules.lock
 import qs.modules.notificationPopup
 import qs.modules.OSD
 import qs.modules.sessionScreen
+import qs.modules.wallpaper
 import qs.services
 
 ShellRoot {
@@ -54,4 +55,6 @@ ShellRoot {
     }
 
     LockModule {}
+
+    WallpaperModule {}
 }
