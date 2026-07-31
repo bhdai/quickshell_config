@@ -65,6 +65,7 @@ WlSessionLockSurface {
     // onto the unlocked session for as long as it ran.
     LockBackground {
         anchors.fill: parent
+        source: Wallpaper.forMonitor(root.screen.name)
     }
 
     Item {

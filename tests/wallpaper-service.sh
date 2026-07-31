@@ -9,7 +9,8 @@ qs_bin="$(command -v qs)"
 trap 'rm -rf "$test_dir"' EXIT
 
 mkdir -p "$test_dir/config/services" "$test_dir/config/modules/common" \
-    "$test_dir/home/.config" "$test_dir/images" "$test_dir/library"
+    "$test_dir/home/.config" "$test_dir/images" "$test_dir/library" \
+    "$test_dir/empty-library" "$test_dir/one-library"
 ln -s "$repo_root/services/Wallpaper.qml" "$test_dir/config/services/Wallpaper.qml"
 ln -s "$repo_root/services/WallpaperLogic.js" "$test_dir/config/services/WallpaperLogic.js"
 ln -s "$repo_root/modules/common/functions" "$test_dir/config/modules/common/functions"
@@ -26,6 +27,7 @@ cp "$test_dir/images/first.png" "$test_dir/library/m.jpeg"
 cp "$test_dir/images/first.png" "$test_dir/library/b.BMP"
 cp "$test_dir/images/first.png" "$test_dir/library/ignored.webp"
 mkdir "$test_dir/library/directory.png"
+cp "$test_dir/images/first.png" "$test_dir/one-library/only.png"
 
 printf 'XDG_PICTURES_DIR="%s"\n' "$test_dir/home/Pictures" >"$test_dir/home/.config/user-dirs.dirs"
 
@@ -88,7 +90,8 @@ printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
     "$test_dir/images/first.png" "$test_dir/library" >"$reload_state"
 run_case reload
 grep -qF "WALLPAPER_INITIAL $test_dir/images/first.png" "$test_dir/reload.log"
-grep -qF "WALLPAPER_RESULT reloaded=$test_dir/images/second.png" "$test_dir/reload.log"
+grep -qF "WALLPAPER_RELOADED global=$test_dir/images/second.png resolved=$test_dir/images/second.png" "$test_dir/reload.log"
+grep -qF "WALLPAPER_RESULT reloaded=$test_dir/images/second.png override=$test_dir/images/first.png" "$test_dir/reload.log"
 
 malformed_state="$test_dir/state-malformed/quickshell/user/wallpaper.json"
 mkdir -p "$(dirname "$malformed_state")"
@@ -125,6 +128,79 @@ printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
 run_case same-path
 grep -qF "WALLPAPER_RESULT same-path=$test_dir/images/bad.png" "$test_dir/same-path.log"
 grep -qF "Wallpaper: image decode failed: $test_dir/images/bad.png" "$test_dir/same-path.log"
+
+cycle_state="$test_dir/state-cycle/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$cycle_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/second.png" "$test_dir/library" >"$cycle_state"
+run_case cycle
+grep -qF "WALLPAPER_CYCLE next=$test_dir/library/a.jpg current=$test_dir/images/second.png" "$test_dir/cycle.log"
+grep -qF "WALLPAPER_CYCLE prev=$test_dir/library/z.PNG current=$test_dir/library/a.jpg" "$test_dir/cycle.log"
+grep -qF "WALLPAPER_CYCLE wrap=$test_dir/library/a.jpg current=$test_dir/library/z.PNG" "$test_dir/cycle.log"
+grep -qF "WALLPAPER_RESULT cycle=$test_dir/library/a.jpg" "$test_dir/cycle.log"
+
+override_set_state="$test_dir/state-override-set/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$override_set_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$override_set_state"
+run_case override-set
+grep -qF "WALLPAPER_OVERRIDE pending invalid= bad=$test_dir/images/bad.png current=$test_dir/images/first.png" "$test_dir/override-set.log"
+grep -qF "WALLPAPER_OVERRIDE after-bad=$test_dir/images/first.png accepted=$test_dir/images/second.png" "$test_dir/override-set.log"
+grep -qF "WALLPAPER_RESULT override=$test_dir/images/second.png global=$test_dir/images/first.png" "$test_dir/override-set.log"
+grep -qF "Wallpaper: monitor DP-1 is not connected; connected screens:" "$test_dir/override-set.log"
+grep -qF "\"wallpaper\": \"$test_dir/images/first.png\"" "$override_set_state"
+grep -qF "\"DP-1\": \"$test_dir/images/second.png\"" "$override_set_state"
+
+override_clear_state="$test_dir/state-override-clear/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$override_clear_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{"DP-1":"%s","orphan":"%s"},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/images/second.png" \
+    "$test_dir/images/second.png" "$test_dir/library" >"$override_clear_state"
+run_case override-clear
+grep -qF "WALLPAPER_RESULT clear=$test_dir/images/first.png resolved=$test_dir/images/first.png again=" "$test_dir/override-clear.log"
+if grep -qF '"DP-1"' "$override_clear_state"; then
+    echo "Cleared wallpaper override was retained"
+    exit 1
+fi
+grep -qF "\"orphan\": \"$test_dir/images/second.png\"" "$override_clear_state"
+
+override_no_fallback_state="$test_dir/state-override-no-fallback/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$override_no_fallback_state")"
+printf '{"wallpaper":"","monitorWallpapers":{"DP-1":"%s"},"library":"%s"}\n' \
+    "$test_dir/images/second.png" "$test_dir/library" >"$override_no_fallback_state"
+run_case override-no-fallback
+grep -qF "WALLPAPER_RESULT clear-no-fallback= resolved=" "$test_dir/override-no-fallback.log"
+if grep -qF '"DP-1"' "$override_no_fallback_state"; then
+    echo "Wallpaper override with no fallback was retained"
+    exit 1
+fi
+
+hidden_global_state="$test_dir/state-hidden-global/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$hidden_global_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/library" >"$hidden_global_state"
+run_case hidden-global
+grep -qF "WALLPAPER_HIDDEN accepted=$test_dir/images/second.png current=$test_dir/images/first.png" "$test_dir/hidden-global.log"
+grep -qF "WALLPAPER_RESULT hidden=$test_dir/images/second.png" "$test_dir/hidden-global.log"
+grep -qF "Wallpaper: every connected screen" "$test_dir/hidden-global.log"
+grep -qF "\"wallpaper\": \"$test_dir/images/second.png\"" "$hidden_global_state"
+
+empty_cycle_state="$test_dir/state-empty-cycle/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$empty_cycle_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/images/first.png" "$test_dir/empty-library" >"$empty_cycle_state"
+run_case empty-cycle
+grep -qF "WALLPAPER_RESULT empty-cycle next= prev= current=$test_dir/images/first.png" "$test_dir/empty-cycle.log"
+[[ "$(grep -cF "Wallpaper: cannot cycle an empty library: $test_dir/empty-library" "$test_dir/empty-cycle.log")" -eq 2 ]]
+
+noop_cycle_state="$test_dir/state-noop-cycle/quickshell/user/wallpaper.json"
+mkdir -p "$(dirname "$noop_cycle_state")"
+printf '{"wallpaper":"%s","monitorWallpapers":{},"library":"%s"}\n' \
+    "$test_dir/one-library/only.png" "$test_dir/one-library" >"$noop_cycle_state"
+touch -d '2001-01-01 00:00:00 UTC' "$noop_cycle_state"
+run_case noop-cycle
+grep -qF "WALLPAPER_RESULT noop-cycle next= prev= current=$test_dir/one-library/only.png" "$test_dir/noop-cycle.log"
+[[ "$(stat -c %Y "$noop_cycle_state")" -eq 978307200 ]]
 
 library_state="$test_dir/state-library/quickshell/user/wallpaper.json"
 mkdir -p "$(dirname "$library_state")"

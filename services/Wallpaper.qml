@@ -12,8 +12,9 @@ import "WallpaperLogic.js" as WallpaperLogic
 /**
  * Owns wallpaper state, library discovery, validation, persistence, and IPC.
  *
- * Mutations return an accepted normalized path before asynchronous decoding finishes.
- * The public wallpaper value changes only after the newest accepted image reaches Ready.
+ * Path mutations return an accepted normalized path before asynchronous decoding finishes
+ * and commit only when the newest candidate reaches Ready. Override deletion is immediate
+ * and returns the resolved global fallback.
  */
 Singleton {
     id: root
@@ -34,6 +35,8 @@ Singleton {
     property bool stateDirectoryReady: false
     property bool savePending: false
     property string pendingPath: ""
+    property bool pendingForMonitor: false
+    property string pendingMonitor: ""
 
     function get(): string {
         return stateAdapter.wallpaper;
@@ -61,7 +64,11 @@ Singleton {
         return normalized;
     }
 
-    function apply(path): string {
+    function connectedMonitorNames(): list<string> {
+        return Quickshell.screens.map(screen => screen.name);
+    }
+
+    function apply(path, monitor): string {
         const normalized = root.normalizePath(path);
         if (!normalized) {
             console.warn("Wallpaper: refused unsupported or non-absolute path:", path);
@@ -72,7 +79,17 @@ Singleton {
             return "";
         }
 
+        const forMonitor = monitor !== undefined;
+        if (forMonitor) {
+            const connected = root.connectedMonitorNames();
+            if (!connected.includes(monitor))
+                console.warn("Wallpaper: monitor", monitor,
+                    "is not connected; connected screens:", connected.join(", "));
+        }
+
         root.pendingPath = normalized;
+        root.pendingForMonitor = forMonitor;
+        root.pendingMonitor = forMonitor ? monitor : "";
         validationImage.source = "";
         validationImage.source = Qt.resolvedUrl(normalized);
         return normalized;
@@ -82,17 +99,94 @@ Singleton {
         return root.apply(path);
     }
 
+    function libraryPaths(): list<string> {
+        const paths = [];
+        for (let index = 0; index < folderList.count; ++index)
+            paths.push(FileUtils.trimFileProtocol(folderList.get(index, "fileUrl")));
+        return paths;
+    }
+
+    function cycle(direction): string {
+        const paths = root.libraryPaths();
+        if (paths.length === 0) {
+            console.warn("Wallpaper: cannot cycle an empty library:", root.library);
+            return "";
+        }
+
+        const target = WallpaperLogic.cyclePath(paths, stateAdapter.wallpaper, direction);
+        if (target === stateAdapter.wallpaper)
+            return "";
+        return root.apply(target);
+    }
+
+    function next(): string {
+        return root.cycle(1);
+    }
+
+    function prev(): string {
+        return root.cycle(-1);
+    }
+
+    function setFor(monitor, path): string {
+        return root.apply(path, monitor);
+    }
+
+    function clearFor(monitor): string {
+        if (!root.writesEnabled) {
+            console.warn("Wallpaper: state writes are disabled for this session");
+            return "";
+        }
+        if (!Object.keys(stateAdapter.monitorWallpapers).includes(monitor))
+            return "";
+
+        const overrides = {};
+        for (const name in stateAdapter.monitorWallpapers) {
+            if (name !== monitor)
+                overrides[name] = stateAdapter.monitorWallpapers[name];
+        }
+        stateAdapter.monitorWallpapers = overrides;
+        root.saveState();
+        return stateAdapter.wallpaper || "";
+    }
+
+    function saveState(): void {
+        if (root.stateDirectoryReady)
+            stateFile.writeAdapter();
+        else
+            root.savePending = true;
+    }
+
+    function warnIfGlobalHidden(): void {
+        const connected = root.connectedMonitorNames();
+        if (connected.length > 0
+                && connected.every(name => Boolean(stateAdapter.monitorWallpapers[name]))) {
+            console.warn("Wallpaper: every connected screen (" + connected.join(", ")
+                + ") has a per-monitor override; the global wallpaper changed but nothing"
+                + " on screen will");
+        }
+    }
+
     function commitPending(): void {
         const path = root.pendingPath;
         if (!path || !root.writesEnabled)
             return;
 
+        const forMonitor = root.pendingForMonitor;
+        const monitor = root.pendingMonitor;
         root.pendingPath = "";
-        stateAdapter.wallpaper = path;
-        if (root.stateDirectoryReady)
-            stateFile.writeAdapter();
-        else
-            root.savePending = true;
+        root.pendingForMonitor = false;
+        root.pendingMonitor = "";
+        if (forMonitor) {
+            const overrides = {};
+            for (const name in stateAdapter.monitorWallpapers)
+                overrides[name] = stateAdapter.monitorWallpapers[name];
+            overrides[monitor] = path;
+            stateAdapter.monitorWallpapers = overrides;
+        } else {
+            stateAdapter.wallpaper = path;
+            root.warnIfGlobalHidden();
+        }
+        root.saveState();
     }
 
     function resetState(): void {
@@ -124,6 +218,8 @@ Singleton {
         } catch (error) {
             root.writesEnabled = false;
             root.pendingPath = "";
+            root.pendingForMonitor = false;
+            root.pendingMonitor = "";
             validationImage.source = "";
             root.resetState();
             console.warn("Wallpaper: malformed state; refusing writes for this session");
@@ -203,6 +299,8 @@ Singleton {
             } else if (status === Image.Error && root.pendingPath) {
                 console.warn("Wallpaper: image decode failed:", root.pendingPath);
                 root.pendingPath = "";
+                root.pendingForMonitor = false;
+                root.pendingMonitor = "";
             }
         }
     }
@@ -216,6 +314,22 @@ Singleton {
 
         function set(path: string): string {
             return root.set(path);
+        }
+
+        function next(): string {
+            return root.next();
+        }
+
+        function prev(): string {
+            return root.prev();
+        }
+
+        function setFor(monitor: string, path: string): string {
+            return root.setFor(monitor, path);
+        }
+
+        function clearFor(monitor: string): string {
+            return root.clearFor(monitor);
         }
     }
 }

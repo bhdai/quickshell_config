@@ -15,6 +15,8 @@ ShellRoot {
     readonly property string statePath: `${Quickshell.env("XDG_STATE_HOME")}/quickshell/user/wallpaper.json`
     property int attempts: 0
     property int phase: 0
+    property var monitorNames: []
+    property int monitorIndex: 0
 
     function libraryNames(): list<string> {
         const names = [];
@@ -81,7 +83,17 @@ ShellRoot {
                         library: Wallpaper.library
                     }));
                 } else if (Wallpaper.get() === root.secondPath) {
-                    root.finish("reloaded=" + Wallpaper.get());
+                    if (root.phase === 1) {
+                        root.phase = 2;
+                        console.log(`WALLPAPER_RELOADED global=${Wallpaper.get()} resolved=${Wallpaper.forMonitor("DP-1")}`);
+                        stateEditor.setText(JSON.stringify({
+                            wallpaper: root.secondPath,
+                            monitorWallpapers: { "DP-1": root.goodPath },
+                            library: Wallpaper.library
+                        }));
+                    } else if (Wallpaper.forMonitor("DP-1") === root.goodPath) {
+                        root.finish(`reloaded=${Wallpaper.get()} override=${Wallpaper.forMonitor("DP-1")}`);
+                    }
                 }
                 return;
             }
@@ -139,6 +151,93 @@ ShellRoot {
                 } else if (root.phase === 1 && names.length === 5) {
                     root.finish("library=" + names.join(","));
                 }
+                return;
+            }
+
+            if (root.scenario === "cycle" && Wallpaper.libraryModel.count === 4) {
+                const first = Wallpaper.library + "/a.jpg";
+                const last = Wallpaper.library + "/z.PNG";
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    console.log(`WALLPAPER_CYCLE next=${Wallpaper.next()} current=${Wallpaper.get()}`);
+                } else if (root.phase === 1 && Wallpaper.get() === first) {
+                    root.phase = 2;
+                    console.log(`WALLPAPER_CYCLE prev=${Wallpaper.prev()} current=${Wallpaper.get()}`);
+                } else if (root.phase === 2 && Wallpaper.get() === last) {
+                    root.phase = 3;
+                    console.log(`WALLPAPER_CYCLE wrap=${Wallpaper.next()} current=${Wallpaper.get()}`);
+                } else if (root.phase === 3 && Wallpaper.get() === first) {
+                    root.finish("cycle=" + Wallpaper.get());
+                }
+                return;
+            }
+
+            if (root.scenario === "override-set") {
+                if (root.phase === 0) {
+                    root.phase = 1;
+                    const invalid = Wallpaper.setFor("DP-1", "relative/wall.jpg");
+                    const bad = Wallpaper.setFor("DP-1", root.badPath);
+                    console.log(`WALLPAPER_OVERRIDE pending invalid=${invalid} bad=${bad} current=${Wallpaper.forMonitor("DP-1")}`);
+                } else if (root.phase === 1 && root.attempts > 8) {
+                    root.phase = 2;
+                    const accepted = Wallpaper.setFor("DP-1", root.secondPath);
+                    console.log(`WALLPAPER_OVERRIDE after-bad=${Wallpaper.forMonitor("DP-1")} accepted=${accepted}`);
+                } else if (root.phase === 2 && Wallpaper.forMonitor("DP-1") === root.secondPath) {
+                    root.finish(`override=${Wallpaper.forMonitor("DP-1")} global=${Wallpaper.get()}`);
+                }
+                return;
+            }
+
+            if (root.scenario === "override-clear") {
+                const cleared = Wallpaper.clearFor("DP-1");
+                const resolved = Wallpaper.forMonitor("DP-1");
+                const again = Wallpaper.clearFor("DP-1");
+                root.finish(`clear=${cleared} resolved=${resolved} again=${again}`);
+                return;
+            }
+
+            if (root.scenario === "override-no-fallback") {
+                const cleared = Wallpaper.clearFor("DP-1");
+                root.finish(`clear-no-fallback=${cleared} resolved=${Wallpaper.forMonitor("DP-1")}`);
+                return;
+            }
+
+            if (root.scenario === "hidden-global") {
+                if (root.phase === 0) {
+                    root.monitorNames = Quickshell.screens.map(screen => screen.name);
+                    if (root.monitorNames.length === 0) {
+                        root.finish("hidden=no-connected-screens");
+                        return;
+                    }
+                    root.phase = 1;
+                    Wallpaper.setFor(root.monitorNames[0], root.goodPath);
+                } else if (root.phase === 1
+                        && Wallpaper.forMonitor(root.monitorNames[root.monitorIndex]) === root.goodPath) {
+                    root.monitorIndex++;
+                    if (root.monitorIndex < root.monitorNames.length) {
+                        Wallpaper.setFor(root.monitorNames[root.monitorIndex], root.goodPath);
+                    } else {
+                        root.phase = 2;
+                        const accepted = Wallpaper.set(root.secondPath);
+                        console.log(`WALLPAPER_HIDDEN accepted=${accepted} current=${Wallpaper.get()}`);
+                    }
+                } else if (root.phase === 2 && Wallpaper.get() === root.secondPath) {
+                    root.finish("hidden=" + Wallpaper.get());
+                }
+                return;
+            }
+
+            if (root.scenario === "empty-cycle") {
+                const next = Wallpaper.next();
+                const prev = Wallpaper.prev();
+                root.finish(`empty-cycle next=${next} prev=${prev} current=${Wallpaper.get()}`);
+                return;
+            }
+
+            if (root.scenario === "noop-cycle" && Wallpaper.libraryModel.count === 1) {
+                const next = Wallpaper.next();
+                const prev = Wallpaper.prev();
+                root.finish(`noop-cycle next=${next} prev=${prev} current=${Wallpaper.get()}`);
             }
         }
     }

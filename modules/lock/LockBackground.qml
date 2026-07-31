@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Effects
 import qs.modules.common
 import qs.modules.common.functions
-import qs.modules.common.widgets
 
 /**
  * The wallpaper layer: the desktop's own image, under a strong blur and a neutral scrim.
@@ -15,11 +14,9 @@ import qs.modules.common.widgets
 Item {
     id: root
 
-    // The lock's whole knowledge of where the wallpaper is: one property, kept in sync
-    // with hyprpaper's by hand. Deliberately not discovered — parsing another tool's
-    // config would couple this to a tool that is meant to be replaced. When the wallpaper
-    // service arrives it becomes this property's source and no other lock code changes.
-    property url source: `${Directories.home}/Pictures/wall/leaves.jpg`
+    // The surface supplies the live per-monitor choice. Keeping resolution outside this
+    // renderer prevents lock lifecycle from gaining wallpaper state or I/O.
+    property url source
 
     Image {
         id: wallpaper
