@@ -31,3 +31,18 @@ const COL_W = (PANE_W - COL_GAP) / 2;
 
 // The pane's incoming content fades in over this. A named 0 is the supported hard cut.
 const TAB_FADE_MS = 120;
+
+// The wallpaper grid, Grid A of the accepted prototype.
+//
+// A thumbnail is a scaled-down screen, so the cell follows the aspect of the panel this
+// shell runs on rather than a generic 16:9 — a 16:9 cell would crop the top and bottom off
+// every wallpaper it is previewing.
+const GRID_COLUMNS = 4;
+const CELL_GAP_X = 12;
+// Smaller than the column gap on purpose: at 12 only three rows of cells fit the pane.
+const CELL_GAP_Y = 8;
+const CELL_ASPECT = 1920 / 1200;
+const CELL_W = (PANE_W - (GRID_COLUMNS - 1) * CELL_GAP_X) / GRID_COLUMNS;
+const CELL_H = Math.round(CELL_W / CELL_ASPECT);
+// How many rows the pane shows before it has to be scrolled.
+const GRID_ROWS = Math.floor((PANE_H + CELL_GAP_Y) / (CELL_H + CELL_GAP_Y));

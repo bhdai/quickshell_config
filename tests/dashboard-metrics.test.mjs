@@ -7,7 +7,7 @@ import { blocks, read } from "./qml-source.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
-const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["WINDOW_W", "WINDOW_H", "MARGIN", "CARD_W", "CARD_H", "PAD", "TABBAR_H", "GAP", "PANE_W", "PANE_H", "HEADER_H", "BODY_H", "COL_W", "COL_GAP", "TAB_FADE_MS"]);
+const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["WINDOW_W", "WINDOW_H", "MARGIN", "CARD_W", "CARD_H", "PAD", "TABBAR_H", "GAP", "PANE_W", "PANE_H", "HEADER_H", "BODY_H", "COL_W", "COL_GAP", "TAB_FADE_MS", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y"]);
 
 // #96's canvas. These are derived rather than restated so a change to the padding cannot
 // leave the pane claiming a width the card does not have, but the derivation has to land
@@ -54,6 +54,31 @@ test("the 2x3 tile grid fits the column at the accepted tile size", () => {
 
     assert.equal(tileW, 160);
     assert.ok(Math.abs(tileH - 107) < 1, `tile height ${tileH} is not about 107`);
+});
+
+// Grid A of the accepted prototype. The cell is the one number the spike existed to settle,
+// so it is derived from the pane and the panel aspect rather than restated, and then checked
+// against what was measured.
+test("the wallpaper grid is four 160x100 cells across the pane", () => {
+    assert.equal(metrics.GRID_COLUMNS, 4);
+    assert.equal(metrics.CELL_W, 160);
+    assert.equal(metrics.CELL_H, 100);
+    assert.equal(metrics.CELL_GAP_X, 12);
+    assert.equal(metrics.CELL_GAP_Y, 8);
+    assert.equal(metrics.GRID_COLUMNS * metrics.CELL_W + (metrics.GRID_COLUMNS - 1) * metrics.CELL_GAP_X, metrics.PANE_W);
+});
+
+// The row gap is the smaller of the two on purpose: a 12px row gap fits only three rows in
+// 427, where 8px fits four.
+test("four rows of cells fit the pane, and a fifth does not", () => {
+    const rowsIn = height => Math.floor((height + metrics.CELL_GAP_Y) / (metrics.CELL_H + metrics.CELL_GAP_Y));
+
+    assert.equal(metrics.GRID_ROWS, 4);
+    assert.equal(rowsIn(metrics.PANE_H), 4);
+
+    const used = metrics.GRID_ROWS * metrics.CELL_H + (metrics.GRID_ROWS - 1) * metrics.CELL_GAP_Y;
+    assert.ok(used <= metrics.PANE_H, `four rows need ${used}px of a ${metrics.PANE_H}px pane`);
+    assert.ok(metrics.PANE_H - used < metrics.CELL_H, "a fifth row fits the pane");
 });
 
 test("the pane fade is the prototype's 120ms, and zero is the hard cut", () => {

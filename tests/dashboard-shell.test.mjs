@@ -34,10 +34,10 @@ test("an unknown tab is named back rather than opened", () => {
     assert.ok(rejection < open.indexOf("isOpen = true"), "open() opens before it validates the tab");
 });
 
-// The picker ticket adds the second destination. Until then the tab list is the one place
-// that says what exists, and IPC validates against it rather than against a literal.
+// The tab list is the one place that says what exists, and IPC validates against it rather
+// than against a literal, so adding a destination cannot leave IPC refusing it.
 test("the tab list is what IPC validates against", () => {
-    assert.match(dashboard, /readonly property var tabs: \["Calendar"\]/);
+    assert.match(dashboard, /readonly property var tabs: \["Calendar", "Wallpaper"\]/);
     assert.match(dashboard, /function knows\(tab: string\): bool \{\s*return root\.tabs\.some\(label => label\.toLowerCase\(\) === tab\);/);
 });
 
