@@ -51,10 +51,6 @@ test("wallpaper surfaces dissolve only a ready incoming image and release the re
     assert.match(module, /readonly property int transitionDuration: 400/);
     assert.match(module, /property string displayed:/);
     assert.match(module, /Easing\.Linear/);
-    assert.equal(
-        [...module.matchAll(/enabled: wallpaperWindow\.transitioning/g)].length,
-        2
-    );
     assert.match(module, /status === Image\.Ready/);
     assert.match(module, /status === Image\.Error/);
     assert.match(module, /console\.warn\("Wallpaper: image decode failed:"/);

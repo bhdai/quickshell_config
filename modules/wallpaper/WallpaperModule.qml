@@ -10,6 +10,7 @@ Scope {
     id: root
 
     readonly property int transitionDuration: 400
+    readonly property alias surfaces: surfaceVariants.instances
     property var seenOutputs: ({})
 
     function hasSeen(name: string): bool {
@@ -21,6 +22,8 @@ Scope {
     }
 
     Variants {
+        id: surfaceVariants
+
         model: Quickshell.screens
 
         PanelWindow {
@@ -108,7 +111,7 @@ Scope {
                 }
 
                 wallpaperWindow.transitioning = true;
-                image.opacity = 1;
+                fadeAnimation.restart();
             }
 
             function failed(image): void {
@@ -141,6 +144,20 @@ Scope {
                 onTriggered: wallpaperWindow.reattaching = false
             }
 
+            NumberAnimation {
+                id: fadeAnimation
+
+                // A Behavior reaches opacity 1 but does not reliably deliver its child
+                // completion signal under Quickshell 0.3.0, stranding later targets.
+                target: wallpaperWindow.incomingImage
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: root.transitionDuration
+                easing.type: Easing.Linear
+                onFinished: wallpaperWindow.land(wallpaperWindow.incomingImage)
+            }
+
             Image {
                 id: firstImage
 
@@ -158,20 +175,6 @@ Scope {
                         wallpaperWindow.ready(firstImage);
                     else if (status === Image.Error)
                         wallpaperWindow.failed(firstImage);
-                }
-
-                Behavior on opacity {
-                    enabled: wallpaperWindow.transitioning
-
-                    NumberAnimation {
-                        duration: root.transitionDuration
-                        easing.type: Easing.Linear
-                        onFinished: {
-                            if (wallpaperWindow.transitioning
-                                    && wallpaperWindow.incomingImage === firstImage)
-                                wallpaperWindow.land(firstImage);
-                        }
-                    }
                 }
             }
 
@@ -192,20 +195,6 @@ Scope {
                         wallpaperWindow.ready(secondImage);
                     else if (status === Image.Error)
                         wallpaperWindow.failed(secondImage);
-                }
-
-                Behavior on opacity {
-                    enabled: wallpaperWindow.transitioning
-
-                    NumberAnimation {
-                        duration: root.transitionDuration
-                        easing.type: Easing.Linear
-                        onFinished: {
-                            if (wallpaperWindow.transitioning
-                                    && wallpaperWindow.incomingImage === secondImage)
-                                wallpaperWindow.land(secondImage);
-                        }
-                    }
                 }
             }
         }
