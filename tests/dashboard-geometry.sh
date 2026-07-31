@@ -55,14 +55,12 @@ if grep -v 'quickshell\.ipc' "$test_dir/quickshell.log" | grep -qE 'ERROR|TypeEr
 fi
 
 # #96's canvas, and the composition derived from it: a full-width 72px band over a 347px body
-# of two equal 332px columns, with the calendar's natural height fitting the body it is given
-# rather than being compressed into it.
+# of two equal 332px columns.
 for expected in "card=700x507" \
     "pane=676x427" \
     "band=676x72" \
     "calendar=0,80 332x347" \
     "tiles=344,80 332x347" \
-    "natural=347" \
     "cells=42 rows=6" \
     "today=28@0"; do
     if ! grep -qF "$expected" <<<"$results"; then
@@ -72,11 +70,36 @@ for expected in "card=700x507" \
     fi
 done
 
+# What the calendar column wants, against the 347 it is given. It has to fit rather than be
+# compressed into place — restoring the Today row's old 4px top margin puts it at 351, which
+# is the regression this catches.
+#
+# Not pinned to a single number: the weekday labels are the one row here whose height comes
+# from font metrics, so the natural height is 347 with this machine's fonts and a couple of
+# pixels under it in a bare container. Only the ceiling is the contract. The floor is loose
+# and exists so that a calendar which lost a row fails here too rather than passing for
+# being small.
+for natural in $(grep -o 'natural=[0-9.]*' <<<"$results" | cut -d= -f2); do
+    if ! awk -v n="$natural" 'BEGIN { exit !(n <= 347 && n > 330) }'; then
+        echo "$results"
+        echo "The calendar column does not fit its 347px body: natural=$natural"
+        exit 1
+    fi
+done
+
 # Every month is six rows and the Today control is opacity-gated, so navigating cannot change
 # a single one of those numbers.
-if ! grep -qF "navigated=700x507,700x507,700x507 today=28@1 natural=347" <<<"$results"; then
+if ! grep -qF "navigated=700x507,700x507,700x507 today=28@1" <<<"$results"; then
     echo "$results"
     echo "The dashboard resized while navigating months"
+    exit 1
+fi
+
+# The same calendar before and after, so navigation cannot quietly change what the column
+# wants either.
+if [[ "$(grep -o 'natural=[0-9.]*' <<<"$results" | sort -u | wc -l)" != 1 ]]; then
+    echo "$results"
+    echo "The calendar column changed height while navigating months"
     exit 1
 fi
 
