@@ -106,6 +106,18 @@ test("hover, focus, pending and applied are four distinct treatments", () => {
         assert.match(tile, treatment, `the tile has no ${treatment} treatment`);
 });
 
+test("focus and applied rings use the same tile bounds", () => {
+    const rings = blocks(tile, "Rectangle");
+    const applied = rings.find(block => /visible: root\.applied/.test(block));
+    const focused = rings.find(block => /visible: root\.activeFocus/.test(block));
+
+    assert.match(applied, /anchors\.fill: parent/);
+    assert.match(focused, /anchors\.fill: parent/);
+    assert.doesNotMatch(focused, /anchors\.margins/);
+    assert.match(applied, /radius: Appearance\.rounding\.small/);
+    assert.match(focused, /radius: Appearance\.rounding\.small/);
+});
+
 // An applied wallpaper from outside the library has no cell, and #96 refuses to invent one.
 test("nothing is drawn for a wallpaper the library does not contain", () => {
     assert.doesNotMatch(pane, /synthetic|banner|outsideLibrary/i);

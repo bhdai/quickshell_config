@@ -125,13 +125,10 @@ Item {
         border.color: Appearance.colors.colPrimary
     }
 
-    // Inset, so the applied ring and the focus ring read as two rings on the same tile
-    // rather than one ring in an ambiguous colour.
     Rectangle {
         anchors.fill: parent
-        anchors.margins: 4
         visible: root.activeFocus
-        radius: Appearance.rounding.small - 4
+        radius: Appearance.rounding.small
         color: "transparent"
         border.width: 2
         border.color: Appearance.colors.colSecondary
