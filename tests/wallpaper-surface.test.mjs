@@ -67,3 +67,9 @@ test("the root mounts the wallpaper module and the service owns all wallpaper IO
     assert.match(service, /IpcHandler\s*\{/);
     assert.doesNotMatch(module, /FileView|JsonAdapter|FolderListModel|IpcHandler/);
 });
+
+test("the wallpaper smoke fixture uses only tools installed by the smoke job", () => {
+    const fixture = read(repoRoot, "tests", "wallpaper-service.sh");
+
+    assert.doesNotMatch(fixture, /\bnode\b/);
+});

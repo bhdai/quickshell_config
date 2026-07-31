@@ -75,14 +75,12 @@ run_case commit
 commit_state="$test_dir/state-commit/quickshell/user/wallpaper.json"
 grep -qF "WALLPAPER_PENDING relative= unsupported= home=$test_dir/home/missing.JPG accepted=$test_dir/images/first.png current=" "$test_dir/commit.log"
 grep -qF "WALLPAPER_RESULT committed=$test_dir/images/first.png" "$test_dir/commit.log"
-node -e '
-const fs = require("node:fs");
-const value = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-if (JSON.stringify(Object.keys(value).sort()) !== JSON.stringify(["library", "monitorWallpapers", "wallpaper"]))
-    process.exit(1);
-if (value.wallpaper !== process.argv[2] || JSON.stringify(value.monitorWallpapers) !== "{}")
-    process.exit(1);
-' "$commit_state" "$test_dir/images/first.png"
+state_keys="$(grep -oE '"[^"]+"[[:space:]]*:' "$commit_state" \
+    | sed -E 's/[":[:space:]]//g' | sort)"
+[[ "$state_keys" == $'library\nmonitorWallpapers\nwallpaper' ]]
+grep -qF "\"wallpaper\": \"$test_dir/images/first.png\"" "$commit_state"
+grep -qE '"monitorWallpapers"[[:space:]]*:[[:space:]]*\{' "$commit_state"
+grep -qF "\"library\": \"$test_dir/home/Pictures/wall\"" "$commit_state"
 
 reload_state="$test_dir/state-reload/quickshell/user/wallpaper.json"
 mkdir -p "$(dirname "$reload_state")"
