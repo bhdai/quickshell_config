@@ -184,62 +184,15 @@ GridLayout {
         // The two clock times are the footer below, laid out one per line with its own glyph.
         caption: ""
 
-        // The hill is the whole daylight span and the dot is now, so how much of the day is
+        // The ridge is the whole daylight span and the sun is now, so how much of the day is
         // left reads as a distance along it rather than as a subtraction of two clock times.
-        Item {
-            id: sunBox
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.topMargin: 20
-            anchors.bottom: times.top
-            anchors.bottomMargin: 5
+        // Full bleed, because the horizon has to cut the tile rather than sit in a box drawn
+        // inside it — the times below read as standing on the ground that way.
+        backdrop: SunPath {
+            anchors.fill: parent
+            cornerRadius: Appearance.rounding.small
+            progress: WeatherFormat.dayProgress(Time.date, Weather.sunrise, Weather.sunset)
             visible: Weather.hasData
-
-            readonly property real progress: WeatherFormat.dayProgress(Time.date, Weather.sunrise, Weather.sunset)
-            // The dot has to sit on the curve, not beside it, so the marker and the outline
-            // are the same function sampled at different points.
-            readonly property var marker: TileGeometry.sunMarker(width, height, progress)
-            readonly property var outline: {
-                const points = TileGeometry.sunPath(width, height, TileGeometry.SUN_SAMPLES);
-                const path = [];
-                for (let i = 0; i < points.length; i++)
-                    path.push(Qt.point(points[i].x, points[i].y));
-                return path;
-            }
-
-            // Both ends of the track already rest on the horizon, so filling the polyline
-            // closes it along the bottom edge without a bottom edge being listed.
-            Shape {
-                anchors.fill: parent
-                preferredRendererType: Shape.CurveRenderer
-
-                ShapePath {
-                    strokeWidth: 0
-                    strokeColor: "transparent"
-                    fillColor: Appearance.colors.colSecondaryContainer
-                    PathPolyline {
-                        path: sunBox.outline
-                    }
-                }
-            }
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                height: 1
-                color: Appearance.colors.colOutlineVariant
-            }
-
-            Rectangle {
-                width: 9
-                height: 9
-                radius: 4.5
-                color: Appearance.colors.colPrimary
-                x: sunBox.marker.x - width / 2
-                y: sunBox.marker.y - height / 2
-            }
         }
 
         Column {

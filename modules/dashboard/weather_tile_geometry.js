@@ -21,7 +21,33 @@ const WAVE_AMPLITUDE = 2.5;
 const WAVE_PHASE = Math.PI;
 const WAVE_SAMPLES = 40;
 
+// The sun tile is a landscape rather than a chart: the horizon cuts the whole tile in two,
+// the hill passes under it at both edges instead of landing on it, and the times sit on the
+// ground below. All of it is a fraction of the tile so the composition survives a resize.
+//
+// The ridge is a bell, not the half sine solar elevation actually follows: flat tails and a
+// broad crown read as terrain at 100px wide, where a sine reads as a graph of something.
+// SUN_TAIL is how far the ground settles below the horizon once the bell has died away.
+// Tuned against the 160x108 the dashboard's 2x3 grid actually gives a tile, where the header
+// row and the two clock times leave about 35px of sky and 45px of ground. A horizon lower
+// than this puts the sunrise time on the line it is supposed to be standing under.
+const SUN_HORIZON = 0.53;
+const SUN_PEAK = 0.17;
+const SUN_TAIL = 0.025;
+const SUN_SPREAD = 0.22;
 const SUN_SAMPLES = 40;
+
+// Daylight is inset from both edges, so the tile carries a little night either side of it
+// and the ridge crosses the horizon at sunrise and sunset rather than at the tile's corners.
+const SUN_DAY_SPAN = 0.86;
+
+// Material 3's Sunny shape, near enough at this size: a circle rippled by a whole number of
+// lobes. SUN_MARKER_SAMPLES is a multiple of twice the lobe count so the sampling lands on
+// every crest and every valley, and closes without a seam.
+const SUN_MARKER_RADIUS = 6.5;
+const SUN_MARKER_LOBES = 10;
+const SUN_MARKER_SCALLOP = 0.08;
+const SUN_MARKER_SAMPLES = 60;
 
 function waterLevel(humidity) {
     if (typeof humidity !== "number" || !isFinite(humidity))
@@ -47,24 +73,45 @@ function waveLine(width, height, level, amplitude, wavelength, phase, samples) {
     return points;
 }
 
-/**
- * The sun's track across the box: the horizon is the bottom edge, the peak is solar noon at
- * the top of the box, and the shape between them is the half sine that solar elevation
- * roughly follows. The horizontal axis is the sunrise-to-sunset span, not clock time, so the
- * curve is symmetric by construction.
- */
+function sunHorizon(height) {
+    return height * SUN_HORIZON;
+}
+
+// The skyline at a given x. Symmetric about the middle of the tile, which is solar noon.
+function sunRidge(x, width, height) {
+    const offset = x / width - 0.5;
+    const bell = Math.exp(-(offset * offset) / (2 * SUN_SPREAD * SUN_SPREAD));
+    return height * (SUN_HORIZON + SUN_TAIL - (SUN_PEAK + SUN_TAIL) * bell);
+}
+
+// The skyline sampled left to right. The caller closes it against the bottom of the tile.
 function sunPath(width, height, samples) {
     const points = [];
-    for (let i = 0; i <= samples; i++)
-        points.push(sunMarker(width, height, i / samples));
+    for (let i = 0; i <= samples; i++) {
+        const x = width * i / samples;
+        points.push({ x: x, y: sunRidge(x, width, height) });
+    }
     return points;
 }
 
-// Where the sun sits on that track. `progress` is weather_format.js's dayProgress(), already
-// clamped, so a reading taken at night parks the marker on the horizon at one end.
+// Where the sun sits on that skyline. `progress` is weather_format.js's dayProgress(),
+// already clamped, so a reading taken at night parks the sun where the ridge crosses the
+// horizon rather than running it off the end.
 function sunMarker(width, height, progress) {
-    return {
-        x: width * progress,
-        y: height * (1 - Math.sin(Math.PI * progress))
-    };
+    const x = width * ((1 - SUN_DAY_SPAN) / 2 + progress * SUN_DAY_SPAN);
+    return { x: x, y: sunRidge(x, width, height) };
+}
+
+/**
+ * A circle whose radius ripples between `radius * (1 ± scallop)` once per lobe. Returns the
+ * ring without repeating the first point, so the caller closes the path itself.
+ */
+function scallopedCircle(cx, cy, radius, lobes, scallop, samples) {
+    const points = [];
+    for (let i = 0; i < samples; i++) {
+        const angle = 2 * Math.PI * i / samples;
+        const r = radius * (1 + scallop * Math.cos(lobes * angle));
+        points.push({ x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) });
+    }
+    return points;
 }
