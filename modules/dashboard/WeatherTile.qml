@@ -17,9 +17,17 @@ Rectangle {
     property string caption
     // For the two tiles whose shape carries a reading: UV's scale and the sun's arc.
     default property alias extra: extraContainer.data
+    // Painted under the text, corners and all, for the one tile that fills itself rather
+    // than drawing a graphic inside its padding.
+    property alias backdrop: backdropContainer.data
 
     color: Appearance.colors.colLayer1
     radius: Appearance.rounding.small
+
+    Item {
+        id: backdropContainer
+        anchors.fill: parent
+    }
 
     Item {
         anchors.fill: parent
@@ -31,10 +39,14 @@ Rectangle {
             anchors.top: parent.top
             anchors.left: parent.left
 
+            // Filled and set on the surface's own foreground, not the variant tone: two of
+            // these tiles paint under their header, and an outlined glyph in a dimmed colour
+            // disappears into whatever is behind it.
             MaterialSymbol {
                 text: root.symbol
                 iconSize: 14
-                color: Appearance.colors.colOnLayer1
+                fill: 1
+                color: Appearance.colors.colOnLayer2
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -42,7 +54,8 @@ Rectangle {
                 text: root.label
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.smaller
-                color: Appearance.colors.colOnLayer1
+                font.weight: Font.DemiBold
+                color: Appearance.colors.colOnLayer2
                 anchors.verticalCenter: parent.verticalCenter
             }
         }

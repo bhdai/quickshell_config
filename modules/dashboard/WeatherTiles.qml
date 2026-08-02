@@ -3,12 +3,15 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import qs.services
 import qs.modules.common
+import qs.modules.common.widgets
 import "dashboard_metrics.js" as Metrics
+import "weather_tile_geometry.js" as TileGeometry
 import "../../services/weather_format.js" as WeatherFormat
 
 /**
- * Current conditions as six tiles in a 2x3 grid. Four are plain; UV and Sun are the two
- * where the shape encodes the reading, which is the only reason they get bespoke geometry.
+ * Current conditions as six tiles in a 2x3 grid. Three are plain; humidity, UV and the sun
+ * encode their reading in the tile's shape, which is the only reason they get bespoke
+ * geometry — the number is still there to be read either way.
  */
 GridLayout {
     id: root
@@ -30,11 +33,61 @@ GridLayout {
     WeatherTile {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        symbol: "humidity_percentage"
+        symbol: "water_drop"
         label: "Humidity"
-        figure: WeatherFormat.formatPercent(Weather.humidity)
-        unit: "%"
-        caption: WeatherFormat.humidityCaption(Weather.humidity)
+        // The percent sign belongs to the number rather than sitting beside it as a unit:
+        // "71" and "%" are one reading, and the tile's small-unit slot would set the sign a
+        // size down and half a line off the baseline.
+        figure: WeatherFormat.formatPercent(Weather.humidity) + "%"
+        unit: ""
+        // The dew point chip below occupies the caption's row and interprets the figure in
+        // its place.
+        caption: ""
+
+        // The tile fills to the reading, so the number has a second, wordless statement of
+        // itself; the wave is what stops a flat block from reading as a progress bar.
+        backdrop: HumidityWave {
+            anchors.fill: parent
+            cornerRadius: Appearance.rounding.small
+            color: Appearance.colors.colSecondaryContainer
+            level: Weather.hasData ? TileGeometry.waterLevel(Weather.humidity) : 0
+        }
+
+        // Dew point rather than a "humid"/"dry" word: relative humidity alone does not say
+        // how much water is actually in the air, and the dew point does.
+        Row {
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            spacing: 5
+            visible: Weather.hasData
+
+            // Round rather than a pill: a circle reads as a token carrying its own reading,
+            // where a pill sized to its text would read as the caption the other tiles have.
+            Rectangle {
+                width: Math.max(dewPoint.implicitWidth, dewPoint.implicitHeight) + 6
+                height: width
+                radius: width / 2
+                color: Appearance.colors.colTertiaryContainer
+                anchors.verticalCenter: parent.verticalCenter
+
+                Text {
+                    id: dewPoint
+                    anchors.centerIn: parent
+                    text: WeatherFormat.formatTemperature(Weather.dewPoint) + "°"
+                    font.family: Appearance.font.family.main
+                    font.pixelSize: Appearance.font.pixelSize.smallest
+                    color: Appearance.colors.colOnTertiaryContainer
+                }
+            }
+
+            Text {
+                text: "Dew point"
+                anchors.verticalCenter: parent.verticalCenter
+                font.family: Appearance.font.family.main
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colOnLayer1
+            }
+        }
     }
 
     WeatherTile {
@@ -130,61 +183,65 @@ GridLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         symbol: "wb_twilight"
-        label: "Sun"
+        label: "Sunrise & sunset"
         figure: ""
         unit: ""
-        caption: WeatherFormat.formatClock(Weather.sunrise) + "  —  " + WeatherFormat.formatClock(Weather.sunset)
+        // The two clock times are the footer below, laid out one per line with its own glyph.
+        caption: ""
 
-        // The arc is the daylight span and the dot is now, so how much of the day is left
-        // reads as a distance rather than as a subtraction of two clock times.
-        Item {
-            id: arcBox
+        // The ridge is the whole daylight span and the sun is now, so how much of the day is
+        // left reads as a distance along it rather than as a subtraction of two clock times.
+        // Full bleed, because the horizon has to cut the tile rather than sit in a box drawn
+        // inside it — the times below read as standing on the ground that way.
+        backdrop: SunPath {
+            anchors.fill: parent
+            cornerRadius: Appearance.rounding.small
+            progress: TileGeometry.sunTrack(Time.date, Weather.sunrise, Weather.sunset)
+            visible: Weather.hasData
+        }
+
+        Column {
+            id: times
             anchors.left: parent.left
-            anchors.right: parent.right
             anchors.bottom: parent.bottom
-            // Clear of the caption below, which carries the two clock times.
-            anchors.bottomMargin: 18
-            anchors.top: parent.top
-            anchors.topMargin: 22
+            spacing: 1
             visible: Weather.hasData
 
-            // Elliptical, not circular: a semicircle wide enough to span the tile would be
-            // 70px tall in a 50px gap and would climb out through the tile above it.
-            readonly property real rx: (width - 8) / 2
-            readonly property real ry: height - 5
-            readonly property real cx: width / 2
-            readonly property real cy: height
-            readonly property real angle: Math.PI * (1 - WeatherFormat.dayProgress(Time.date, Weather.sunrise, Weather.sunset))
+            // Bold and on the surface's own foreground rather than the subtext tone the
+            // captions use: these two sit over the terrain, not over a flat tile.
+            Repeater {
+                model: [
+                    {
+                        symbol: "wb_sunny",
+                        time: WeatherFormat.formatClock(Weather.sunrise)
+                    },
+                    {
+                        symbol: "wb_twilight",
+                        time: WeatherFormat.formatClock(Weather.sunset)
+                    }
+                ]
 
-            Shape {
-                anchors.fill: parent
-                preferredRendererType: Shape.CurveRenderer
+                delegate: Row {
+                    required property var modelData
+                    spacing: 4
 
-                ShapePath {
-                    strokeWidth: 2
-                    strokeColor: Appearance.colors.colPrimary
-                    fillColor: "transparent"
-                    capStyle: ShapePath.RoundCap
-                    startX: arcBox.cx - arcBox.rx
-                    startY: arcBox.cy
-                    PathArc {
-                        x: arcBox.cx + arcBox.rx
-                        y: arcBox.cy
-                        radiusX: arcBox.rx
-                        radiusY: arcBox.ry
-                        useLargeArc: false
-                        direction: PathArc.Clockwise
+                    MaterialSymbol {
+                        text: parent.modelData.symbol
+                        iconSize: 13
+                        fill: 1
+                        color: Appearance.colors.colOnLayer2
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: parent.modelData.time
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        font.weight: Font.DemiBold
+                        color: Appearance.colors.colOnLayer2
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
-            }
-
-            Rectangle {
-                width: 9
-                height: 9
-                radius: 4.5
-                color: Appearance.colors.colPrimary
-                x: arcBox.cx + arcBox.rx * Math.cos(arcBox.angle) - width / 2
-                y: arcBox.cy - arcBox.ry * Math.sin(arcBox.angle) - height / 2
             }
         }
     }

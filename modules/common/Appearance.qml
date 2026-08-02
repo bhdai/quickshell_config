@@ -203,6 +203,10 @@ Singleton {
         readonly property color colPowerButton: "#DD5C82"
         readonly property color colEmptyWorkspace: "#77767b"
         readonly property color colArchBlue: "#0F94D2"
+        // The sun on the dashboard's sunrise tile. Fixed rather than taken from the palette:
+        // a matugen primary is whatever the wallpaper is, and a green or blue sun stops the
+        // graphic saying "sun" at all.
+        readonly property color colSun: "#F3B02A"
     }
 
     // Font configuration
