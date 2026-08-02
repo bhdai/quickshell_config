@@ -15,7 +15,6 @@ const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_
     "SUN_BASE",
     "SUN_SPREAD",
     "SUN_DAY_SPAN",
-    "SUN_NIGHT_OVERSHOOT",
     "SUN_SAMPLES",
     "SUN_MARKER_RADIUS",
     "SUN_MARKER_LOBES",
@@ -26,7 +25,8 @@ const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_
     "sunHorizon",
     "sunRidge",
     "sunTrack",
-    "sunMarkerInset",
+    "isDaylight",
+    "sunMarkerReach",
     "sunPath",
     "sunMarker",
     "scallopedCircle"
@@ -42,7 +42,6 @@ const {
     SUN_BASE,
     SUN_SPREAD,
     SUN_DAY_SPAN,
-    SUN_NIGHT_OVERSHOOT,
     SUN_SAMPLES,
     SUN_MARKER_RADIUS,
     SUN_MARKER_LOBES,
@@ -53,7 +52,8 @@ const {
     sunHorizon,
     sunRidge,
     sunTrack,
-    sunMarkerInset,
+    isDaylight,
+    sunMarkerReach,
     sunPath,
     sunMarker,
     scallopedCircle
@@ -187,27 +187,31 @@ test("sunMarker is at its highest at solar noon", () => {
     near(sunMarker(200, 100, 0.5).y, sunHorizon(100) - 100 * SUN_PEAK, "noon is the peak");
 });
 
-// The overshoot is what stops the sun parking on the skyline all night, which reads as a
-// graphic stuck against the edge rather than as a sun that has set.
-test("sunTrack carries the night past both ends of the daylight span", () => {
+test("sunTrack measures the daylight span from sunrise to sunset", () => {
     const sunrise = new Date(2026, 7, 2, 5, 30);
     const sunset = new Date(2026, 7, 2, 18, 30);
 
     near(sunTrack(new Date(2026, 7, 2, 5, 30), sunrise, sunset), 0, "sunrise");
     near(sunTrack(new Date(2026, 7, 2, 12, 0), sunrise, sunset), 0.5, "midday");
     near(sunTrack(new Date(2026, 7, 2, 18, 30), sunrise, sunset), 1, "sunset");
-
-    assert.ok(sunTrack(new Date(2026, 7, 2, 20, 0), sunrise, sunset) > 1, "after sunset is past the end");
-    assert.ok(sunTrack(new Date(2026, 7, 2, 4, 0), sunrise, sunset) < 0, "before sunrise is before the start");
 });
 
-test("sunTrack is bounded so the small hours cannot walk off the tile", () => {
+// Unclamped on purpose: a clamped fraction cannot tell sunset from an hour after it, and
+// that difference is the whole of whether there is a sun to draw.
+test("sunTrack runs past both ends rather than clamping to them", () => {
     const sunrise = new Date(2026, 7, 2, 5, 30);
     const sunset = new Date(2026, 7, 2, 18, 30);
 
-    near(sunTrack(new Date(2026, 7, 2, 23, 59), sunrise, sunset), 1 + SUN_NIGHT_OVERSHOOT, "late night");
-    near(sunTrack(new Date(2026, 7, 2, 0, 1), sunrise, sunset), -SUN_NIGHT_OVERSHOOT, "small hours");
-    assert.ok(SUN_NIGHT_OVERSHOOT > 0 && SUN_NIGHT_OVERSHOOT < 0.5);
+    assert.ok(sunTrack(new Date(2026, 7, 2, 20, 0), sunrise, sunset) > 1, "after sunset");
+    assert.ok(sunTrack(new Date(2026, 7, 2, 23, 59), sunrise, sunset) > 1, "late night");
+    assert.ok(sunTrack(new Date(2026, 7, 2, 4, 0), sunrise, sunset) < 0, "before sunrise");
+});
+
+test("isDaylight holds from sunrise to sunset inclusive and nowhere else", () => {
+    for (const progress of [0, 0.001, 0.5, 0.999, 1])
+        assert.equal(isDaylight(progress), true, `daylight at ${progress}`);
+    for (const progress of [-0.001, -0.4, 1.001, 1.4])
+        assert.equal(isDaylight(progress), false, `night at ${progress}`);
 });
 
 test("sunTrack answers the start of the day for readings the service does not have", () => {
@@ -220,24 +224,18 @@ test("sunTrack answers the start of the day for readings the service does not ha
     assert.equal(sunTrack(new Date(2026, 7, 2, 12, 0), sunset, sunrise), 0);
 });
 
-// The sun is drawn, not laid out, so nothing else stops it being painted half outside the
-// tile at the ends of its track.
-test("sunMarker keeps the whole disc inside the tile at every point on the track", () => {
-    const inset = sunMarkerInset();
-    assert.ok(inset > SUN_MARKER_RADIUS, "the inset covers the scallop and the ring");
+// The sun is painted, not laid out, so the daylight span being inset far enough is the only
+// thing keeping the disc off the frame. Checked at the real tile width, where the margin is
+// tightest.
+test("the whole disc fits inside the tile everywhere the sun is drawn", () => {
+    const reach = sunMarkerReach();
+    assert.ok(reach > SUN_MARKER_RADIUS, "the reach covers the scallop and the ring");
 
-    for (const progress of [-SUN_NIGHT_OVERSHOOT, 0, 0.5, 1, 1 + SUN_NIGHT_OVERSHOOT]) {
-        const marker = sunMarker(200, 100, progress);
-        assert.ok(marker.x >= inset, `the disc clears the left edge at ${progress}`);
-        assert.ok(marker.x <= 200 - inset, `the disc clears the right edge at ${progress}`);
-        near(marker.y, sunRidge(marker.x, 200, 100), `still on the ridge at ${progress}`);
+    for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
+        const marker = sunMarker(160, 107.67, progress);
+        assert.ok(marker.x - reach > 0, `the disc clears the left edge at ${progress}`);
+        assert.ok(marker.x + reach < 160, `the disc clears the right edge at ${progress}`);
     }
-});
-
-test("sunMarker is under the horizon once the sun has set", () => {
-    const horizon = sunHorizon(100);
-    assert.ok(sunMarker(200, 100, 1 + SUN_NIGHT_OVERSHOOT).y > horizon, "after sunset");
-    assert.ok(sunMarker(200, 100, -SUN_NIGHT_OVERSHOOT).y > horizon, "before sunrise");
 });
 
 test("scallopedCircle ripples between an inner and an outer radius", () => {

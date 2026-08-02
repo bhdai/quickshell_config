@@ -9,14 +9,15 @@ import "weather_tile_geometry.js" as TileGeometry
  * tile, so `cornerRadius` has to be the tile's own radius — the ground runs into the corners
  * and is clipped by them.
  *
- * The colours are read here rather than passed in: there are six of them, and every one is a
+ * The colours are read here rather than passed in: there are five of them, and every one is a
  * fixed role, so a caller could only ever hand back what this would have picked anyway. Each
  * is a property so that a palette change raises a signal and repaints.
  */
 Canvas {
     id: root
 
-    // A weather_tile_geometry.js sunTrack(): 0 at sunrise, 1 at sunset, a little past both.
+    // A weather_tile_geometry.js sunTrack(): 0 at sunrise, 1 at sunset, unclamped either
+    // side, because outside that range there is no sun to draw.
     property real progress: 0
     property real cornerRadius: 0
 
@@ -36,13 +37,6 @@ Canvas {
     onRidgeColorChanged: requestPaint()
     onHorizonColorChanged: requestPaint()
     onSunColorChanged: requestPaint()
-
-    Behavior on progress {
-        NumberAnimation {
-            duration: 400
-            easing.type: Easing.OutQuad
-        }
-    }
 
     onPaint: {
         const ctx = getContext("2d");
@@ -77,6 +71,11 @@ Canvas {
         ctx.fillStyle = root.horizonColor;
         ctx.fillRect(0, horizon, width, 1);
 
+        // Nothing to draw once it has set: an empty sky over the ridge is what night looks
+        // like, and a sun parked at one end of the track all night is not.
+        if (!TileGeometry.isDaylight(root.progress))
+            return;
+
         const sun = TileGeometry.sunMarker(width, height, root.progress);
         const disc = TileGeometry.scallopedCircle(sun.x, sun.y, TileGeometry.SUN_MARKER_RADIUS, TileGeometry.SUN_MARKER_LOBES, TileGeometry.SUN_MARKER_SCALLOP, TileGeometry.SUN_MARKER_SAMPLES);
         ctx.beginPath();
@@ -88,7 +87,7 @@ Canvas {
         // Stroked before it is filled, so the sky-toned ring reads as a gap around the sun
         // and the fill takes back the inner half of it. Without it the sun disappears into
         // the ridge whenever it is sitting on it.
-        ctx.lineWidth = 3;
+        ctx.lineWidth = TileGeometry.SUN_MARKER_RING * 2;
         ctx.strokeStyle = root.skyColor;
         ctx.stroke();
         ctx.fillStyle = root.sunColor;
