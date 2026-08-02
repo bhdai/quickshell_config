@@ -16,24 +16,24 @@ import "weather_tile_geometry.js" as TileGeometry
 Canvas {
     id: root
 
-    // weather_format.js's dayProgress(): 0 at sunrise, 1 at sunset, clamped either side.
+    // A weather_tile_geometry.js sunTrack(): 0 at sunrise, 1 at sunset, a little past both.
     property real progress: 0
     property real cornerRadius: 0
 
     readonly property color skyColor: Appearance.colors.colLayer1
-    readonly property color groundColor: Appearance.colors.colLayer2
-    readonly property color dayRidgeColor: Appearance.colors.colSecondaryContainer
-    // The same terrain seen without the sun on it, so the ridge stays one continuous shape
-    // across the horizon instead of stopping at it.
-    readonly property color nightRidgeColor: ColorUtils.mix(Appearance.colors.colSecondaryContainer, groundColor, 0.35)
+    readonly property color ridgeColor: Appearance.colors.colSecondaryContainer
+    // Translucent, and that is the whole point: the ground is a layer over the landscape
+    // rather than a second landscape, so the ridge stays visibly on its way down behind it.
+    // Being a tone above the sky, it lifts the ground's background as it dims the ridge.
+    readonly property color groundColor: ColorUtils.transparentize(Appearance.colors.colLayer2, 0.25)
     readonly property color horizonColor: Appearance.colors.colOutlineVariant
-    readonly property color sunColor: Appearance.colors.colPrimary
+    readonly property color sunColor: Appearance.colors.colSun
 
     onProgressChanged: requestPaint()
     onCornerRadiusChanged: requestPaint()
     onSkyColorChanged: requestPaint()
     onGroundColorChanged: requestPaint()
-    onDayRidgeColorChanged: requestPaint()
+    onRidgeColorChanged: requestPaint()
     onHorizonColorChanged: requestPaint()
     onSunColorChanged: requestPaint()
 
@@ -55,11 +55,9 @@ Canvas {
         ctx.roundedRect(0, 0, width, height, root.cornerRadius, root.cornerRadius);
         ctx.clip();
 
-        const horizon = TileGeometry.sunHorizon(height);
-
-        ctx.fillStyle = root.groundColor;
-        ctx.fillRect(0, horizon, width, height - horizon);
-
+        // Terrain first and whole, then the ground laid over its lower half. Painting the
+        // two halves separately would put a seam on the horizon; this way the same shape
+        // simply passes under it.
         const ridge = TileGeometry.sunPath(width, height, TileGeometry.SUN_SAMPLES);
         ctx.beginPath();
         ctx.moveTo(ridge[0].x, ridge[0].y);
@@ -69,18 +67,12 @@ Canvas {
         ctx.lineTo(0, height);
         ctx.closePath();
 
-        ctx.fillStyle = root.dayRidgeColor;
+        ctx.fillStyle = root.ridgeColor;
         ctx.fill();
 
-        // The buried half of the same path, repainted in the ground's tone. Saved and
-        // restored because the outer rounded clip has to survive it.
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(0, horizon, width, height - horizon);
-        ctx.clip();
-        ctx.fillStyle = root.nightRidgeColor;
-        ctx.fill();
-        ctx.restore();
+        const horizon = TileGeometry.sunHorizon(height);
+        ctx.fillStyle = root.groundColor;
+        ctx.fillRect(0, horizon, width, height - horizon);
 
         ctx.fillStyle = root.horizonColor;
         ctx.fillRect(0, horizon, width, 1);

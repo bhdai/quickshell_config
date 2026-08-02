@@ -26,8 +26,7 @@ const weather = loadQmlJs(path.join(repoRoot, "services", "weather_format.js"), 
     "formatClock",
     "apparentCaption",
     "windCaption",
-    "precipitationCaption",
-    "dayProgress"
+    "precipitationCaption"
 ]);
 
 const {
@@ -50,8 +49,7 @@ const {
     formatClock,
     apparentCaption,
     windCaption,
-    precipitationCaption,
-    dayProgress
+    precipitationCaption
 } = weather;
 
 const minutes = n => n * 60000;
@@ -213,10 +211,10 @@ test("a reading the service does not have yet formats as the placeholder", () =>
     assert.equal(formatClock(new Date(NaN)), PLACEHOLDER);
 });
 
-test("clock times drop the leading zero and keep the twenty-four hour hour", () => {
-    assert.equal(formatClock(new Date(2026, 6, 31, 5, 24)), "5:24");
+test("clock times pad both fields and keep the twenty-four hour hour", () => {
+    assert.equal(formatClock(new Date(2026, 6, 31, 5, 24)), "05:24");
     assert.equal(formatClock(new Date(2026, 6, 31, 18, 32)), "18:32");
-    assert.equal(formatClock(new Date(2026, 6, 31, 0, 5)), "0:05");
+    assert.equal(formatClock(new Date(2026, 6, 31, 0, 5)), "00:05");
 });
 
 // The tile grammar is a figure over a caption that interprets it; "93%" alone does not
@@ -239,14 +237,3 @@ test("wind and precipitation captions interpret their figures", () => {
     assert.equal(precipitationCaption(NaN), "");
 });
 
-test("the sun's position is a clamped fraction of the daylight span", () => {
-    const sunrise = new Date(2026, 6, 31, 6, 0);
-    const sunset = new Date(2026, 6, 31, 18, 0);
-
-    assert.equal(dayProgress(new Date(2026, 6, 31, 6, 0), sunrise, sunset), 0);
-    assert.equal(dayProgress(new Date(2026, 6, 31, 12, 0), sunrise, sunset), 0.5);
-    assert.equal(dayProgress(new Date(2026, 6, 31, 18, 0), sunrise, sunset), 1);
-    assert.equal(dayProgress(new Date(2026, 6, 31, 3, 0), sunrise, sunset), 0);
-    assert.equal(dayProgress(new Date(2026, 6, 31, 23, 0), sunrise, sunset), 1);
-    assert.equal(dayProgress(new Date(2026, 6, 31, 12, 0), null, sunset), 0);
-});

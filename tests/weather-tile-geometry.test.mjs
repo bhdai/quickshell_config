@@ -12,8 +12,10 @@ const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_
     "WAVE_SAMPLES",
     "SUN_HORIZON",
     "SUN_PEAK",
-    "SUN_TAIL",
+    "SUN_BASE",
+    "SUN_SPREAD",
     "SUN_DAY_SPAN",
+    "SUN_NIGHT_OVERSHOOT",
     "SUN_SAMPLES",
     "SUN_MARKER_RADIUS",
     "SUN_MARKER_LOBES",
@@ -23,6 +25,8 @@ const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_
     "waveLine",
     "sunHorizon",
     "sunRidge",
+    "sunTrack",
+    "sunMarkerInset",
     "sunPath",
     "sunMarker",
     "scallopedCircle"
@@ -35,8 +39,10 @@ const {
     WAVE_SAMPLES,
     SUN_HORIZON,
     SUN_PEAK,
-    SUN_TAIL,
+    SUN_BASE,
+    SUN_SPREAD,
     SUN_DAY_SPAN,
+    SUN_NIGHT_OVERSHOOT,
     SUN_SAMPLES,
     SUN_MARKER_RADIUS,
     SUN_MARKER_LOBES,
@@ -46,6 +52,8 @@ const {
     waveLine,
     sunHorizon,
     sunRidge,
+    sunTrack,
+    sunMarkerInset,
     sunPath,
     sunMarker,
     scallopedCircle
@@ -130,15 +138,24 @@ test("sunRidge climbs monotonically from the left edge to the peak", () => {
     }
 });
 
-// The hill passing under the horizon rather than meeting it is what makes it read as terrain
-// continuing past the tile instead of a chart plotted inside one.
-test("sunRidge settles just below the horizon at the tile edges", () => {
+// The ridge carrying on well under the horizon is the whole reason the lower half reads as
+// layered rather than as a block: the terrain is still visibly descending behind the ground.
+test("sunRidge keeps descending under the horizon out to the tile edges", () => {
     const horizon = sunHorizon(100);
     for (const x of [0, 200]) {
         const y = sunRidge(x, 200, 100);
-        assert.ok(y > horizon, `the ridge is under the horizon at ${x}`);
-        assert.ok(y - horizon < 100 * SUN_PEAK / 4, `the ridge only dips under the horizon at ${x}`);
+        assert.ok(y - horizon > 100 * SUN_PEAK / 3, `the ridge is well under the horizon at ${x}`);
+        assert.ok(y < 100, `the ridge is still inside the tile at ${x}`);
     }
+    assert.ok(sunRidge(0, 200, 100) > sunRidge(20, 200, 100), "the ridge is at its lowest against the edge");
+});
+
+// Not free parameters: if the crossings are not sunrise and sunset the sun rises out of the
+// ground and sets into the sky. SUN_SPREAD is solved from the others to hold this.
+test("the ridge crosses the horizon exactly at sunrise and sunset", () => {
+    const horizon = sunHorizon(100);
+    for (const progress of [0, 1])
+        near(sunMarker(200, 100, progress).y, horizon, `crossing at progress ${progress}`);
 });
 
 test("sunPath samples the ridge across the full width", () => {
@@ -166,12 +183,61 @@ test("sunMarker rides the ridge rather than floating beside it", () => {
     }
 });
 
-test("sunMarker is at its highest at solar noon and meets the horizon at both ends", () => {
+test("sunMarker is at its highest at solar noon", () => {
     near(sunMarker(200, 100, 0.5).y, sunHorizon(100) - 100 * SUN_PEAK, "noon is the peak");
-    // dayProgress() clamps, so both ends of the span are "not daylight" and the sun parks
-    // where the track crosses the horizon rather than running off it.
-    for (const progress of [0, 1])
-        assert.ok(Math.abs(sunMarker(200, 100, progress).y - sunHorizon(100)) < 100 * SUN_PEAK / 8, `parked on the horizon at ${progress}`);
+});
+
+// The overshoot is what stops the sun parking on the skyline all night, which reads as a
+// graphic stuck against the edge rather than as a sun that has set.
+test("sunTrack carries the night past both ends of the daylight span", () => {
+    const sunrise = new Date(2026, 7, 2, 5, 30);
+    const sunset = new Date(2026, 7, 2, 18, 30);
+
+    near(sunTrack(new Date(2026, 7, 2, 5, 30), sunrise, sunset), 0, "sunrise");
+    near(sunTrack(new Date(2026, 7, 2, 12, 0), sunrise, sunset), 0.5, "midday");
+    near(sunTrack(new Date(2026, 7, 2, 18, 30), sunrise, sunset), 1, "sunset");
+
+    assert.ok(sunTrack(new Date(2026, 7, 2, 20, 0), sunrise, sunset) > 1, "after sunset is past the end");
+    assert.ok(sunTrack(new Date(2026, 7, 2, 4, 0), sunrise, sunset) < 0, "before sunrise is before the start");
+});
+
+test("sunTrack is bounded so the small hours cannot walk off the tile", () => {
+    const sunrise = new Date(2026, 7, 2, 5, 30);
+    const sunset = new Date(2026, 7, 2, 18, 30);
+
+    near(sunTrack(new Date(2026, 7, 2, 23, 59), sunrise, sunset), 1 + SUN_NIGHT_OVERSHOOT, "late night");
+    near(sunTrack(new Date(2026, 7, 2, 0, 1), sunrise, sunset), -SUN_NIGHT_OVERSHOOT, "small hours");
+    assert.ok(SUN_NIGHT_OVERSHOOT > 0 && SUN_NIGHT_OVERSHOOT < 0.5);
+});
+
+test("sunTrack answers the start of the day for readings the service does not have", () => {
+    const sunrise = new Date(2026, 7, 2, 5, 30);
+    const sunset = new Date(2026, 7, 2, 18, 30);
+
+    assert.equal(sunTrack(null, sunrise, sunset), 0);
+    assert.equal(sunTrack(new Date(2026, 7, 2, 12, 0), null, sunset), 0);
+    assert.equal(sunTrack(new Date(2026, 7, 2, 12, 0), sunrise, null), 0);
+    assert.equal(sunTrack(new Date(2026, 7, 2, 12, 0), sunset, sunrise), 0);
+});
+
+// The sun is drawn, not laid out, so nothing else stops it being painted half outside the
+// tile at the ends of its track.
+test("sunMarker keeps the whole disc inside the tile at every point on the track", () => {
+    const inset = sunMarkerInset();
+    assert.ok(inset > SUN_MARKER_RADIUS, "the inset covers the scallop and the ring");
+
+    for (const progress of [-SUN_NIGHT_OVERSHOOT, 0, 0.5, 1, 1 + SUN_NIGHT_OVERSHOOT]) {
+        const marker = sunMarker(200, 100, progress);
+        assert.ok(marker.x >= inset, `the disc clears the left edge at ${progress}`);
+        assert.ok(marker.x <= 200 - inset, `the disc clears the right edge at ${progress}`);
+        near(marker.y, sunRidge(marker.x, 200, 100), `still on the ridge at ${progress}`);
+    }
+});
+
+test("sunMarker is under the horizon once the sun has set", () => {
+    const horizon = sunHorizon(100);
+    assert.ok(sunMarker(200, 100, 1 + SUN_NIGHT_OVERSHOOT).y > horizon, "after sunset");
+    assert.ok(sunMarker(200, 100, -SUN_NIGHT_OVERSHOOT).y > horizon, "before sunrise");
 });
 
 test("scallopedCircle ripples between an inner and an outer radius", () => {
@@ -214,7 +280,11 @@ test("the tuned constants are usable sample counts and a positive wave", () => {
         assert.ok(Number.isInteger(samples) && samples > 0);
     assert.ok(WAVE_AMPLITUDE > 0);
     assert.ok(WAVE_WAVELENGTH > 0);
-    assert.ok(SUN_TAIL > 0 && SUN_TAIL < SUN_PEAK);
+    // The ridge has to fall further below the horizon than it rises above it, or there is
+    // nothing left of the curve to show through the ground.
+    assert.ok(SUN_BASE > SUN_PEAK);
+    assert.ok(SUN_HORIZON + SUN_BASE < 1, "the ridge settles inside the tile rather than under it");
+    assert.ok(SUN_SPREAD > 0);
     assert.ok(SUN_MARKER_RADIUS > 0);
     // A whole number of lobes per turn, or the shape has a seam where it closes.
     assert.ok(Number.isInteger(SUN_MARKER_LOBES) && SUN_MARKER_LOBES > 2);

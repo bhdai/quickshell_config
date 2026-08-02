@@ -196,7 +196,7 @@ GridLayout {
         backdrop: SunPath {
             anchors.fill: parent
             cornerRadius: Appearance.rounding.small
-            progress: WeatherFormat.dayProgress(Time.date, Weather.sunrise, Weather.sunset)
+            progress: TileGeometry.sunTrack(Time.date, Weather.sunrise, Weather.sunset)
             visible: Weather.hasData
         }
 
@@ -207,41 +207,40 @@ GridLayout {
             spacing: 1
             visible: Weather.hasData
 
-            Row {
-                spacing: 4
+            // Bold and on the surface's own foreground rather than the subtext tone the
+            // captions use: these two sit over the terrain, not over a flat tile.
+            Repeater {
+                model: [
+                    {
+                        symbol: "wb_sunny",
+                        time: WeatherFormat.formatClock(Weather.sunrise)
+                    },
+                    {
+                        symbol: "wb_twilight",
+                        time: WeatherFormat.formatClock(Weather.sunset)
+                    }
+                ]
 
-                MaterialSymbol {
-                    text: "wb_sunny"
-                    iconSize: 12
-                    color: Appearance.colors.colSubtext
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+                delegate: Row {
+                    required property var modelData
+                    spacing: 4
 
-                Text {
-                    text: WeatherFormat.formatClock(Weather.sunrise)
-                    font.family: Appearance.font.family.main
-                    font.pixelSize: Appearance.font.pixelSize.smaller
-                    color: Appearance.colors.colSubtext
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
+                    MaterialSymbol {
+                        text: parent.modelData.symbol
+                        iconSize: 13
+                        fill: 1
+                        color: Appearance.colors.colOnLayer2
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
 
-            Row {
-                spacing: 4
-
-                MaterialSymbol {
-                    text: "wb_twilight"
-                    iconSize: 12
-                    color: Appearance.colors.colSubtext
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-
-                Text {
-                    text: WeatherFormat.formatClock(Weather.sunset)
-                    font.family: Appearance.font.family.main
-                    font.pixelSize: Appearance.font.pixelSize.smaller
-                    color: Appearance.colors.colSubtext
-                    anchors.verticalCenter: parent.verticalCenter
+                    Text {
+                        text: parent.modelData.time
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        font.weight: Font.DemiBold
+                        color: Appearance.colors.colOnLayer2
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
             }
         }

@@ -205,11 +205,13 @@ function formatPrecipitation(mm) {
     return isNumber(mm) ? mm.toFixed(1) : PLACEHOLDER;
 }
 
+// Both fields padded, so a column of times lines up on the colon rather than stepping in
+// and out by a character between morning and afternoon.
 function formatClock(date) {
     if (!date || isNaN(date.getTime()))
         return PLACEHOLDER;
-    const minutes = date.getMinutes();
-    return date.getHours() + ":" + (minutes < 10 ? "0" + minutes : String(minutes));
+    const pad = value => (value < 10 ? "0" + value : String(value));
+    return pad(date.getHours()) + ":" + pad(date.getMinutes());
 }
 
 function apparentCaption(apparent, actual) {
@@ -233,15 +235,3 @@ function precipitationCaption(probability) {
     return Math.round(probability) + "% chance";
 }
 
-/**
- * Where now sits between sunrise and sunset, for the sun tile's arc. Clamped, so the dot
- * rests at one end of the arc through the night rather than running off it.
- */
-function dayProgress(now, sunrise, sunset) {
-    if (!now || !sunrise || !sunset)
-        return 0;
-    const span = sunset.getTime() - sunrise.getTime();
-    if (!isNumber(span) || span <= 0)
-        return 0;
-    return Math.max(0, Math.min(1, (now.getTime() - sunrise.getTime()) / span));
-}

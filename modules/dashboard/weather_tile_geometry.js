@@ -31,15 +31,34 @@ const WAVE_SAMPLES = 40;
 // Tuned against the 160x108 the dashboard's 2x3 grid actually gives a tile, where the header
 // row and the two clock times leave about 35px of sky and 45px of ground. A horizon lower
 // than this puts the sunrise time on the line it is supposed to be standing under.
+//
+// SUN_BASE is deeper than SUN_PEAK on purpose: the ridge has to keep falling well under the
+// horizon and stay inside the tile, so the ground can be a translucent layer with the curve
+// still visibly descending behind it rather than an opaque block the curve stops against.
 const SUN_HORIZON = 0.53;
 const SUN_PEAK = 0.17;
-const SUN_TAIL = 0.025;
-const SUN_SPREAD = 0.22;
+const SUN_BASE = 0.25;
 const SUN_SAMPLES = 40;
 
-// Daylight is inset from both edges, so the tile carries a little night either side of it
-// and the ridge crosses the horizon at sunrise and sunset rather than at the tile's corners.
-const SUN_DAY_SPAN = 0.86;
+// Daylight is inset from both edges, so the tile carries a little night either side of it.
+const SUN_DAY_SPAN = 0.72;
+
+// How far past sunrise and sunset the track runs before it stops. Without it the sun spends
+// every night parked on the skyline at one end, which reads as a graphic jammed against the
+// edge rather than as a sun that has set.
+const SUN_NIGHT_OVERSHOOT = 0.12;
+
+// Not a free parameter. Sunrise and sunset have to be the two points where the ridge crosses
+// the horizon, or the sun rises out of the ground and sets into the sky; this is
+// sunRidge(sunrise) === sunHorizon() solved for the width of the bell.
+const SUN_SPREAD = Math.sqrt(-(SUN_DAY_SPAN / 2) * (SUN_DAY_SPAN / 2) / (2 * Math.log(SUN_BASE / (SUN_PEAK + SUN_BASE))));
+
+// The stroke that separates the sun from whatever it is sitting on, as a radius rather than
+// a width, because only the outer half of it is drawn outside the disc. The margin past it
+// is what keeps the ends of the track reading as a low sun rather than as a graphic pressed
+// against the frame.
+const SUN_MARKER_RING = 1.5;
+const SUN_MARKER_EDGE_MARGIN = 4;
 
 // Material 3's Sunny shape, near enough at this size: a circle rippled by a whole number of
 // lobes. SUN_MARKER_SAMPLES is a multiple of twice the lobe count so the sampling lands on
@@ -81,7 +100,28 @@ function sunHorizon(height) {
 function sunRidge(x, width, height) {
     const offset = x / width - 0.5;
     const bell = Math.exp(-(offset * offset) / (2 * SUN_SPREAD * SUN_SPREAD));
-    return height * (SUN_HORIZON + SUN_TAIL - (SUN_PEAK + SUN_TAIL) * bell);
+    return height * (SUN_HORIZON + SUN_BASE - (SUN_PEAK + SUN_BASE) * bell);
+}
+
+/**
+ * Where `now` sits on the tile's track: 0 at sunrise, 1 at sunset, and on past both by up to
+ * SUN_NIGHT_OVERSHOOT so the night hours put the sun under the horizon instead of on it.
+ * A reading the service does not have yet, or a sunset before its sunrise, answers 0.
+ */
+function sunTrack(now, sunrise, sunset) {
+    if (!now || !sunrise || !sunset)
+        return 0;
+    const span = sunset.getTime() - sunrise.getTime();
+    if (!isFinite(span) || span <= 0)
+        return 0;
+    const raw = (now.getTime() - sunrise.getTime()) / span;
+    return Math.max(-SUN_NIGHT_OVERSHOOT, Math.min(1 + SUN_NIGHT_OVERSHOOT, raw));
+}
+
+// How far the sun's centre is held from the tile's edges: the scalloped disc, its ring, and
+// a margin clear of the frame.
+function sunMarkerInset() {
+    return SUN_MARKER_RADIUS * (1 + SUN_MARKER_SCALLOP) + SUN_MARKER_RING + SUN_MARKER_EDGE_MARGIN;
 }
 
 // The skyline sampled left to right. The caller closes it against the bottom of the tile.
@@ -94,11 +134,16 @@ function sunPath(width, height, samples) {
     return points;
 }
 
-// Where the sun sits on that skyline. `progress` is weather_format.js's dayProgress(),
-// already clamped, so a reading taken at night parks the sun where the ridge crosses the
-// horizon rather than running it off the end.
+/**
+ * Where the sun sits on that skyline, given a sunTrack() position. The sun is painted rather
+ * than laid out, so nothing else would stop the ends of the track drawing it half outside
+ * the tile — the centre is held an inset in from both edges, and the height follows whatever
+ * x survives that.
+ */
 function sunMarker(width, height, progress) {
-    const x = width * ((1 - SUN_DAY_SPAN) / 2 + progress * SUN_DAY_SPAN);
+    const inset = sunMarkerInset();
+    const tracked = width * ((1 - SUN_DAY_SPAN) / 2 + progress * SUN_DAY_SPAN);
+    const x = Math.max(inset, Math.min(width - inset, tracked));
     return { x: x, y: sunRidge(x, width, height) };
 }
 
