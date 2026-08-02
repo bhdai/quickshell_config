@@ -33,10 +33,13 @@ GridLayout {
     WeatherTile {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        symbol: "humidity_percentage"
+        symbol: "water_drop"
         label: "Humidity"
-        figure: WeatherFormat.formatPercent(Weather.humidity)
-        unit: "%"
+        // The percent sign belongs to the number rather than sitting beside it as a unit:
+        // "71" and "%" are one reading, and the tile's small-unit slot would set the sign a
+        // size down and half a line off the baseline.
+        figure: WeatherFormat.formatPercent(Weather.humidity) + "%"
+        unit: ""
         // The dew point chip below occupies the caption's row and interprets the figure in
         // its place.
         caption: ""
@@ -58,10 +61,12 @@ GridLayout {
             spacing: 5
             visible: Weather.hasData
 
+            // Round rather than a pill: a circle reads as a token carrying its own reading,
+            // where a pill sized to its text would read as the caption the other tiles have.
             Rectangle {
-                width: dewPoint.implicitWidth + 10
-                height: dewPoint.implicitHeight + 4
-                radius: height / 2
+                width: Math.max(dewPoint.implicitWidth, dewPoint.implicitHeight) + 6
+                height: width
+                radius: width / 2
                 color: Appearance.colors.colTertiaryContainer
                 anchors.verticalCenter: parent.verticalCenter
 

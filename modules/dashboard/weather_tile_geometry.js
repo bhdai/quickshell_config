@@ -17,7 +17,7 @@
 // job in progress, so animating it would claim motion the reading does not have. The offset
 // keeps a zero crossing rather than a crest against the tile's left edge.
 const WAVE_WAVELENGTH = 44;
-const WAVE_AMPLITUDE = 2.5;
+const WAVE_AMPLITUDE = 3.5;
 const WAVE_PHASE = Math.PI;
 const WAVE_SAMPLES = 40;
 
