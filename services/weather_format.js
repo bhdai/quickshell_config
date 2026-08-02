@@ -221,18 +221,6 @@ function apparentCaption(apparent, actual) {
     return Math.abs(delta) + "° " + (delta > 0 ? "warmer" : "cooler");
 }
 
-function humidityCaption(humidity) {
-    if (!isNumber(humidity))
-        return "";
-    if (humidity < 30)
-        return "dry";
-    if (humidity < 60)
-        return "comfortable";
-    if (humidity < 80)
-        return "humid";
-    return "very humid";
-}
-
 function windCaption(degrees) {
     if (!isNumber(degrees))
         return "";

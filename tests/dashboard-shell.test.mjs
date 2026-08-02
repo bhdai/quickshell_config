@@ -103,7 +103,7 @@ test("the Today control keeps its row while it is inactive", () => {
 test("the request asks for exactly what the card shows, for one day, with no hourly data", () => {
     const [request] = weather.match(/const url = [\s\S]*?;\n/);
 
-    assert.match(request, /current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m/);
+    assert.match(request, /current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m/);
     assert.match(request, /daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset/);
     assert.match(request, /forecast_days=1/);
     assert.match(request, /timezone=auto/);
@@ -120,6 +120,7 @@ test("readings are typed numbers and dates, not unit-bearing strings", () => {
         /property real temperature: NaN/,
         /property real apparentTemperature: NaN/,
         /property real humidity: NaN/,
+        /property real dewPoint: NaN/,
         /property int weatherCode: -1/,
         /property bool isDay: true/,
         /property real windSpeed: NaN/,

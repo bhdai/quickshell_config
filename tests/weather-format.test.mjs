@@ -25,7 +25,6 @@ const weather = loadQmlJs(path.join(repoRoot, "services", "weather_format.js"), 
     "formatPrecipitation",
     "formatClock",
     "apparentCaption",
-    "humidityCaption",
     "windCaption",
     "precipitationCaption",
     "dayProgress"
@@ -50,7 +49,6 @@ const {
     formatPrecipitation,
     formatClock,
     apparentCaption,
-    humidityCaption,
     windCaption,
     precipitationCaption,
     dayProgress
@@ -231,13 +229,7 @@ test("feels-like reports its distance from the actual temperature", () => {
     assert.equal(apparentCaption(NaN, 27), "");
 });
 
-test("humidity, wind and precipitation captions interpret their figures", () => {
-    assert.equal(humidityCaption(20), "dry");
-    assert.equal(humidityCaption(50), "comfortable");
-    assert.equal(humidityCaption(75), "humid");
-    assert.equal(humidityCaption(93), "very humid");
-    assert.equal(humidityCaption(NaN), "");
-
+test("wind and precipitation captions interpret their figures", () => {
     assert.equal(windCaption(81), "from E · 81°");
     assert.equal(windCaption(0), "from N · 0°");
     assert.equal(windCaption(NaN), "");

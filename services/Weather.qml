@@ -33,6 +33,7 @@ Singleton {
     property real temperature: NaN
     property real apparentTemperature: NaN
     property real humidity: NaN
+    property real dewPoint: NaN
     property int weatherCode: -1
     property bool isDay: true
     property real windSpeed: NaN
@@ -62,7 +63,7 @@ Singleton {
         retryTimer.stop();
         root.awaitingResponse = true;
 
-        const url = "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m" + "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset" + "&forecast_days=1" + "&timezone=auto";
+        const url = "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m" + "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset" + "&forecast_days=1" + "&timezone=auto";
 
         // Bounded, because the single-request guard above would otherwise let one wedged
         // connection block every retry and every background tick behind it.
@@ -104,6 +105,7 @@ Singleton {
         root.temperature = current.temperature_2m;
         root.apparentTemperature = current.apparent_temperature;
         root.humidity = current.relative_humidity_2m;
+        root.dewPoint = current.dew_point_2m;
         root.weatherCode = current.weather_code;
         root.isDay = current.is_day === 1;
         root.windSpeed = current.wind_speed_10m;

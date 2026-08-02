@@ -17,9 +17,17 @@ Rectangle {
     property string caption
     // For the two tiles whose shape carries a reading: UV's scale and the sun's arc.
     default property alias extra: extraContainer.data
+    // Painted under the text, corners and all, for the one tile that fills itself rather
+    // than drawing a graphic inside its padding.
+    property alias backdrop: backdropContainer.data
 
     color: Appearance.colors.colLayer1
     radius: Appearance.rounding.small
+
+    Item {
+        id: backdropContainer
+        anchors.fill: parent
+    }
 
     Item {
         anchors.fill: parent
