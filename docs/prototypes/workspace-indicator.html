@@ -52,13 +52,37 @@
   --expressiveFastSpatial:  350ms cubic-bezier(0.42, 1.67, 0.21, 0.90);
 }
 
+/* Deliberately single-theme. This page's job is fidelity to a dark desktop
+   shell rendering the user's own matugen palette; a light variant would be
+   showing them a widget that does not exist. */
+:root { color-scheme: dark; }
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  background: #07090b;
-  color: var(--colOnLayer0);
+  background: #07090b;                /* below the shell's own #101417, so the */
+  color: var(--colOnLayer0);          /* mocked bar reads as a screen, not the page */
   font: 13px/1.5 ui-sans-serif, system-ui, "Inter", "DejaVu Sans", sans-serif;
   padding-bottom: 4rem;
+}
+
+/* A measurement instrument: every number, token name and px value is mono and
+   tabular so columns line up as the sliders move. */
+.val, .stat .v, #answer, code, kbd {
+  font-family: ui-monospace, "JetBrains Mono", "DejaVu Sans Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+:where(button, select, input, a):focus-visible {
+  outline: 2px solid var(--colPrimary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* The widget's transitions are the thing under evaluation, so they stay. Only
+   the ambient urgent pulse is decorative enough to drop. */
+@media (prefers-reduced-motion: reduce) {
+  .urgent { animation: none; }
 }
 
 /* ---------------- mocked screen + bar ---------------- */
@@ -417,23 +441,6 @@ kbd {
     </div>
   </div>
 
-  <div class="card span-all">
-    <h2>The answer</h2>
-    <p class="hint" style="margin-top:0">
-      Settings persist across reloads, so you can leave this open and come back to it.
-      When you have settled on a style, a size and a special-workspace treatment, this
-      is the line to paste back — it is exactly what
-      <a href="https://github.com/bhdai/quickshell_config/issues/120"
-         style="color:var(--colPrimary)">#120</a> resolves to.
-    </p>
-    <pre id="answer" style="background:var(--m3surfaceContainerHigh);border-radius:10px;
-      padding:12px 14px;margin:10px 0 0;overflow-x:auto;font-size:12px;line-height:1.6;
-      white-space:pre-wrap"></pre>
-    <div class="seg" style="margin-top:10px">
-      <button class="btn" id="copyAnswer" type="button">Copy the answer</button>
-      <button class="btn" id="resetAll" type="button">Forget my settings</button>
-    </div>
-  </div>
 
   <div class="card">
     <h2>Motion</h2>
@@ -510,6 +517,24 @@ kbd {
       Baseline is today's widget at the same workspace count:
       <code>21 + 29n</code> px (166 at n=5, 311 at n=10).
     </p>
+  </div>
+
+  <div class="card span-all">
+    <h2>The answer</h2>
+    <p class="hint" style="margin-top:0">
+      Settings persist across reloads, so you can leave this open and come back to it.
+      When you have settled on a style, a size and a special-workspace treatment, this
+      is the line to paste back — it is exactly what
+      <a href="https://github.com/bhdai/quickshell_config/issues/120"
+         style="color:var(--colPrimary)">#120</a> resolves to.
+    </p>
+    <pre id="answer" style="background:var(--m3surfaceContainerHigh);border-radius:10px;
+      padding:12px 14px;margin:10px 0 0;overflow-x:auto;font-size:12px;line-height:1.6;
+      white-space:pre-wrap"></pre>
+    <div class="seg" style="margin-top:10px">
+      <button class="btn" id="copyAnswer" type="button">Copy the answer</button>
+      <button class="btn" id="resetAll" type="button">Forget my settings</button>
+    </div>
   </div>
 
 </div>
