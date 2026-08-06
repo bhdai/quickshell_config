@@ -1,0 +1,139 @@
+2026-08-06 21:38:17.965  INFO: Launching config: "/home/dai/.claude/jobs/e2a0bfe0/tmp/realshell/shell.qml"
+2026-08-06 21:38:17.966  INFO: Shell ID: "5d7d76533ad4ec4efdfbada3007a3bf5" Path ID "5d7d76533ad4ec4efdfbada3007a3bf5"
+2026-08-06 21:38:17.966  INFO: Saving logs to "/run/user/1000/quickshell/by-id/i5e3tbrcjt/log.qslog"
+2026-08-06 21:38:18.133  INFO: QML tooling support enabled
+2026-08-06 21:38:18.400 DEBUG quickshell.hyprland.ipc: Making request: "j/status"
+2026-08-06 21:38:18.468 DEBUG qml: PROBE +68ms load ws=[] mons=[] focusedMon=NULL focusedWs=NULL monActiveWs=NULL sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:18.477  WARN quickshell.service.notifications: Could not register notification server at org.freedesktop.Notifications, presumably because one is already registered.
+2026-08-06 21:38:18.477  WARN quickshell.service.notifications: Registration will be attempted again if the active service is unregistered.
+2026-08-06 21:38:18.478  INFO: Configuration Loaded
+2026-08-06 21:38:18.554 DEBUG quickshell.hyprland.ipc: Toplevel with address 94839074732240 requested before creation, performing early init
+2026-08-06 21:38:18.554 DEBUG quickshell.hyprland.ipc: Toplevel with address 94839074760208 requested before creation, performing early init
+2026-08-06 21:38:18.554 DEBUG quickshell.hyprland.ipc: Toplevel with address 94839074976416 requested before creation, performing early init
+2026-08-06 21:38:18.554 DEBUG quickshell.hyprland.ipc: Toplevel with address 94839075014224 requested before creation, performing early init
+2026-08-06 21:38:18.928 DEBUG qml: [Notifications] File loaded
+2026-08-06 21:38:19.171  INFO quickshell.hyprland.ipc: Hyprland event socket connected.
+2026-08-06 21:38:19.172 DEBUG quickshell.hyprland.ipc: Making request: "j/monitors"
+2026-08-06 21:38:19.172 DEBUG quickshell.hyprland.ipc: Making request: "j/workspaces"
+2026-08-06 21:38:19.172 DEBUG quickshell.hyprland.ipc: Making request: "j/clients"
+2026-08-06 21:38:19.202 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspace>>11" parsed as "createworkspace" "11"
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event createworkspace :: 11
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspacev2>>11,11" parsed as "createworkspacev2" "11,11"
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc: Workspace created with id 11 name "11"
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event createworkspacev2 :: 11,11
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindow>>5641715c38d0,11" parsed as "movewindow" "5641715c38d0,11"
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event movewindow :: 5641715c38d0,11
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindowv2>>5641715c38d0,11,11" parsed as "movewindowv2" "5641715c38d0,11,11"
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event movewindowv2 :: 5641715c38d0,11,11
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspace>>3" parsed as "destroyworkspace" "3"
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event destroyworkspace :: 3
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspacev2>>3,3" parsed as "destroyworkspacev2" "3,3"
+2026-08-06 21:38:19.203  WARN quickshell.hyprland.ipc: Got removal for workspace id 3 name "3" which was not previously tracked.
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event destroyworkspacev2 :: 3,3
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspace>>12" parsed as "createworkspace" "12"
+2026-08-06 21:38:19.203 DEBUG qml: PROBE +803ms event createworkspace :: 12
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspacev2>>12,12" parsed as "createworkspacev2" "12,12"
+2026-08-06 21:38:19.203 DEBUG quickshell.hyprland.ipc: Workspace created with id 12 name "12"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event createworkspacev2 :: 12,12
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindow>>5641715ca610,12" parsed as "movewindow" "5641715ca610,12"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event movewindow :: 5641715ca610,12
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindowv2>>5641715ca610,12,12" parsed as "movewindowv2" "5641715ca610,12,12"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event movewindowv2 :: 5641715ca610,12,12
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "activewindow>>," parsed as "activewindow" ","
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event activewindow :: ,
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "activewindowv2>>" parsed as "activewindowv2" ""
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event activewindowv2 :: 
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspace>>13" parsed as "createworkspace" "13"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event createworkspace :: 13
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspacev2>>13,13" parsed as "createworkspacev2" "13,13"
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc: Workspace created with id 13 name "13"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event createworkspacev2 :: 13,13
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindow>>5641715ff2a0,13" parsed as "movewindow" "5641715ff2a0,13"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event movewindow :: 5641715ff2a0,13
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindowv2>>5641715ff2a0,13,13" parsed as "movewindowv2" "5641715ff2a0,13,13"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event movewindowv2 :: 5641715ff2a0,13,13
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspace>>4" parsed as "destroyworkspace" "4"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event destroyworkspace :: 4
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspacev2>>4,4" parsed as "destroyworkspacev2" "4,4"
+2026-08-06 21:38:19.204  WARN quickshell.hyprland.ipc: Got removal for workspace id 4 name "4" which was not previously tracked.
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event destroyworkspacev2 :: 4,4
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspace>>14" parsed as "createworkspace" "14"
+2026-08-06 21:38:19.204 DEBUG qml: PROBE +804ms event createworkspace :: 14
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc.events: Received event: "createworkspacev2>>14,14" parsed as "createworkspacev2" "14,14"
+2026-08-06 21:38:19.204 DEBUG quickshell.hyprland.ipc: Workspace created with id 14 name "14"
+2026-08-06 21:38:19.205 DEBUG qml: PROBE +805ms event createworkspacev2 :: 14,14
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindow>>564171608650,14" parsed as "movewindow" "564171608650,14"
+2026-08-06 21:38:19.205 DEBUG qml: PROBE +805ms event movewindow :: 564171608650,14
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc.events: Received event: "movewindowv2>>564171608650,14,14" parsed as "movewindowv2" "564171608650,14,14"
+2026-08-06 21:38:19.205 DEBUG qml: PROBE +805ms event movewindowv2 :: 564171608650,14,14
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspace>>2" parsed as "destroyworkspace" "2"
+2026-08-06 21:38:19.205 DEBUG qml: PROBE +805ms event destroyworkspace :: 2
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspacev2>>2,2" parsed as "destroyworkspacev2" "2,2"
+2026-08-06 21:38:19.205  WARN quickshell.hyprland.ipc: Got removal for workspace id 2 name "2" which was not previously tracked.
+2026-08-06 21:38:19.205 DEBUG qml: PROBE +805ms event destroyworkspacev2 :: 2,2
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc: parsing monitors response
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc: Workspace "1" requested before creation, performing early init with id 1
+2026-08-06 21:38:19.205 DEBUG quickshell.hyprland.ipc: Parsing workspaces response
+2026-08-06 21:38:19.206 DEBUG quickshell.hyprland.ipc: Parsing j/clients response
+2026-08-06 21:38:19.267 DEBUG qml: PROBE +866ms change ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:20.193 DEBUG qml: PROBE +1792ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:21.192 DEBUG qml: PROBE +2792ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:22.192 DEBUG qml: PROBE +3792ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:23.193 DEBUG qml: PROBE +4793ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:24.192 DEBUG qml: PROBE +5792ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:25.192 DEBUG qml: PROBE +6792ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:26.193 DEBUG qml: PROBE +7792ms heartbeat ws=[1,2,3,4] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=5
+2026-08-06 21:38:26.390 DEBUG quickshell.hyprland.ipc.events: Received event: "activewindow>>org.quickshell,fakeapp" parsed as "activewindow" "org.quickshell,fakeapp"
+2026-08-06 21:38:26.391 DEBUG qml: PROBE +7991ms event activewindow :: org.quickshell,fakeapp
+2026-08-06 21:38:26.391 DEBUG quickshell.hyprland.ipc.events: Received event: "activewindowv2>>5641715c38d0" parsed as "activewindowv2" "5641715c38d0"
+2026-08-06 21:38:26.391 DEBUG qml: PROBE +7991ms event activewindowv2 :: 5641715c38d0
+2026-08-06 21:38:26.391 DEBUG quickshell.hyprland.ipc.events: Received event: "workspace>>11" parsed as "workspace" "11"
+2026-08-06 21:38:26.391 DEBUG qml: PROBE +7991ms event workspace :: 11
+2026-08-06 21:38:26.391 DEBUG quickshell.hyprland.ipc.events: Received event: "workspacev2>>11,11" parsed as "workspacev2" "11,11"
+2026-08-06 21:38:26.391 DEBUG quickshell.hyprland.ipc: Workspace "11" requested before creation, performing early init with id 11
+2026-08-06 21:38:26.393 DEBUG quickshell.hyprland.ipc: Workspace 11 activated on "WAYLAND-1"
+2026-08-06 21:38:26.393 DEBUG qml: PROBE +7993ms event workspacev2 :: 11,11
+2026-08-06 21:38:26.393 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspace>>1" parsed as "destroyworkspace" "1"
+2026-08-06 21:38:26.393 DEBUG qml: PROBE +7993ms event destroyworkspace :: 1
+2026-08-06 21:38:26.395 DEBUG qml: PROBE +7994ms change ws=[1,2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:26.395 DEBUG quickshell.hyprland.ipc.events: Received event: "destroyworkspacev2>>1,1" parsed as "destroyworkspacev2" "1,1"
+2026-08-06 21:38:26.395 DEBUG quickshell.hyprland.ipc: Workspace removed with id 1 name "1"
+2026-08-06 21:38:26.395 DEBUG qml: PROBE +7995ms event destroyworkspacev2 :: 1,1
+2026-08-06 21:38:26.443 DEBUG qml: PROBE +8043ms change ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:27.193 DEBUG qml: PROBE +8792ms heartbeat ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:28.193 DEBUG qml: PROBE +9793ms heartbeat ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:29.192 DEBUG qml: PROBE +10792ms heartbeat ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:30.192 DEBUG qml: PROBE +11792ms heartbeat ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:31.193 DEBUG qml: PROBE +12793ms heartbeat ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:32.193 DEBUG qml: PROBE +13793ms recover:before ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:32.193 DEBUG quickshell.hyprland.ipc: Making request: "j/clients"
+2026-08-06 21:38:32.194 DEBUG qml: PROBE +13793ms heartbeat ws=[2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:32.194 DEBUG quickshell.hyprland.ipc: Parsing j/clients response
+2026-08-06 21:38:32.196 DEBUG quickshell.hyprland.ipc: Workspace "12" requested before creation, performing early init with id -1
+2026-08-06 21:38:32.196 DEBUG quickshell.hyprland.ipc: Workspace "13" requested before creation, performing early init with id -1
+2026-08-06 21:38:32.197 DEBUG quickshell.hyprland.ipc: Workspace "14" requested before creation, performing early init with id -1
+2026-08-06 21:38:32.247 DEBUG qml: PROBE +13847ms change ws=[-1,-1,-1,2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:32.693 DEBUG qml: PROBE +14292ms recover:after-toplevels ws=[-1,-1,-1,2,3,4,11] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=11
+2026-08-06 21:38:32.693 DEBUG quickshell.hyprland.ipc: Making request: "j/workspaces"
+2026-08-06 21:38:32.693 DEBUG quickshell.hyprland.ipc: Making request: "j/monitors"
+2026-08-06 21:38:32.693 DEBUG quickshell.hyprland.ipc: Parsing workspaces response
+2026-08-06 21:38:32.700 DEBUG quickshell.hyprland.ipc: parsing monitors response
+2026-08-06 21:38:32.750 DEBUG qml: PROBE +14350ms change ws=[2,3,4,11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:32.928 DEBUG quickshell.hyprland.ipc.events: Received event: "configreloaded>>" parsed as "configreloaded" ""
+2026-08-06 21:38:32.928 DEBUG quickshell.hyprland.ipc: Making request: "j/monitors"
+2026-08-06 21:38:32.928 DEBUG quickshell.hyprland.ipc: Making request: "j/workspaces"
+2026-08-06 21:38:32.928 DEBUG quickshell.hyprland.ipc: Making request: "j/clients"
+2026-08-06 21:38:32.929 DEBUG qml: PROBE +14529ms event configreloaded :: 
+2026-08-06 21:38:32.932 DEBUG quickshell.hyprland.ipc: parsing monitors response
+2026-08-06 21:38:32.938 DEBUG quickshell.hyprland.ipc: Parsing workspaces response
+2026-08-06 21:38:32.940 DEBUG quickshell.hyprland.ipc: Parsing j/clients response
+2026-08-06 21:38:32.958 DEBUG qml: PROBE +14558ms change ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:33.187 DEBUG qml: PROBE +14787ms recover:after-workspaces ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:33.187 DEBUG qml: PROBE +14787ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:34.186 DEBUG qml: PROBE +15786ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:35.186 DEBUG qml: PROBE +16786ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:36.186 DEBUG qml: PROBE +17786ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:37.187 DEBUG qml: PROBE +18787ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:38.186 DEBUG qml: PROBE +19786ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:39.186 DEBUG qml: PROBE +20786ms final ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14
+2026-08-06 21:38:39.186 DEBUG qml: PROBE +20786ms heartbeat ws=[11,12,13,14] mons=[WAYLAND-1:11] focusedMon=WAYLAND-1 focusedWs=11 monActiveWs=11 sock=ok usingLua=false widgetDots=14

@@ -1,0 +1,12 @@
+nested sig 5c9377c15f85c50648f35ca5a213754f95b93ca0_1786027097_1596113058 (pid 158282)
+trigger batch: dispatch movetoworkspacesilent 11,address:0x5641715c38d0;dispatch movetoworkspacesilent 12,address:0x5641715ca610;dispatch movetoworkspacesilent 13,address:0x5641715ff2a0;dispatch movetoworkspacesilent 14,address:0x564171608650
+--- state at 21:38:26.346
+model:  1 2 3 4 
+truth:  1 11 12 13 14 
+--- switching to missing workspace 11
+ok
+model after switch: 2 3 4 11 
+--- hyprctl reload 21:38:32.908
+ok
+model after reload: 11 12 13 14 
+truth after reload: 11 12 13 14 

@@ -1,0 +1,7 @@
+nested sig 5c9377c15f85c50648f35ca5a213754f95b93ca0_1786026042_50083919 (pid 109621)
+--- dispatch round trip
+ok
+ok
+--- truth 21:20:51.074
+workspaces: 1,2,3,4,5,6,7,8,9,10,
+activeWorkspace: 1

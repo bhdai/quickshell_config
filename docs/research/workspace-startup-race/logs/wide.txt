@@ -1,0 +1,40 @@
+wide-001 window=87ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-002 window=118ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-003 window=63ms broken=no truth=[]
+    postSnapshot=ws=[]
+    beforeRecover=ws=[] afterToplevels=ws=[] afterWorkspaces=ws=[]
+    final=ws=[] mons=[] focusedMon=NULL focusedWs=NULL monActiveWs=NULL sock=ok usingLua=false widgetDots=5
+wide-004 window=35ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-005 window=49ms broken=no truth=[]
+    postSnapshot=ws=[]
+    beforeRecover=ws=[] afterToplevels=ws=[] afterWorkspaces=ws=[]
+    final=ws=[] mons=[] focusedMon=NULL focusedWs=NULL monActiveWs=NULL sock=ok usingLua=false widgetDots=5
+wide-006 window=119ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-007 window=87ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-008 window=73ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-009 window=35ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
+wide-010 window=98ms broken=no truth=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    postSnapshot=ws=[-1,1,5,9,13,14]
+    beforeRecover=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterToplevels=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] afterWorkspaces=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    final=ws=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] mons=[WAYLAND-1:1] focusedMon=WAYLAND-1 focusedWs=1 monActiveWs=1 sock=ok usingLua=false widgetDots=16
