@@ -117,7 +117,9 @@ Scope {
                             font.pixelSize: 20
                         }
                     }
-                    WorkspaceIndicator {}
+                    WorkspaceIndicator {
+                        screen: modelData
+                    }
                     ActiveWindow {}
                 }
 
