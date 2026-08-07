@@ -66,11 +66,10 @@ Item {
         }
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: Appearance.colors.colLayer1
-        radius: Appearance.rounding.full
-    }
+    // No background of its own. A colLayer1 stadium at this height read as a smaller
+    // container beside the bar's others rather than as one of them, so the row sits
+    // directly on the bar. The vertical padding stays: it is what keeps the dots off the
+    // bar's edges and what the hover state layer needs room for.
 
     Item {
         id: row
@@ -102,13 +101,14 @@ Item {
 
                 // An M3 state layer behind the dot rather than a recolour of it: hover and
                 // active used to be the same colour, so you could not tell what the pointer
-                // was over from what the compositor was showing.
+                // was over from what the compositor was showing. Keyed to layer 0 because
+                // that is the surface it now sits on — the row has no container of its own.
                 Rectangle {
                     anchors.centerIn: parent
                     width: root.activeSize
                     height: root.activeSize
                     radius: Appearance.rounding.full
-                    color: Appearance.colors.colLayer1Hover
+                    color: Appearance.colors.colLayer0Hover
                     opacity: slotMouseArea.containsMouse ? 1 : 0
 
                     Behavior on opacity {
