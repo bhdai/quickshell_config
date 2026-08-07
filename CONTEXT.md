@@ -21,6 +21,13 @@ slot is position.
 **Occupied** — a slot whose workspace exists and holds at least one window. Not the
 same as *existing*: Hyprland keeps an empty workspace alive while it is focused.
 
+**Stride** — the distance from one slot's left edge to the next one's, in pixels. It is a
+constant, so every position in the row is arithmetic from it rather than read back off a
+laid-out item.
+
+**Urgent** — a workspace flagged by the compositor as demanding attention. A property of
+the workspace, not of the windows in it.
+
 **Special** — Hyprland's overlay workspace, addressed by name rather than number.
 It is never a slot: it has no ordinal position, and its numeric id is allocated
 dynamically and is not stable between sessions. At most one special is visible per

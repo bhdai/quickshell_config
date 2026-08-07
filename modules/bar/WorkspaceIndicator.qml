@@ -1,156 +1,175 @@
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Widgets
 import QtQuick
-import QtQuick.Layouts
 import qs.modules.common
+import "WorkspaceModel.js" as WorkspaceModel
 
 Item {
-    id: workspaceIndicatorRoot
+    id: root
 
-    readonly property int defaultWorkspaceCount: 5
-    readonly property int horizontalPadding: 8
-    readonly property int pillSpacing: 5
+    // One bar per output, so the highlight is a question about this output. Hyprland's
+    // focused workspace and focused monitor are both global and would light the same dot on
+    // every display.
+    required property ShellScreen screen
 
-    readonly property int activeSize: 20
-    readonly property int hasWindowsSize: 12
-    readonly property int emptySize: 8
-    readonly property real itemContainerWidth: activeSize * 1.2
+    // The special visible on this monitor. Nothing sets it yet; the `activespecial` event
+    // that does arrives with bhdai/quickshell_config#130.
+    property string specialName: ""
 
-    readonly property real activeWidthMultiplier: 1.2
-    readonly property real activeIndicatorWidth: itemContainerWidth * activeWidthMultiplier
+    readonly property int activeSize: 16
+    readonly property int verticalPadding: 5
+    readonly property int dotWidth: 18
+    readonly property int slotSpacing: 3
+    readonly property int stride: dotWidth + slotSpacing
+    // Measured from the widget's outer edge, so contentWidth covers the whole item and the
+    // bounds it reports cannot drift from the ones it paints.
+    readonly property int padding: 10
+    readonly property int pillWidth: Math.round(dotWidth * 1.2)
+    readonly property int occupiedDotSize: Math.round(activeSize * 0.6)
+    readonly property int emptyDotSize: Math.round(activeSize * 0.4)
 
-    readonly property int targetIndex: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id - 1 : 0
+    // The marshalling into plain data has to happen inside this binding. Hoisted into a
+    // JS variable first, QML stops tracking the live Hyprland objects it reads and the row
+    // freezes at whatever it held when the binding last ran.
+    readonly property var workspaceRow: WorkspaceModel.workspaceModel({
+        workspaces: Hyprland.workspaces.values.map(workspace => ({
+                    id: workspace.id,
+                    name: workspace.name,
+                    windowCount: workspace.toplevels?.values?.length ?? 0,
+                    urgent: workspace.urgent
+                })),
+        activeId: Hyprland.monitorFor(root.screen)?.activeWorkspace?.id ?? 0,
+        specialName: root.specialName
+    })
 
-    readonly property string mainColor: Appearance.colors.colPrimary
+    readonly property var rowGeometry: WorkspaceModel.pillGeometry({
+        count: workspaceRow.slots.length,
+        activeIndex: workspaceRow.activeIndex
+    }, {
+        dotWidth: dotWidth,
+        spacing: slotSpacing,
+        padding: padding,
+        pillWidth: pillWidth
+    })
 
-    readonly property real targetX: {
-        if (dotsRepeater.count === 0 || targetIndex < 0 || targetIndex >= dotsRepeater.count) {
-            return 0 - (activeIndicatorWidth / 2);
+    implicitWidth: rowGeometry.contentWidth
+    implicitHeight: activeSize + 2 * verticalPadding
+
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: Appearance.animation.elementMove.duration
+            // Qt reads `bezierCurve` only when the type says BezierSpline. Appearance
+            // already spells that enum on every token that carries a curve, so this names
+            // one there rather than reaching into the Easing namespace for itself.
+            easing.type: Appearance.animation.elementMoveSlow.type
+            easing.bezierCurve: Appearance.animation.expressiveFastSpatial
         }
-
-        var targetItem = dotsRepeater.itemAt(targetIndex);
-        if (targetItem) {
-            var centerPointInRoot = targetItem.mapToItem(workspaceIndicatorRoot, targetItem.width / 2, 0);
-            return centerPointInRoot.x - (activeIndicatorWidth / 2);
-        }
-
-        return 0 - (activeIndicatorWidth / 2);
     }
 
-    property bool isInitialized: false
-
-    Component.onCompleted: {
-        Qt.callLater(() => {
-            isInitialized = true;
-        });
-    }
-
-    readonly property int maxWorkspaceId: {
-        if (Hyprland.workspaces?.values?.length > 0) {
-            let ids = Hyprland.workspaces.values.map(ws => ws.id);
-            // ensure have enough items for the target index
-            var count = Math.max(defaultWorkspaceCount, Math.max(...ids));
-            // if focused workspace is outside current max, expand to fill it
-            if (Hyprland.focusedWorkspace) {
-                count = Math.max(count, Hyprland.focusedWorkspace.id);
-            }
-            return count;
-        }
-        return Math.max(defaultWorkspaceCount, Hyprland.focusedWorkspace?.id || 0);
-    }
-
-    // the component's implicit size is calculated based on its contents
-    implicitHeight: activeSize + 10 // WrapperRectangle's margin * 2
-    implicitWidth: {
-        const repeaterWidth = (itemContainerWidth * maxWorkspaceId) + (pillSpacing * (maxWorkspaceId - 1));
-        return repeaterWidth + (horizontalPadding * 2) + 10; // WrapperRectangle's margin * 2
-    }
-
-    WrapperRectangle {
-        id: background
+    Rectangle {
         anchors.fill: parent
         color: Appearance.colors.colLayer1
-        radius: 20
-        margin: 5
+        radius: Appearance.rounding.full
     }
 
-    RowLayout {
-        id: dotsLayout
-        anchors.centerIn: parent
-        spacing: pillSpacing
+    Item {
+        id: row
 
-        Item {
-            Layout.preferredWidth: horizontalPadding
-        }
+        anchors.verticalCenter: parent.verticalCenter
+        width: root.rowGeometry.contentWidth
+        height: root.activeSize
 
         Repeater {
-            id: dotsRepeater
-            model: maxWorkspaceId
+            model: root.workspaceRow.slots
 
             delegate: Item {
+                id: slot
 
-                Layout.preferredWidth: itemContainerWidth
-                Layout.preferredHeight: activeSize
+                required property int index
+                required property var modelData
 
-                readonly property int workspaceId: index + 1
-                readonly property var actualWorkspace: Hyprland.workspaces?.values?.find(w => w.id === workspaceId) || null
+                x: root.padding + index * root.stride
+                width: root.dotWidth
+                height: root.activeSize
+
+                // A slot that appears because the row grew arrives rather than pops.
+                opacity: 0
+                Component.onCompleted: opacity = 1
+
+                Behavior on opacity {
+                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                }
+
+                // An M3 state layer behind the dot rather than a recolour of it: hover and
+                // active used to be the same colour, so you could not tell what the pointer
+                // was over from what the compositor was showing.
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: root.activeSize
+                    height: root.activeSize
+                    radius: Appearance.rounding.full
+                    color: Appearance.colors.colLayer1Hover
+                    opacity: slotMouseArea.containsMouse ? 1 : 0
+
+                    Behavior on opacity {
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    }
+                }
 
                 Rectangle {
                     anchors.centerIn: parent
-
-                    height: actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? hasWindowsSize : emptySize
+                    height: slot.modelData.occupied ? root.occupiedDotSize : root.emptyDotSize
                     width: height
-                    radius: height / 2
-
+                    radius: Appearance.rounding.full
                     color: {
-                        if (workspaceMouseArea.containsMouse)
-                            return mainColor;
-                        return actualWorkspace && actualWorkspace.toplevels?.values?.length > 0 ? Appearance.colors.colOnLayer0 : Appearance.colors.colEmptyWorkspace;
+                        if (slot.modelData.urgent)
+                            return Appearance.m3colors.m3error;
+                        return slot.modelData.occupied ? Appearance.colors.colOnLayer0 : Appearance.colors.colEmptyWorkspace;
                     }
 
                     Behavior on height {
-                        NumberAnimation {
-                            duration: 200
-                        }
+                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    }
+
+                    Behavior on color {
+                        animation: Appearance.animation.elementMove.colorAnimation.createObject(this)
                     }
                 }
 
                 MouseArea {
-                    id: workspaceMouseArea
+                    id: slotMouseArea
+
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: Hyprland.dispatch(`hl.dsp.focus({ workspace = ${workspaceId} })`)
+                    onClicked: Hyprland.dispatch(WorkspaceModel.focusCommand(slot.modelData.id))
                 }
             }
         }
 
-        Item {
-            Layout.preferredWidth: horizontalPadding
-        }
-    }
+        // Declared after the slots so it covers the active dot, which is the mark — #120
+        // chose no knocked-out shape on the pill.
+        Rectangle {
+            x: root.rowGeometry.pillX
+            width: root.pillWidth
+            height: root.activeSize
+            radius: Appearance.rounding.full
+            // -1 is the model's single "nowhere to point": no workspaces at all, an active
+            // workspace missing from the list, or an active id past the ceiling.
+            visible: root.workspaceRow.activeIndex >= 0
+            color: {
+                const index = root.workspaceRow.activeIndex;
+                if (index >= 0 && root.workspaceRow.slots[index].urgent)
+                    return Appearance.m3colors.m3error;
+                return Appearance.colors.colPrimary;
+            }
 
-    // move the animation outside the behavior so that it can be referenced
-    NumberAnimation {
-        id: pillMoveAnimation
-        duration: 150
-        easing.type: Easing.InOutCubic
-    }
+            Behavior on x {
+                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+            }
 
-    Rectangle {
-        z: 1 // make sure it's drawn on top of the dots
-        anchors.verticalCenter: parent.verticalCenter
-        height: activeSize
-        width: activeIndicatorWidth
-        radius: height / 2
-        color: mainColor
-        enabled: false
-
-        x: targetX
-
-        // condition behavior
-        Behavior on x {
-            animation: workspaceIndicatorRoot.isInitialized ? pillMoveAnimation : null
+            Behavior on color {
+                animation: Appearance.animation.elementMove.colorAnimation.createObject(this)
+            }
         }
     }
 }
