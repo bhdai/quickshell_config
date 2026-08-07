@@ -157,8 +157,8 @@ GridLayout {
         unit: ""
         caption: WeatherFormat.describeUv(Weather.uvIndex)
 
-        // The eleven-point WHO scale as five dots: the lit run says which band today sits
-        // in, which is the fact a bare "7" leaves you to look up.
+        // The eleven-point WHO scale as five dots: the lit run says which band the reading
+        // sits in, which is the fact a bare "7" leaves you to look up.
         Row {
             anchors.right: parent.right
             anchors.bottom: parent.bottom

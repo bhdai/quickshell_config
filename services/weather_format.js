@@ -150,7 +150,7 @@ function describeUv(uv) {
 
 /**
  * The eleven-point WHO scale compressed to the tile's five dots: one dot per band, so the
- * lit run says which band today sits in rather than being a bare eleventh of the number.
+ * lit run says which band the reading sits in rather than being a bare eleventh of it.
  */
 function uvSteps(uv) {
     if (!isNumber(uv) || uv < 1)

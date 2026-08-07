@@ -63,7 +63,7 @@ Singleton {
         retryTimer.stop();
         root.awaitingResponse = true;
 
-        const url = "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m" + "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset" + "&forecast_days=1" + "&timezone=auto";
+        const url = "https://api.open-meteo.com/v1/forecast" + "?latitude=" + root.latitude + "&longitude=" + root.longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,uv_index" + "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset" + "&forecast_days=1" + "&timezone=auto";
 
         // Bounded, because the single-request guard above would otherwise let one wedged
         // connection block every retry and every background tick behind it.
@@ -110,13 +110,15 @@ Singleton {
         root.isDay = current.is_day === 1;
         root.windSpeed = current.wind_speed_10m;
         root.windDirection = current.wind_direction_10m;
+        // Current, not daily uv_index_max: the max is the solar-noon peak, so after dark the
+        // tile would still read the middle of the afternoon while every tile beside it is now.
+        root.uvIndex = current.uv_index;
 
         // forecast_days=1, so every daily array holds exactly today.
         root.high = daily.temperature_2m_max[0];
         root.low = daily.temperature_2m_min[0];
         root.precipitationSum = daily.precipitation_sum[0];
         root.precipitationProbability = daily.precipitation_probability_max[0];
-        root.uvIndex = daily.uv_index_max[0];
         // Open-Meteo returns these in the location's own timezone with no offset, which
         // JavaScript reads as local time — the same reading the rest of the shell uses.
         root.sunrise = new Date(daily.sunrise[0]);

@@ -103,8 +103,10 @@ test("the Today control keeps its row while it is inactive", () => {
 test("the request asks for exactly what the card shows, for one day, with no hourly data", () => {
     const [request] = weather.match(/const url = [\s\S]*?;\n/);
 
-    assert.match(request, /current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m/);
-    assert.match(request, /daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset/);
+    // uv_index rides in `current`, not as the daily uv_index_max: the max is the solar-noon
+    // peak, which left the tile reading the afternoon's number long after dark.
+    assert.match(request, /current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,uv_index/);
+    assert.match(request, /daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset/);
     assert.match(request, /forecast_days=1/);
     assert.match(request, /timezone=auto/);
     assert.doesNotMatch(request, /hourly/);
