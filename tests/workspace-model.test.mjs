@@ -10,10 +10,11 @@ const model = loadQmlJs(path.join(repoRoot, "modules", "bar", "WorkspaceModel.js
     "MAX_SLOTS",
     "workspaceModel",
     "pillGeometry",
-    "focusCommand"
+    "focusCommand",
+    "parseActiveSpecial"
 ]);
 
-const { MIN_SLOTS, MAX_SLOTS, workspaceModel, pillGeometry, focusCommand } = model;
+const { MIN_SLOTS, MAX_SLOTS, workspaceModel, pillGeometry, focusCommand, parseActiveSpecial } = model;
 
 // #120's chosen tokens, as WorkspaceIndicator.qml passes them in.
 const tokens = { dotWidth: 18, spacing: 3, padding: 10, pillWidth: 22 };
@@ -175,4 +176,36 @@ test("nowhere to point parks the pill at zero rather than throwing", () => {
 test("focusCommand emits the Lua dispatch form", () => {
     assert.equal(focusCommand(3), "hl.dsp.focus({ workspace = 3 })");
     assert.equal(focusCommand(10), "hl.dsp.focus({ workspace = 10 })");
+});
+
+test("a special being shown carries its name and its monitor", () => {
+    assert.deepEqual(parseActiveSpecial("special:quake,eDP-1"), { name: "special:quake", monitor: "eDP-1" });
+});
+
+test("a special being hidden carries an empty name and still names its monitor", () => {
+    assert.deepEqual(parseActiveSpecial(",eDP-1"), { name: "", monitor: "eDP-1" });
+});
+
+// SUPER+s raises the unnamed special, which Hyprland reports as the bare name `special`.
+// It is the only special this machine ever shows, so the colonless form is the common case.
+test("a special name with no colon parses as itself", () => {
+    assert.deepEqual(parseActiveSpecial("special,eDP-1"), { name: "special", monitor: "eDP-1" });
+});
+
+// Splitting on the first comma would cut `DP-3` down to `DP` on a name like `a,b`; every
+// real monitor name here carries a hyphen, and none carries a comma.
+test("a hyphenated monitor name survives intact", () => {
+    assert.deepEqual(parseActiveSpecial("special,DP-3"), { name: "special", monitor: "DP-3" });
+    assert.deepEqual(parseActiveSpecial(",HDMI-A-1"), { name: "", monitor: "HDMI-A-1" });
+});
+
+test("the monitor is the last field, so a comma in the name does not steal it", () => {
+    assert.deepEqual(parseActiveSpecial("special:a,b,eDP-1"), { name: "special:a,b", monitor: "eDP-1" });
+});
+
+// A payload the event stream should never produce must not become a monitor match: an
+// empty monitor would compare equal to a screen whose name failed to resolve.
+test("a payload with no monitor field yields no monitor", () => {
+    assert.deepEqual(parseActiveSpecial("special"), { name: "special", monitor: "" });
+    assert.deepEqual(parseActiveSpecial(""), { name: "", monitor: "" });
 });

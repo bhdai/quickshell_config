@@ -86,3 +86,26 @@ function pillGeometry(row, tokens) {
 function focusCommand(id) {
     return `hl.dsp.focus({ workspace = ${id} })`;
 }
+
+/**
+ * The payload of Hyprland's `activespecial` event, as `{ name, monitor }`.
+ *
+ * The event fires on both edges and always names the monitor: `"special:quake,eDP-1"` when
+ * one is raised, `",eDP-1"` when the raised one is dismissed. That is what makes special
+ * visibility per-monitor and event-sourced rather than something to poll for, and an empty
+ * `name` is the *only* thing that clears it — a special sits in `Hyprland.workspaces`
+ * whenever it holds windows, and lingers there for a moment after being hidden.
+ *
+ * The monitor is the last comma-separated field, not the second: a workspace name may
+ * contain a comma and a monitor name may not. An absent monitor field yields `""`, which
+ * must not be treated as a match for a screen whose own name failed to resolve.
+ */
+function parseActiveSpecial(data) {
+    const text = data ?? "";
+    const split = text.lastIndexOf(",");
+
+    if (split === -1)
+        return { name: text, monitor: "" };
+
+    return { name: text.slice(0, split), monitor: text.slice(split + 1) };
+}
