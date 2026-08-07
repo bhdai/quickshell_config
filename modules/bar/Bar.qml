@@ -37,6 +37,40 @@ Scope {
         }
     }
 
+    // Stopgap for a defect in Quickshell's Hyprland singleton rather than in this config:
+    // the startup snapshot's removal pass deletes workspaces created by events that arrive
+    // while its reply is in flight, and switching workspace afterwards heals only the one
+    // dot you land on. Mechanism and measurements: bhdai/quickshell_config#119. Why the
+    // repair is unconditional, timed and lives here — rather than a sleep before launch, a
+    // `hyprctl reload` kick, or a patched Quickshell: bhdai/quickshell_config#123.
+    //
+    // The two stages must not share a tick. refreshToplevels() is an async request, so the
+    // `id = -1` ghosts it revives do not exist until its reply is parsed; refreshWorkspaces()
+    // is what backfills their real ids through the name fallback, and it can only write over
+    // entries that already exist. Issued from one handler the repair would hinge on the two
+    // replies parsing in issue order, which the singleton promises nowhere. 500 ms is a wide
+    // margin: request to parse measured 1-2 ms warm and 35-40 ms for the startup snapshot
+    // itself across runs of the reproducer named below.
+    //
+    // Delete this block once `docs/research/workspace-startup-race/boot-trigger2.sh` (branch
+    // `research/workspace-startup-race`, commit 9a1ec76) stops breaking a shell that does not
+    // carry it. It still breaks one on Quickshell v0.3.0, and the defect is intact on upstream
+    // master as of 2026-08-07.
+    Timer {
+        interval: 2000
+        running: true
+        onTriggered: {
+            Hyprland.refreshToplevels();
+            workspaceIdBackfill.start();
+        }
+    }
+
+    Timer {
+        id: workspaceIdBackfill
+        interval: 500
+        onTriggered: Hyprland.refreshWorkspaces()
+    }
+
     Variants {
         model: Quickshell.screens
 
