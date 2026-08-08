@@ -15,6 +15,9 @@ import qs.modules.common.widgets
  * The three variants use the real Dashboard and Wallpaper canvas sizes after the settled
  * 64px tab-bar decision. Performance is deliberately a third, different-sized canvas so the
  * transition cannot accidentally depend on either existing destination's geometry.
+ *
+ * Accepted: variant A. The track is controlled by tab selection only; it exposes neither
+ * drag-to-swipe nor wheel-over-tabs, and the old pane fade is removed.
  */
 ShellRoot {
     id: shell
@@ -45,7 +48,7 @@ ShellRoot {
     readonly property var variants: [
         {
             name: "A — pane track",
-            summary: "One horizontal track; outgoing and incoming panes coexist during one 200ms move."
+            summary: "Accepted — one tab-controlled track; no fade, direct dragging, or wheel cycling."
         },
         {
             name: "B — incoming only",
@@ -556,7 +559,7 @@ ShellRoot {
             anchors.top: parent.top
             anchors.topMargin: 526
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Permanent geometry track; only the current pane is live at rest, and both panes live while the viewport crosses between them."
+            text: "ACCEPTED — permanent geometry track, selected by tabs only; one live pane at rest and both live while the viewport crosses between them."
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.smaller
             color: Appearance.colors.colOnLayer1
