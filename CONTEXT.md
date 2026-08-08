@@ -3,6 +3,18 @@
 Glossary for this shell. Terms only — no implementation detail, no decisions.
 Decisions live in their issue; structure lives in the code.
 
+## Dashboard
+
+**Dashboard** — The shell surface opened from the bar clock that contains selectable
+destinations.
+
+**Destination** — A selectable view within the Dashboard, with a stable identity distinct
+from its presentation label.
+
+**Dashboard destination** — The date-and-weather overview labelled “Dashboard”. Use the full
+term when it could be confused with the Dashboard surface.
+_Avoid_: Calendar destination
+
 ## Workspaces
 
 **Workspace** — Hyprland's object, as Quickshell exposes it via
