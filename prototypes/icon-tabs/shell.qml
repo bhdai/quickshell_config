@@ -25,8 +25,8 @@ ShellRoot {
 
     readonly property var iconSetA: [
         {
-            label: "Calendar",
-            icon: "calendar_month"
+            label: "Dashboard",
+            icon: "dashboard"
         },
         {
             label: "Wallpaper",
@@ -58,7 +58,7 @@ ShellRoot {
     // The second line's size is its own decision, not a detail: `small` (15) is what the
     // label-only tab uses today, `smaller` (12) is what stops a two-line tab dominating the
     // chrome. Toggling it re-measures everything.
-    property real labelSize: Appearance.font.pixelSize.smaller
+    property real labelSize: Appearance.font.pixelSize.small
 
     FloatingWindow {
         id: window
@@ -353,9 +353,10 @@ ShellRoot {
         property real contentHeight: 0
         readonly property real indicatorWidth: indicator.width
 
-        // The lane the icon and label need, plus the breathing room caelestia gives them
-        // above and below (`tabIndicatorSpacing`, 5), plus the 3px indicator lane.
-        readonly property real spacing: 5
+        // The lane the icon and label need, plus breathing room above and below, plus the 3px
+        // indicator lane. 6 rather than caelestia's 5 is what rounds the 49px of icon-and-label
+        // this font gives to M3's 64.
+        readonly property real spacing: 6
         height: contentHeight + 2 * spacing + 3
 
         Row {
