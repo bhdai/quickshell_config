@@ -19,8 +19,13 @@ Item {
     // content does not blank mid-animation; the scan dropping the access point nulls it.
     property WifiAccessPoint detailNetwork: null
     property bool detailOpen: false
+    // Everything the control center has left under its card.
+    property real maxPanelHeight: 720
 
-    implicitHeight: 720
+    // Fixed, and deliberately not sized to the list: a scan is live, so a panel that measured
+    // its own content would change height whenever an access point came or went, and opening
+    // one network's subpage would resize the panel around it. The list scrolls instead.
+    implicitHeight: root.maxPanelHeight
     // The subpage slides in from beyond the right edge.
     clip: true
 

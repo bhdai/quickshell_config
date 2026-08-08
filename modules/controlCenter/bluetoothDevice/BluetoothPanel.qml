@@ -16,8 +16,13 @@ Item {
     // content does not blank mid-animation; BlueZ dropping the device nulls it and closes.
     property BluetoothDevice detailDevice: null
     property bool detailOpen: false
+    // Everything the control center has left under its card.
+    property real maxPanelHeight: 600
 
-    implicitHeight: 600
+    // Fixed, and deliberately not sized to the list: discovery is live, so a panel that measured
+    // its own content would change height whenever BlueZ found or dropped a device, and opening
+    // one device's subpage would resize the panel around it. The list scrolls instead.
+    implicitHeight: root.maxPanelHeight
     // The subpage slides in from beyond the right edge.
     clip: true
 

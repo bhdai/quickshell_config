@@ -8,14 +8,18 @@ Scope {
 
     property bool isOpen: false
     property int desiredPanelWidth: 430
-    // The window is the ceiling every panel below it shares — the toggles and sliders take a
-    // fixed slice off the top, and a detail panel gets what is left, which is this minus 306
-    // (the card, the window margins, and the spacing between the two). The Wi-Fi list is what
-    // sets the floor: five networks and the See-all row want about 600, so trimming much below
-    // 900 starts the list scrolling. Sized once and never resized per panel — a layer surface
-    // is resized asynchronously, so a panel whose height comes off the window's gets laid out
-    // against the old height and then again, a frame or more later, against the new one, and
-    // that second pass is a visible snap whenever a panel was already on screen to watch it.
+    // A ceiling, not a size. The content below is as tall as whichever panel is showing, and the
+    // surplus is empty: the window's input mask is cut from the card and the panel, so the rest
+    // of this height is click-through and invisible.
+    //
+    // The window itself must not be resized to follow the content. A layer surface is resized
+    // asynchronously, so a panel whose height comes off the window's gets laid out against the
+    // old height and then again, a frame or more later, against the new one, and that second
+    // pass is a visible snap whenever a panel was already on screen to watch it. Holding the
+    // surface still and moving only the items inside it is what lets the height animate.
+    //
+    // The floor is the tallest thing that must not scroll: the card, plus the Wi-Fi list at five
+    // networks and the See-all row. Trimming much below 900 starts that list scrolling.
     property int desiredPanelHeight: 900
 
     Loader {
