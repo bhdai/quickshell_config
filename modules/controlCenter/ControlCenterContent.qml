@@ -22,10 +22,31 @@ ColumnLayout {
     property int margins: 15
     property int notificationCount: Notifications.list.length
 
-    readonly property real maxNotificationHeight: availableHeight - controlPannel.height - spacing // - margins * 2
+    // Everything the card leaves. A panel that wants more than this scrolls inside it — the
+    // window is a fixed layer surface and cannot grow to meet a taller panel.
+    //
+    // The card's implicit height, not its laid-out one: the panel below is sized from this and
+    // the layout is sized from the panel, so reading back a height the layout had just assigned
+    // would let one relayout feed the next.
+    readonly property real maxPanelHeight: availableHeight - controlPannel.implicitHeight - spacing
 
     property alias topWindow: controlPannel
     property alias bottomWindow: contentLoader
+
+    // The whole content is rebuilt every time the control center opens, and the container below
+    // reads its height off a Loader that has no item yet on the first pass — so the first height
+    // it settles on arrives as a jump from zero. That jump is the panel appearing, not the panel
+    // moving, and animating it unrolls the notification list from nothing on every open.
+    //
+    // A timer rather than Qt.callLater: callLater still runs inside the turn that lays the
+    // content out, so the flag was already set when that first height landed.
+    property bool placed: false
+
+    Timer {
+        interval: 1
+        running: true
+        onTriggered: root.placed = true
+    }
 
     // Which detail panel the bottom container is showing: "wifi", "bluetooth", or "" for the
     // notification list. One property rather than a flag per panel — with two flags, swapping
@@ -114,7 +135,27 @@ ColumnLayout {
     Loader {
         id: contentLoader
         Layout.fillWidth: true
-        Layout.fillHeight: root.openPanel !== ""
+        // The panel names its own height and the container follows it. Both detail panels ask
+        // for the whole of `maxPanelHeight` and so are fixed; the notification list asks for
+        // what it holds. Deliberately not filled: a filled loader gives every panel the same
+        // leftover space, which is the one thing the notification list must not get.
+        //
+        // Only the bottom edge moves. The card is above this in the column and never resizes,
+        // so this container's top edge — and the gap above it — is the same in every state.
+        Layout.preferredHeight: item?.implicitHeight ?? 0
+
+        // One animation for the whole swap, here rather than inside each panel — two panels
+        // animating their own heights into a container that animates again reads as a single
+        // sluggish move with a soft landing.
+        Behavior on Layout.preferredHeight {
+            enabled: root.placed
+            NumberAnimation {
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+            }
+        }
+
         sourceComponent: {
             if (root.openPanel === "wifi")
                 return wifiPanelComponent;
@@ -128,6 +169,7 @@ ColumnLayout {
         id: wifiPanelComponent
 
         WiFiPanel {
+            maxPanelHeight: root.maxPanelHeight
             onClosePanel: {
                 root.openPanel = "";
             }
@@ -138,6 +180,7 @@ ColumnLayout {
         id: bluetoothPanelComponent
 
         BluetoothPanel {
+            maxPanelHeight: root.maxPanelHeight
             onClosePanel: {
                 root.openPanel = "";
             }
@@ -152,35 +195,14 @@ ColumnLayout {
             color: Appearance.m3colors.m3background
             radius: root.radius
 
-            property bool isInitialized: false
+            // Zero when there is nothing to show, so an empty list leaves no invisible strip
+            // below the card holding the bottom edge down — and taking clicks, since the
+            // window's input mask is cut from this item's geometry.
+            implicitHeight: visible ? Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxPanelHeight) : 0
 
-            implicitHeight: Math.min(notifColumn.implicitHeight + root.margins * 2, root.maxNotificationHeight)
-
-            height: implicitHeight
             border.width: 1
             border.color: Appearance.m3colors.m3outlineVariant
             visible: root.notificationCount > 0
-
-            Component.onCompleted: {
-                initTimer.start();
-            }
-
-            Timer {
-                id: initTimer
-                interval: 1
-                repeat: false
-                onTriggered: {
-                    notificationsPannel.isInitialized = true;
-                }
-            }
-
-            Behavior on implicitHeight {
-                enabled: isInitialized
-                NumberAnimation {
-                    duration: 100
-                    easing.type: Easing.InOutQuad
-                }
-            }
 
             ColumnLayout {
                 id: notifColumn
@@ -205,18 +227,17 @@ ColumnLayout {
                 NotificationList {
                     id: list
                     headerAndMarginHeight: notifHeader.implicitHeight + root.margins * 2 + separator.implicitHeight + (notifColumn.spacing * 2)
-                    maxPanelHeight: root.maxNotificationHeight
+                    maxPanelHeight: root.maxPanelHeight
                 }
             }
         }
     }
 
-    // Packs a short notification list up against the card. It must stop filling once a detail
-    // panel opens, or it splits the leftover space with the panel and each panel settles at a
-    // height of its own — so swapping one panel for another moves the bottom edge. With only
-    // the panel filling, every panel gets exactly the space the card leaves, whatever it asked
-    // for, and a swap changes nothing outside the panel.
+    // Eats whatever height the card and the panel do not use. Without something here to take
+    // it, a ColumnLayout hands the surplus to the rows themselves and centres them in it, so a
+    // short notification list pushed the card down the screen and dragged the panel's top edge
+    // with it — the card has to sit in the same place whatever is below it.
     Item {
-        Layout.fillHeight: root.openPanel === ""
+        Layout.fillHeight: true
     }
 }

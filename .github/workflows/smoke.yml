@@ -90,6 +90,7 @@ jobs:
 
           tests/wallpaper-transition.sh
           tests/compact-notification-layout.sh
+          tests/control-center-panel-sizing.sh
 
           qs --no-color -p . >quickshell-startup.log 2>&1 &
           qs_pid=$!
