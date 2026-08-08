@@ -6,7 +6,7 @@ import { loadQmlJs } from "./load-qml-js.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_tile_geometry.js"), [
-    "WAVE_WAVELENGTH",
+    "WAVE_COUNT",
     "WAVE_AMPLITUDE",
     "WAVE_PHASE",
     "WAVE_SAMPLES",
@@ -20,6 +20,7 @@ const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_
     "SUN_MARKER_LOBES",
     "SUN_MARKER_SCALLOP",
     "SUN_MARKER_SAMPLES",
+    "waveWavelength",
     "waterLevel",
     "waveLine",
     "sunHorizon",
@@ -33,7 +34,7 @@ const geometry = loadQmlJs(path.join(repoRoot, "modules", "dashboard", "weather_
 ]);
 
 const {
-    WAVE_WAVELENGTH,
+    WAVE_COUNT,
     WAVE_AMPLITUDE,
     WAVE_PHASE,
     WAVE_SAMPLES,
@@ -47,6 +48,7 @@ const {
     SUN_MARKER_LOBES,
     SUN_MARKER_SCALLOP,
     SUN_MARKER_SAMPLES,
+    waveWavelength,
     waterLevel,
     waveLine,
     sunHorizon,
@@ -80,19 +82,19 @@ test("waterLevel empties the tile for a reading the service does not have", () =
 });
 
 test("waveLine spans the full width and closes on both edges", () => {
-    const points = waveLine(160, 80, 0.5, WAVE_AMPLITUDE, WAVE_WAVELENGTH, WAVE_PHASE, 8);
+    const points = waveLine(160, 80, 0.5, WAVE_AMPLITUDE, waveWavelength(160), WAVE_PHASE, 8);
     assert.equal(points.length, 9);
     assert.equal(points[0].x, 0);
     assert.equal(points[points.length - 1].x, 160);
 });
 
 test("waveLine sits the waterline at the fill fraction measured up from the bottom", () => {
-    const flat = waveLine(160, 80, 0.25, 0, WAVE_WAVELENGTH, WAVE_PHASE, 4);
+    const flat = waveLine(160, 80, 0.25, 0, waveWavelength(160), WAVE_PHASE, 4);
     for (const point of flat)
         near(point.y, 60, "flat waterline at 25%");
 
-    near(waveLine(160, 80, 0, 0, WAVE_WAVELENGTH, WAVE_PHASE, 2)[0].y, 80, "empty");
-    near(waveLine(160, 80, 1, 0, WAVE_WAVELENGTH, WAVE_PHASE, 2)[0].y, 0, "full");
+    near(waveLine(160, 80, 0, 0, waveWavelength(160), WAVE_PHASE, 2)[0].y, 80, "empty");
+    near(waveLine(160, 80, 1, 0, waveWavelength(160), WAVE_PHASE, 2)[0].y, 0, "full");
 });
 
 test("waveLine carries one crest and one trough per wavelength", () => {
@@ -110,6 +112,62 @@ test("waveLine shifts with the phase", () => {
     const unshifted = waveLine(160, 80, 0.5, 4, 160, 0, 4);
     const shifted = waveLine(160, 80, 0.5, 4, 160, Math.PI, 4);
     near(shifted[1].y, unshifted[3].y, "half a turn swaps crest and trough");
+});
+
+// Both ends of the waterline are on screen at once, so they have to agree. A wavelength that
+// does not divide the width leaves one edge mid-crest and the other mid-trough, which reads
+// as a waterline that slopes rather than one that ripples.
+test("the waterline meets itself at both edges of any tile it is drawn on", () => {
+    for (const width of [108, 160, 97.5]) {
+        const points = waveLine(width, 100, 0.5, WAVE_AMPLITUDE, waveWavelength(width), WAVE_PHASE, WAVE_SAMPLES);
+
+        near(points[points.length - 1].y, points[0].y, `the two edges sit at the same height at width ${width}`);
+    }
+});
+
+// Equal edges are not enough on their own. A whole number of waves gives them, and still
+// answers the crest a few pixels in from the left with a trough the same distance in from the
+// right — measured at 7px apart on the real tile, which is what reads as lopsided when the
+// header text hides the middle of the wave and leaves only those two ends showing.
+test("the waterline is a mirror image of itself about the tile's centre", () => {
+    for (const width of [108, 160, 97.5]) {
+        const points = waveLine(width, 100, 0.5, WAVE_AMPLITUDE, waveWavelength(width), WAVE_PHASE, WAVE_SAMPLES);
+
+        for (let i = 0; i <= WAVE_SAMPLES; i++)
+            near(points[i].y, points[WAVE_SAMPLES - i].y, `sample ${i} mirrors its opposite at width ${width}`);
+    }
+
+    // The property above holds for a half-integer count and fails for a whole one, so the
+    // count carries the invariant and has to be checked as itself.
+    assert.equal(WAVE_COUNT % 1, 0.5, "a whole number of waves is point-symmetric, not mirrored");
+});
+
+// The wave has to read as water across the tile it is actually drawn on, and the tile is the
+// square one the 2x3 grid gives. Too few crests and the waterline reads as a tilt; too few
+// samples per crest and it reads as folded paper.
+test("the waterline ripples several times across the tile and is sampled smoothly", () => {
+    const width = 108;
+
+    assert.ok(WAVE_COUNT >= 3.5, `only ${WAVE_COUNT} waves cross the tile`);
+    assert.ok(WAVE_SAMPLES / WAVE_COUNT >= 12, `only ${(WAVE_SAMPLES / WAVE_COUNT).toFixed(1)} samples per wave`);
+
+    // Every crest the count promises is a real turning point in the drawn line.
+    const points = waveLine(width, 108, 0.5, WAVE_AMPLITUDE, waveWavelength(width), WAVE_PHASE, WAVE_SAMPLES);
+    let turns = 0;
+    for (let i = 1; i < points.length - 1; i++) {
+        const before = points[i].y - points[i - 1].y;
+        const after = points[i + 1].y - points[i].y;
+        if (before !== 0 && after !== 0 && Math.sign(before) !== Math.sign(after))
+            turns++;
+    }
+    // A crest and a trough per wave, all of them interior: the phase puts a zero crossing on
+    // each edge, so no extreme is cut off by one.
+    assert.equal(turns, 2 * WAVE_COUNT);
+});
+
+test("waveWavelength fits the counted waves across whatever it is given", () => {
+    for (const width of [108, 160, 97.5])
+        near(width / waveWavelength(width), WAVE_COUNT, `waves across ${width}`);
 });
 
 test("the horizon splits the tile, leaving room for the header above and the times below", () => {
@@ -232,9 +290,9 @@ test("the whole disc fits inside the tile everywhere the sun is drawn", () => {
     assert.ok(reach > SUN_MARKER_RADIUS, "the reach covers the scallop and the ring");
 
     for (const progress of [0, 0.25, 0.5, 0.75, 1]) {
-        const marker = sunMarker(160, 107.67, progress);
+        const marker = sunMarker(108, 108, progress);
         assert.ok(marker.x - reach > 0, `the disc clears the left edge at ${progress}`);
-        assert.ok(marker.x + reach < 160, `the disc clears the right edge at ${progress}`);
+        assert.ok(marker.x + reach < 108, `the disc clears the right edge at ${progress}`);
     }
 });
 
@@ -277,7 +335,9 @@ test("the tuned constants are usable sample counts and a positive wave", () => {
     for (const samples of [WAVE_SAMPLES, SUN_SAMPLES, SUN_MARKER_SAMPLES])
         assert.ok(Number.isInteger(samples) && samples > 0);
     assert.ok(WAVE_AMPLITUDE > 0);
-    assert.ok(WAVE_WAVELENGTH > 0);
+    // Half-integer, so the line mirrors about the tile's centre rather than rotating onto
+    // itself; see the mirror test for why that is the shape this wave has to have.
+    assert.ok(WAVE_COUNT > 0 && Number.isInteger(WAVE_COUNT * 2));
     // The ridge has to fall further below the horizon than it rises above it, or there is
     // nothing left of the curve to show through the ground.
     assert.ok(SUN_BASE > SUN_PEAK);
@@ -295,9 +355,24 @@ test("the tuned constants are usable sample counts and a positive wave", () => {
 // measured offscreen at the size the dashboard's 2x3 grid gives: the header row ends at
 // y=27 and the two clock times begin at y=63.
 test("the landscape clears the header and the clock times at the size the grid gives a tile", () => {
-    const width = 160;
-    const height = 107.67;
+    const width = 108;
+    const height = 108;
 
     assert.ok(sunRidge(width / 2, width, height) > 27 + 8, "the peak stands clear of the header row");
     assert.ok(sunHorizon(height) < 63 - 4, "the clock times stand on the ground, not on the horizon");
+});
+
+// The flanks are the shape. SUN_SPREAD is solved rather than set, so the only way to read the
+// steepness back out is to measure the ridge, and this is what stops a later change to the
+// peak or the base from quietly flattening the hill into the graph the bell exists to avoid.
+test("the ridge falls away steeply rather than reading as a broad curve", () => {
+    const width = 108;
+    const height = 108;
+
+    let steepest = 0;
+    for (let x = 0; x < width; x += 0.5)
+        steepest = Math.max(steepest, Math.abs(sunRidge(x + 0.5, width, height) - sunRidge(x, width, height)) / 0.5);
+
+    // 0.84px per px as tuned, against the 0.69 the broader hill it replaced managed.
+    assert.ok(steepest > 0.8, `the steepest flank falls at ${steepest.toFixed(3)}px per px`);
 });

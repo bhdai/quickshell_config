@@ -10,16 +10,42 @@
 
 .pragma library
 
-// The wave motif's parameters follow Material 3's wavy progress indicator, which is the one
-// place Google publishes numbers for it: a wavelength in pixels and an amplitude, both fixed
-// rather than scaled to the tile, so every tile that grows a wave keeps the same water.
+// The wave motif is Material 3's wavy progress indicator, and the amplitude is the number
+// Google publishes for it. The wavelength is not, and cannot be: the water spans the tile
+// edge to edge, so a length that does not divide the tile leaves one edge mid-crest and the
+// other mid-trough, and the eye reads a waterline that slopes. The wave is therefore counted
+// rather than measured, which closes it at both edges on a tile of any width.
+//
+// WAVE_COUNT has to stay a half-integer — three and a half, four and a half — and that is
+// the whole of why this looks right. A whole number of waves does close at the edges, but it
+// makes the line point-symmetric: the crest sitting a few pixels in from the left edge is
+// answered by a trough the same distance from the right. Half a wave more mirrors it about
+// the tile's centre instead, so the two edges are the same height and the two ends the same
+// shape. That matters most at a high reading, where the waterline rides up behind the header
+// text and those two ends are the only part of the wave still visible.
+//
+// M3's published 44px was set against a tile 160 wide, where it fell close to three and a
+// half waves; three and a half across the square 108 tile is 31px, near enough to the same
+// water. WAVE_AMPLITUDE is the one to move for deeper crests, and is still fixed in pixels
+// because depth is not what has to meet at the edges.
+//
 // Unlike that indicator the phase here is a constant — this wave reports a humidity, not a
-// job in progress, so animating it would claim motion the reading does not have. The offset
-// keeps a zero crossing rather than a crest against the tile's left edge.
-const WAVE_WAVELENGTH = 44;
+// job in progress, so animating it would claim motion the reading does not have. At this
+// phase both edges sit on the waterline itself rather than on a crest, so the water meets
+// the tile's sides flat.
+//
+// The line is drawn as straight segments between samples, and seventeen points per wave is
+// what the crests need to not read as folded paper.
+const WAVE_COUNT = 3.5;
 const WAVE_AMPLITUDE = 3.5;
 const WAVE_PHASE = Math.PI;
-const WAVE_SAMPLES = 40;
+const WAVE_SAMPLES = 60;
+
+// The wavelength for a box of this width. The caller passes it to waveLine(), which stays
+// unaware of the tile so it can be checked against arbitrary geometry.
+function waveWavelength(width) {
+    return width / WAVE_COUNT;
+}
 
 // The sun tile is a landscape rather than a chart: the horizon cuts the whole tile in two,
 // the hill passes under it at both edges instead of landing on it, and the times sit on the
@@ -27,17 +53,24 @@ const WAVE_SAMPLES = 40;
 //
 // The ridge is a bell, not the half sine solar elevation actually follows: flat tails and a
 // broad crown read as terrain at 100px wide, where a sine reads as a graph of something.
-// SUN_TAIL is how far the ground settles below the horizon once the bell has died away.
-// Tuned against the 160x108 the dashboard's 2x3 grid actually gives a tile, where the header
+// SUN_BASE is how far the ground settles below the horizon once the bell has died away.
+// Tuned against the 108x108 the dashboard's 2x3 grid actually gives a tile, where the header
 // row and the two clock times leave about 35px of sky and 45px of ground. A horizon lower
 // than this puts the sunrise time on the line it is supposed to be standing under.
 //
-// SUN_BASE is deeper than SUN_PEAK on purpose: the ridge has to keep falling well under the
-// horizon and stay inside the tile, so the ground can be a translucent layer with the curve
-// still visibly descending behind it rather than an opaque block the curve stops against.
+// Both of the other two are what make the flanks steep, and they are what to move to make
+// them steeper still — SUN_SPREAD is solved from them and cannot be set directly. The hill
+// standing higher and its tails falling deeper both narrow the bell, and the sky above the
+// crest is the binding limit: at this peak it is within a pixel of the header row, so any
+// more rise has to come out of SUN_HORIZON, which has about a pixel of its own before the
+// horizon reaches the clock times.
+//
+// SUN_BASE stays deeper than SUN_PEAK: the ridge has to keep falling well under the horizon
+// and stay inside the tile, so the ground can be a translucent layer with the curve still
+// visibly descending behind it rather than an opaque block the curve stops against.
 const SUN_HORIZON = 0.53;
-const SUN_PEAK = 0.17;
-const SUN_BASE = 0.25;
+const SUN_PEAK = 0.2;
+const SUN_BASE = 0.34;
 const SUN_SAMPLES = 40;
 
 // Daylight is inset from both edges, so the tile carries a little night either side of it.

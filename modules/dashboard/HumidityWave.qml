@@ -38,7 +38,7 @@ Canvas {
         ctx.roundedRect(0, 0, width, height, root.cornerRadius, root.cornerRadius);
         ctx.clip();
 
-        const points = TileGeometry.waveLine(width, height, root.level, TileGeometry.WAVE_AMPLITUDE, TileGeometry.WAVE_WAVELENGTH, TileGeometry.WAVE_PHASE, TileGeometry.WAVE_SAMPLES);
+        const points = TileGeometry.waveLine(width, height, root.level, TileGeometry.WAVE_AMPLITUDE, TileGeometry.waveWavelength(width), TileGeometry.WAVE_PHASE, TileGeometry.WAVE_SAMPLES);
 
         ctx.fillStyle = root.color;
         ctx.beginPath();
