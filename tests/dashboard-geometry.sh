@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# The dashboard's contract is a size. A calendar that grew a row, a longer condition string,
-# a tile that reflowed, or a wallpaper grid that stretched its cells to fill a sparse row
-# would all break it in ways source assertions cannot see, so this renders the real card and
-# measures it.
+# The dashboard's contract is a size per destination. A calendar that grew a row, a longer
+# condition string, a tile that reflowed, or a wallpaper grid that stretched its cells to fill
+# a sparse row would all break it in ways source assertions cannot see, so this renders the
+# real card and measures it — on both tabs, which are deliberately not the same size.
 
 set -euo pipefail
 
@@ -99,17 +99,27 @@ expect() {
 
 run_case full "$test_dir/full-library/03.png"
 
-# #96's canvas, and the composition derived from it: a full-width 72px band over a 347px body
-# of two equal 332px columns.
+# The calendar's own canvas: a full-width 72px band over a 348px body of a 332px calendar and
+# a 228px tile column, which is what six square tiles need.
 expect full \
-    "card=700x507" \
-    "pane=676x427" \
-    "band=676x72" \
-    "calendar=0,80 332x347" \
-    "tiles=344,80 332x347" \
+    "card=596x508" \
+    "pane=572x428" \
+    "band=572x72" \
+    "calendar=0,80 332x348" \
+    "tiles=344,80 228x348" \
+    "tilecount=6 tilesizes=108x108" \
     "cells=42 rows=6" \
     "today=28@0" \
     "cellwidths=44"
+
+# The band anchors its date to one edge and its reading to the other with nothing between
+# them, so a destination narrow enough to overlap them shows up as a gap at or below zero.
+bandgap="$(grep -o 'bandgap=-\?[0-9]*' <<<"$results" | head -1 | cut -d= -f2)"
+if ((bandgap < 24)); then
+    echo "$results"
+    echo "The weather band has no room between its date and its reading: bandgap=$bandgap"
+    exit 1
+fi
 
 # A month is only a grid if every day sits under its own heading. Cells left to fill keep
 # their own implicit width first and split only the leftover, which gives a two-digit day, a
@@ -126,26 +136,25 @@ if [[ "$columns" != "$headings" ]]; then
     exit 1
 fi
 
-# What the calendar column wants, against the 347 it is given. It has to fit rather than be
+# What the calendar column wants, against the 348 it is given. It has to fit rather than be
 # compressed into place — restoring the Today row's old 4px top margin puts it at 351, which
 # is the regression this catches.
 #
 # Not pinned to a single number: the weekday labels are the one row here whose height comes
-# from font metrics, so the natural height is 347 with this machine's fonts and a couple of
-# pixels under it in a bare container. Only the ceiling is the contract. The floor is loose
-# and exists so that a calendar which lost a row fails here too rather than passing for
-# being small.
+# from font metrics, so the natural height is a couple of pixels under the body in a bare
+# container. Only the ceiling is the contract. The floor is loose and exists so that a
+# calendar which lost a row fails here too rather than passing for being small.
 for natural in $(grep -o 'natural=[0-9.]*' <<<"$results" | cut -d= -f2); do
-    if ! awk -v n="$natural" 'BEGIN { exit !(n <= 347 && n > 330) }'; then
+    if ! awk -v n="$natural" 'BEGIN { exit !(n <= 348 && n > 330) }'; then
         echo "$results"
-        echo "The calendar column does not fit its 347px body: natural=$natural"
+        echo "The calendar column does not fit its 348px body: natural=$natural"
         exit 1
     fi
 done
 
 # Every month is six rows and the Today control is opacity-gated, so navigating cannot change
-# a single one of those numbers.
-if ! grep -qF "navigated=700x507,700x507,700x507 today=28@1" <<<"$results"; then
+# a single one of those numbers. The card resizes between destinations and nowhere else.
+if ! grep -qF "navigated=596x508,596x508,596x508 today=28@1" <<<"$results"; then
     echo "$results"
     echo "The dashboard resized while navigating months"
     exit 1
@@ -159,8 +168,11 @@ if [[ "$(grep -o 'natural=[0-9.]*' <<<"$results" | sort -u | wc -l)" != 1 ]]; th
     exit 1
 fi
 
-# Two equal, label-only targets across the 676px row, at M3's 48px.
-expect full "TABS height=48 widths=338,338"
+# Two equal, label-only targets across the row, at M3's 48px. The row is as wide as the card
+# it is in, so the two destinations put the same tabs at different widths.
+expect full \
+    "TABS height=48 widths=286,286" \
+    "TABS height=48 widths=338,338"
 
 # The indicator has to hug the rendered label rather than the cell, and the two labels are
 # not the same width, so this compares the two measured segments rather than pinning numbers
@@ -187,12 +199,12 @@ if [[ "${#indicators[@]}" != 2 || "${indicators[0]}" == "${indicators[1]}" ]]; t
     exit 1
 fi
 
-# Switching to the picker is what a fixed canvas is for: the same card, the same pane, four
-# 160x100 cells to a row at the accepted gaps, four rows of them visible, and the twenty-image
-# library scrolling rather than compressing to fit.
+# Switching to the picker is what per-destination sizing is for: a card of the picker's own
+# width, four 160x100 cells to a row at the accepted gaps, four rows of them visible, and the
+# twenty-image library scrolling rather than compressing to fit.
 expect full \
-    "GRID card=700x507 pane=676x427" \
-    "viewport=676x427 content=532" \
+    "GRID card=700x504 pane=676x424" \
+    "viewport=676x424 content=532" \
     "tiles=20 sizes=160x100" \
     "columns=0,172,344,516" \
     "rows=0,108,216,324,432" \
@@ -205,8 +217,8 @@ expect full \
 run_case sparse "$test_dir/pixel.png"
 
 expect sparse \
-    "GRID card=700x507 pane=676x427" \
-    "viewport=676x427 content=100" \
+    "GRID card=700x504 pane=676x424" \
+    "viewport=676x424 content=100" \
     "tiles=2 sizes=160x100" \
     "columns=0,172" \
     "rows=0" \
@@ -217,10 +229,10 @@ run_case empty
 
 # One message, and it has to say which directory was looked in and what would have counted.
 expect empty \
-    "GRID card=700x507 pane=676x427" \
+    "GRID card=700x504 pane=676x424" \
     "tiles=0" \
     "empty=true" \
     "$test_dir/empty-library" \
     '*.jpg, *.jpeg, *.png, *.bmp'
 
-echo "The dashboard holds its geometry across month navigation and both tabs"
+echo "The dashboard holds each destination's geometry across month navigation and both tabs"

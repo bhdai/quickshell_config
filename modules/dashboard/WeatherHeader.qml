@@ -14,6 +14,12 @@ Item {
 
     readonly property date now: Time.date
 
+    // The two clusters the band anchors to opposite edges. Neither is width-constrained and
+    // nothing clips them, so a band too narrow for both would draw one over the other; only
+    // measuring the gap between them catches it.
+    readonly property Item dateCluster: date
+    readonly property Item readingCluster: reading
+
     Rectangle {
         anchors.fill: parent
         color: Appearance.colors.colLayer1
@@ -26,6 +32,7 @@ Item {
         anchors.rightMargin: 14
 
         Column {
+            id: date
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             spacing: 2
@@ -47,6 +54,7 @@ Item {
         }
 
         Row {
+            id: reading
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             spacing: 8

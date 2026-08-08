@@ -38,11 +38,13 @@ Rectangle {
             spacing: 4
             anchors.top: parent.top
             anchors.left: parent.left
+            anchors.right: parent.right
 
             // Filled and set on the surface's own foreground, not the variant tone: two of
             // these tiles paint under their header, and an outlined glyph in a dimmed colour
             // disappears into whatever is behind it.
             MaterialSymbol {
+                id: glyph
                 text: root.symbol
                 iconSize: 14
                 fill: 1
@@ -50,7 +52,11 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
+            // A label wider than the tile would otherwise run out over the one beside it
+            // rather than being clipped by anything.
             Text {
+                width: parent.width - glyph.width - parent.spacing
+                elide: Text.ElideRight
                 text: root.label
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.smaller

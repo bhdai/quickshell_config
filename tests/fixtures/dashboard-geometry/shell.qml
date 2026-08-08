@@ -6,10 +6,11 @@ import qs.modules.dashboard
  * Builds the dashboard card offscreen and measures it: the calendar at rest and after
  * navigating away from the current month, then the wallpaper grid on the other tab.
  *
- * The whole point of this surface is that it is fixed: nothing in it may be sized by its
- * content, so what has to be checked is not how it looks but what it measures. There is no
- * display to look at it on, and #96's warning holds — an offscreen grab cannot see masked
- * or effect-backed drawing, so this asserts geometry and never pixels.
+ * Each destination names its own canvas and the card is the chrome around it, so what has to
+ * be checked is that the card lands on the size the pane asked for, that it is a different
+ * size on the other tab, and that nothing inside a pane is sized by what it happens to hold.
+ * There is no display to look at it on, and #96's warning holds — an offscreen grab cannot
+ * see masked or effect-backed drawing, so this asserts geometry and never pixels.
  *
  * The card rather than the window, because a layer surface cannot be built with no
  * Wayland session to build it on.
@@ -78,7 +79,25 @@ ShellRoot {
                     return `${card.width}x${card.height}`;
                 };
 
-                console.log(`DASHBOARD card=${card.width}x${card.height} pane=${pane.width}x${pane.height}` + ` band=${pane.band.width}x${pane.band.height} calendar=${calendar.x},${calendar.y} ${calendar.width}x${calendar.height}` + ` tiles=${pane.tileColumn.x},${pane.tileColumn.y} ${pane.tileColumn.width}x${pane.tileColumn.height}` + ` natural=${calendar.naturalHeight} cells=${cells.length} rows=${rows}` + ` today=${today.height}@${today.opacity}` + ` cellwidths=${[...widths].join("/")} columns=${columns.join(",")} headings=${headings.join(",")}`);
+                // A weather tile is the only thing in the column carrying a symbol. Their
+                // sizes are reported as a set, so six tiles that are not all one square
+                // shape show up as more than one entry.
+                const tiles = [];
+                const walkTiles = item => {
+                    if (item.symbol !== undefined)
+                        tiles.push(item);
+                    for (const child of item.children)
+                        walkTiles(child);
+                };
+                walkTiles(pane.tileColumn);
+                const tileSizes = [...new Set(tiles.map(tile => `${Math.round(tile.width)}x${Math.round(tile.height)}`))];
+
+                // Nothing constrains or clips the band's two clusters, so a band too narrow
+                // for both draws one over the other. Only the gap between them says so.
+                const band = pane.band;
+                const clusterGap = Math.round(band.readingCluster.mapToItem(band, 0, 0).x - (band.dateCluster.mapToItem(band, 0, 0).x + band.dateCluster.width));
+
+                console.log(`DASHBOARD card=${card.width}x${card.height} pane=${pane.width}x${pane.height}` + ` band=${pane.band.width}x${pane.band.height} bandgap=${clusterGap} calendar=${calendar.x},${calendar.y} ${calendar.width}x${calendar.height}` + ` tiles=${pane.tileColumn.x},${pane.tileColumn.y} ${pane.tileColumn.width}x${pane.tileColumn.height}` + ` tilecount=${tiles.length} tilesizes=${tileSizes.join("/")}` + ` natural=${calendar.naturalHeight} cells=${cells.length} rows=${rows}` + ` today=${today.height}@${today.opacity}` + ` cellwidths=${[...widths].join("/")} columns=${columns.join(",")} headings=${headings.join(",")}`);
 
                 // Navigating months must not resize anything, and the Today control must
                 // hold its row rather than appear and shove the grid.

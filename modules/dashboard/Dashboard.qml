@@ -7,11 +7,12 @@ import qs.services
 import "dashboard_metrics.js" as Metrics
 
 /**
- * The surface behind the bar clock. It owns the fixed window, the focus grab, which
- * destination is showing, and the `dashboard` IPC target.
+ * The surface behind the bar clock. It owns the window, the focus grab, which destination is
+ * showing, and the `dashboard` IPC target.
  *
- * Calendar and Wallpaper are the destinations. A further one is a name in `tabs` and a
- * branch in the card's pane loader; nothing here is per-destination.
+ * Calendar and Wallpaper are the destinations. A further one is a name in `tabs`, a branch in
+ * the card's pane loader, and a pane naming the canvas it wants as its implicit size; nothing
+ * here is per-destination, and nothing here decides how big any of them are.
  */
 Scope {
     id: root
@@ -50,6 +51,10 @@ Scope {
             visible: root.isOpen
 
             exclusiveZone: 0
+            // Big enough for the largest destination and then fixed, so the card resizes
+            // inside a surface that never moves. The window is wider than the card on every
+            // tab but the widest; the mask is what keeps that border from swallowing the
+            // clicks that dismiss the dashboard.
             implicitWidth: Metrics.WINDOW_W
             implicitHeight: Metrics.WINDOW_H
 
@@ -69,8 +74,20 @@ Scope {
                 }
             }
 
+            // Only the card is clickable. Everything around it falls through to whatever is
+            // under the dashboard, which is what clears the focus grab and closes it.
+            mask: Region {
+                item: card
+            }
+
             DashboardCard {
-                anchors.centerIn: parent
+                id: card
+                // Hung from the top rather than centred: centring would walk the card up and
+                // down the window as a destination taller or shorter than the last one
+                // animated in, on top of the resize it is already doing.
+                anchors.top: parent.top
+                anchors.topMargin: Metrics.MARGIN
+                anchors.horizontalCenter: parent.horizontalCenter
                 tabs: root.tabs
                 currentTab: root.currentTab
                 onTabSelected: tab => root.currentTab = tab

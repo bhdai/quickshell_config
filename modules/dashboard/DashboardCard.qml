@@ -3,11 +3,13 @@ import qs.modules.common
 import "dashboard_metrics.js" as Metrics
 
 /**
- * The dashboard's fixed card: a tab bar over one pane. Split from the window so it can be
- * measured offscreen, where no layer surface can be built.
+ * The dashboard's card: a tab bar over one pane. Split from the window so it can be measured
+ * offscreen, where no layer surface can be built.
  *
- * Nothing here is sized by its content. A pane that does not fit should be seen not
- * fitting rather than quietly growing the canvas.
+ * The card is chrome and nothing else. Each destination names the canvas it wants as its
+ * pane's implicit size, and the card — and through it the window — is that plus the padding,
+ * the tab bar and the gap. Nothing is sized by its content: a pane that does not fit the size
+ * its own tab asked for should be seen not fitting rather than quietly growing the window.
  */
 Rectangle {
     id: root
@@ -22,8 +24,34 @@ Rectangle {
 
     signal tabSelected(string tab)
 
-    implicitWidth: Metrics.CARD_W
-    implicitHeight: Metrics.CARD_H
+    implicitWidth: Metrics.cardWidth(paneLoader.implicitWidth)
+    implicitHeight: Metrics.cardHeight(paneLoader.implicitHeight)
+
+    // The card is destroyed and rebuilt every time the dashboard opens, so the first size is
+    // not a resize. Without this every open would animate up from nothing.
+    property bool placed: false
+    Component.onCompleted: Qt.callLater(() => root.placed = true)
+
+    // One animation for the whole move, here rather than in the window above or the panes
+    // below: two of them animating the same change reads as a single sluggish resize with a
+    // soft landing.
+    Behavior on implicitWidth {
+        enabled: root.placed
+        NumberAnimation {
+            duration: Appearance.animation.elementMove.duration
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+        }
+    }
+
+    Behavior on implicitHeight {
+        enabled: root.placed
+        NumberAnimation {
+            duration: Appearance.animation.elementMove.duration
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+        }
+    }
 
     color: Appearance.colors.colLayer0
     radius: Appearance.rounding.large
@@ -44,19 +72,29 @@ Rectangle {
         onSelected: tab => root.tabSelected(tab)
     }
 
+    // The card is still travelling to the new size while the pane inside it is already at
+    // one, so the pane has to be revealed and hidden by the card's edge rather than stretched
+    // through whatever width the card is passing through.
     Item {
         anchors.top: tabBar.bottom
         anchors.topMargin: Metrics.GAP
         anchors.left: parent.left
         anchors.leftMargin: Metrics.PAD
-        width: Metrics.PANE_W
-        height: Metrics.PANE_H
+        anchors.right: parent.right
+        anchors.rightMargin: Metrics.PAD
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Metrics.PAD
+        clip: true
 
-        // One property, one Loader, inactive destinations unloaded — so opening the
-        // calendar builds nothing a later tab owns, and leaving one releases it.
+        // One property, one Loader, inactive destinations unloaded — so opening the calendar
+        // builds nothing a later tab owns, and leaving one releases it.
+        //
+        // Anchored to a corner rather than filled: the pane names its own size, and a filled
+        // loader would hand it the card's animating one instead.
         Loader {
             id: paneLoader
-            anchors.fill: parent
+            anchors.top: parent.top
+            anchors.left: parent.left
             sourceComponent: {
                 switch (root.currentTab) {
                 case "calendar":
@@ -69,11 +107,18 @@ Rectangle {
 
             opacity: 0
             Component.onCompleted: opacity = 1
+            // The reset has to be a cut and only the arrival a fade. Assigning 0 and then 1
+            // through a live Behavior is not that: the second assignment retargets the first
+            // before a frame has advanced, so the animation runs 1 to 1 and the pane appears
+            // at full opacity in a card that is still resizing under it.
             onSourceComponentChanged: {
+                fade.enabled = false;
                 opacity = 0;
+                fade.enabled = true;
                 opacity = 1;
             }
             Behavior on opacity {
+                id: fade
                 NumberAnimation {
                     duration: Metrics.TAB_FADE_MS
                     easing.type: Easing.OutQuad

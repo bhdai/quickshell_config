@@ -12,6 +12,10 @@ import "../../services/weather_format.js" as WeatherFormat
  * Current conditions as six tiles in a 2x3 grid. Three are plain; humidity, UV and the sun
  * encode their reading in the tile's shape, which is the only reason they get bespoke
  * geometry — the number is still there to be read either way.
+ *
+ * The labels are one word wherever a word will do. A square tile leaves 88px beside the
+ * header glyph, which "Precipitation" and "Sunrise & sunset" both overrun; the symbol and
+ * what the tile shows say the rest.
  */
 GridLayout {
     id: root
@@ -142,7 +146,7 @@ GridLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         symbol: "rainy"
-        label: "Precipitation"
+        label: "Rain"
         figure: WeatherFormat.formatPrecipitation(Weather.precipitationSum)
         unit: "mm"
         caption: WeatherFormat.precipitationCaption(Weather.precipitationProbability)
@@ -183,7 +187,7 @@ GridLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         symbol: "wb_twilight"
-        label: "Sunrise & sunset"
+        label: "Sun"
         figure: ""
         unit: ""
         // The two clock times are the footer below, laid out one per line with its own glyph.

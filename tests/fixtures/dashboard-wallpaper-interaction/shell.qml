@@ -79,8 +79,11 @@ ShellRoot {
                         return;
                     if (!root.require(!pane.gridFocused, "opening moved focus into the grid")
                             || !root.require(pane.focusedPath === "", "opening assigned a focused path")
-                            || !root.require(pane.viewport.contentY === 105,
-                                `opening revealed contentY=${pane.viewport.contentY}, expected 105`))
+                            // The applied wallpaper is the last of eighteen, on the fifth row
+                            // of a pane that shows four. The pane is exactly its four rows,
+                            // so revealing the fifth scrolls by exactly one row pitch.
+                            || !root.require(pane.viewport.contentY === 108,
+                                `opening revealed contentY=${pane.viewport.contentY}, expected 108`))
                         return;
 
                     if (!root.require(pane.focusEntry(), "Tab entry found no target")
@@ -120,7 +123,7 @@ ShellRoot {
                             `top focus left contentY=${pane.viewport.contentY}`))
                         return;
                     pane.focusIndex(17);
-                    if (!root.require(pane.viewport.contentY === 105,
+                    if (!root.require(pane.viewport.contentY === 108,
                             `bottom focus set contentY=${pane.viewport.contentY}`))
                         return;
 

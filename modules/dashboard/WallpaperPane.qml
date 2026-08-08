@@ -31,6 +31,9 @@ Item {
 
     readonly property bool empty: Wallpaper.libraryModel.count === 0
 
+    implicitWidth: Metrics.CANVAS.wallpaper.width
+    implicitHeight: Metrics.CANVAS.wallpaper.height
+
     function tileAt(index: int): Item {
         return index >= 0 && index < tiles.count ? tiles.itemAt(index) : null;
     }
