@@ -158,21 +158,33 @@ Item {
         }
 
         Repeater {
-            model: root.workspaceRow.slots
+            // A constant count rather than the row's length. A Repeater over an array model
+            // destroys and rebuilds every delegate when that array is reassigned, and each
+            // rebuilt slot restarts its entry fade from zero — so the whole row blinked
+            // every time a workspace was created or destroyed, which is every time an app
+            // opens on an empty workspace past the floor. The ceiling is the most slots the
+            // model can ever hand back, so the delegates outlive any row length.
+            model: WorkspaceModel.MAX_SLOTS
 
             delegate: Item {
                 id: slot
 
                 required property int index
-                required property var modelData
+
+                // Null past the end of the row. Every binding below reads through that
+                // rather than the delegate being torn down when the row shrinks.
+                readonly property var entry: root.workspaceRow.slots[index] ?? null
 
                 x: root.padding + index * root.stride
                 width: root.dotWidth
                 height: root.activeSize
 
-                // A slot that appears because the row grew arrives rather than pops.
-                opacity: 0
-                Component.onCompleted: opacity = 1
+                // A slot that appears because the row grew arrives rather than pops, and one
+                // that leaves because it shrank departs the same way.
+                opacity: entry ? 1 : 0
+                // Off entirely once faded out: an opacity-zero Item still takes clicks and
+                // hover, and these sit past the widget's own width, which does not clip.
+                visible: opacity > 0
 
                 Behavior on opacity {
                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
@@ -197,13 +209,13 @@ Item {
 
                 Rectangle {
                     anchors.centerIn: parent
-                    height: slot.modelData.occupied ? root.occupiedDotSize : root.emptyDotSize
+                    height: slot.entry?.occupied ? root.occupiedDotSize : root.emptyDotSize
                     width: height
                     radius: Appearance.rounding.full
                     color: {
-                        if (slot.modelData.urgent)
+                        if (slot.entry?.urgent)
                             return Appearance.m3colors.m3error;
-                        return slot.modelData.occupied ? Appearance.colors.colOnLayer0 : Appearance.colors.colEmptyWorkspace;
+                        return slot.entry?.occupied ? Appearance.colors.colOnLayer0 : Appearance.colors.colEmptyWorkspace;
                     }
 
                     Behavior on height {
@@ -220,7 +232,11 @@ Item {
 
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: Hyprland.dispatch(WorkspaceModel.focusCommand(slot.modelData.id))
+                    // The model's slot ids run 1..n contiguously, so the ordinal is the
+                    // index and needs no lookup. Reading it off `entry` instead would have
+                    // to answer for a slot clicked during the fade it leaves on, which has
+                    // no entry left and is still the workspace you pointed at.
+                    onClicked: Hyprland.dispatch(WorkspaceModel.focusCommand(slot.index + 1))
                 }
             }
         }

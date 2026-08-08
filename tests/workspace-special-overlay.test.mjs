@@ -118,7 +118,7 @@ test("nothing in the widget touches compositor state for the special", () => {
     assert.doesNotMatch(code, /BackButton/);
 
     const dispatches = code.match(/Hyprland\.dispatch\(.*$/gm) ?? [];
-    assert.deepEqual(dispatches, ["Hyprland.dispatch(WorkspaceModel.focusCommand(slot.modelData.id))"]);
+    assert.deepEqual(dispatches, ["Hyprland.dispatch(WorkspaceModel.focusCommand(slot.index + 1))"]);
 });
 
 // With peek kept you cannot have the pointer on the widget and a full blur at once, so
