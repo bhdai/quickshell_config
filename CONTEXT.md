@@ -18,11 +18,19 @@ _Avoid_: Calendar destination
 **Performance destination** — The Dashboard view for current and recent CPU, memory,
 network, and root-storage behavior.
 
+**Warning state** — A presentational state indicating that a current resource reading has
+crossed its metric-specific threshold. It clears when the current reading recovers and does
+not describe historical samples.
+_Avoid_: Pressure
+
 **Pane** — The live presentation of a destination inside the Dashboard. A destination keeps
 its identity when its pane is absent and receives a new pane when revisited.
 
 **Track segment** — The permanent region of the Dashboard's transition track belonging to one
 destination. It exists whether or not that destination's pane is present.
+
+**Rest geometry** — The Dashboard's arrangement after transition motion has settled. It is
+independent of whether the selected destination's data is complete.
 
 ## Workspaces
 
