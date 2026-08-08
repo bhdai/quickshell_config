@@ -15,6 +15,15 @@ from its presentation label.
 term when it could be confused with the Dashboard surface.
 _Avoid_: Calendar destination
 
+**Performance destination** — The Dashboard view for current and recent CPU, memory,
+network, and root-storage behavior.
+
+**Pane** — The live presentation of a destination inside the Dashboard. A destination keeps
+its identity when its pane is absent and receives a new pane when revisited.
+
+**Track segment** — The permanent region of the Dashboard's transition track belonging to one
+destination. It exists whether or not that destination's pane is present.
+
 ## Workspaces
 
 **Workspace** — Hyprland's object, as Quickshell exposes it via
