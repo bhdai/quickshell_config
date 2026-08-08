@@ -9,18 +9,18 @@ import "weather_tile_geometry.js" as TileGeometry
 import "../../services/weather_format.js" as WeatherFormat
 
 /**
- * Current conditions as six tiles in a 2x3 grid. Three are plain; humidity, UV and the sun
+ * Current conditions as six tiles in a 3x2 grid. Three are plain; humidity, UV and the sun
  * encode their reading in the tile's shape, which is the only reason they get bespoke
  * geometry — the number is still there to be read either way.
  *
- * The labels are one word wherever a word will do. A square tile leaves 88px beside the
- * header glyph, which "Precipitation" and "Sunrise & sunset" both overrun; the symbol and
- * what the tile shows say the rest.
+ * The labels are one word wherever a word will do; the symbol and what the tile draws say
+ * the rest. That is editorial rather than forced — the tile leaves around 120px beside the
+ * header glyph, which "Precipitation" and "Sunrise & sunset" would both now fit inside.
  */
 GridLayout {
     id: root
 
-    columns: 2
+    columns: 3
     columnSpacing: Metrics.COL_GAP
     rowSpacing: Metrics.COL_GAP
 
@@ -29,8 +29,12 @@ GridLayout {
         Layout.fillHeight: true
         symbol: "device_thermostat"
         label: "Feels like"
-        figure: WeatherFormat.formatTemperature(Weather.apparentTemperature)
-        unit: "°"
+        // The degree sign goes with the number for the same reason the percent sign does on
+        // the humidity tile: it is a mark on the reading, not a unit standing beside it. In
+        // the small-unit slot it sets a third the figure's size and low on the baseline,
+        // where against a 48px numeral it reads as a full stop.
+        figure: WeatherFormat.formatTemperature(Weather.apparentTemperature) + "°"
+        unit: ""
         caption: WeatherFormat.apparentCaption(Weather.apparentTemperature, Weather.temperature)
     }
 
@@ -79,7 +83,7 @@ GridLayout {
                     anchors.centerIn: parent
                     text: WeatherFormat.formatTemperature(Weather.dewPoint) + "°"
                     font.family: Appearance.font.family.main
-                    font.pixelSize: Appearance.font.pixelSize.smallest
+                    font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colOnTertiaryContainer
                 }
             }
@@ -88,7 +92,7 @@ GridLayout {
                 text: "Dew point"
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: Appearance.font.family.main
-                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.pixelSize: Appearance.font.pixelSize.normal
                 color: Appearance.colors.colOnLayer1
             }
         }
@@ -108,8 +112,8 @@ GridLayout {
         Item {
             anchors.right: parent.right
             anchors.top: parent.top
-            width: 26
-            height: 26
+            width: 40
+            height: 40
             visible: Weather.hasData
 
             Rectangle {
@@ -127,15 +131,15 @@ GridLayout {
                 // grows downward, so 0° must point down-screen for a northerly.
                 rotation: Weather.windDirection
                 ShapePath {
-                    strokeWidth: 2
+                    strokeWidth: 3
                     strokeColor: Appearance.colors.colPrimary
                     capStyle: ShapePath.RoundCap
                     fillColor: "transparent"
-                    startX: 13
-                    startY: 5
+                    startX: 20
+                    startY: 8
                     PathLine {
-                        x: 13
-                        y: 21
+                        x: 20
+                        y: 32
                     }
                 }
             }
@@ -174,9 +178,9 @@ GridLayout {
                 model: 5
                 delegate: Rectangle {
                     required property int index
-                    width: 7
-                    height: 7
-                    radius: 3.5
+                    width: 9
+                    height: 9
+                    radius: 4.5
                     color: index < WeatherFormat.uvSteps(Weather.uvIndex) ? Appearance.colors.colPrimary : Appearance.colors.colOutlineVariant
                 }
             }
@@ -231,7 +235,7 @@ GridLayout {
 
                     MaterialSymbol {
                         text: parent.modelData.symbol
-                        iconSize: 13
+                        iconSize: 20
                         fill: 1
                         color: Appearance.colors.colOnLayer2
                         anchors.verticalCenter: parent.verticalCenter
@@ -240,7 +244,7 @@ GridLayout {
                     Text {
                         text: parent.modelData.time
                         font.family: Appearance.font.family.main
-                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.DemiBold
                         color: Appearance.colors.colOnLayer2
                         anchors.verticalCenter: parent.verticalCenter

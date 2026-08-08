@@ -22,9 +22,9 @@ test("the chrome is what the card adds around whatever pane is showing", () => {
 // The point of per-destination sizing: the two tabs are different canvases, and the chrome
 // around them is the same.
 test("each destination names its own canvas", () => {
-    assert.equal(metrics.CALENDAR_PANE_W, 572);
+    assert.equal(metrics.CALENDAR_PANE_W, 872);
     assert.equal(metrics.CALENDAR_PANE_H, 428);
-    assert.equal(metrics.cardWidth(metrics.CALENDAR_PANE_W), 596);
+    assert.equal(metrics.cardWidth(metrics.CALENDAR_PANE_W), 896);
     assert.equal(metrics.cardHeight(metrics.CALENDAR_PANE_H), 508);
 
     assert.equal(metrics.WALLPAPER_PANE_W, 676);
@@ -41,14 +41,14 @@ test("the calendar body is the pane under a full-width 72px header", () => {
     assert.equal(metrics.CALENDAR_PANE_H, metrics.HEADER_H + metrics.GAP + metrics.BODY_H);
 });
 
-// Six tiles in two columns of three, square. The tile edge is what the tile column's width
+// Six tiles in three columns of two, square. The tile edge is what the tile column's width
 // and the body's height are both built from, so it is the one number that can be moved.
-test("the 2x3 tile grid comes out square", () => {
-    assert.equal(metrics.TILE, 108);
+test("the 3x2 tile grid comes out square", () => {
+    assert.equal(metrics.TILE, 168);
     assert.equal(metrics.COL_GAP, 12);
 
-    const tileW = (metrics.TILE_COL_W - metrics.COL_GAP) / 2;
-    const tileH = (metrics.BODY_H - 2 * metrics.COL_GAP) / 3;
+    const tileW = (metrics.TILE_COL_W - 2 * metrics.COL_GAP) / 3;
+    const tileH = (metrics.BODY_H - metrics.COL_GAP) / 2;
 
     assert.equal(tileW, metrics.TILE);
     assert.equal(tileH, metrics.TILE);
@@ -56,7 +56,7 @@ test("the 2x3 tile grid comes out square", () => {
 
 test("the calendar column keeps its width and the tiles take the rest", () => {
     assert.equal(metrics.CALENDAR_COL_W, 332);
-    assert.equal(metrics.TILE_COL_W, 228);
+    assert.equal(metrics.TILE_COL_W, 528);
     assert.equal(metrics.CALENDAR_COL_W + metrics.COL_GAP + metrics.TILE_COL_W, metrics.CALENDAR_PANE_W);
 });
 
@@ -106,7 +106,9 @@ test("the card follows the pane", () => {
 test("the window holds still at the largest destination and masks to the card", () => {
     assert.equal(metrics.WINDOW_W, Math.max(metrics.cardWidth(metrics.CALENDAR_PANE_W), metrics.cardWidth(metrics.WALLPAPER_PANE_W)) + 2 * metrics.MARGIN);
     assert.equal(metrics.WINDOW_H, Math.max(metrics.cardHeight(metrics.CALENDAR_PANE_H), metrics.cardHeight(metrics.WALLPAPER_PANE_H)) + 2 * metrics.MARGIN);
-    assert.equal(metrics.WINDOW_W, 720);
+    // The calendar is now the widest destination; before the tiles went three abreast the
+    // wallpaper grid was, so this is the tab whose card the window is cut to.
+    assert.equal(metrics.WINDOW_W, 916);
     assert.equal(metrics.WINDOW_H, 528);
 
     const [panel] = blocks(read(dashboardDir, "Dashboard.qml"), "PanelWindow");

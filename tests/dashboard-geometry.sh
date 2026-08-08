@@ -100,14 +100,16 @@ expect() {
 run_case full "$test_dir/full-library/03.png"
 
 # The calendar's own canvas: a full-width 72px band over a 348px body of a 332px calendar and
-# a 228px tile column, which is what six square tiles need.
+# a 528px tile column, which is what six square tiles need three abreast. The body is the
+# number the two columns have to agree on, so the tile edge and the calendar's six week rows
+# are both checked against it here.
 expect full \
-    "card=596x508" \
-    "pane=572x428" \
-    "band=572x72" \
+    "card=896x508" \
+    "pane=872x428" \
+    "band=872x72" \
     "calendar=0,80 332x348" \
-    "tiles=344,80 228x348" \
-    "tilecount=6 tilesizes=108x108" \
+    "tiles=344,80 528x348" \
+    "tilecount=6 tilesizes=168x168" \
     "cells=42 rows=6" \
     "today=28@0" \
     "cellwidths=44"
@@ -154,7 +156,7 @@ done
 
 # Every month is six rows and the Today control is opacity-gated, so navigating cannot change
 # a single one of those numbers. The card resizes between destinations and nowhere else.
-if ! grep -qF "navigated=596x508,596x508,596x508 today=28@1" <<<"$results"; then
+if ! grep -qF "navigated=896x508,896x508,896x508 today=28@1" <<<"$results"; then
     echo "$results"
     echo "The dashboard resized while navigating months"
     exit 1
@@ -171,7 +173,7 @@ fi
 # Two equal, label-only targets across the row, at M3's 48px. The row is as wide as the card
 # it is in, so the two destinations put the same tabs at different widths.
 expect full \
-    "TABS height=48 widths=286,286" \
+    "TABS height=48 widths=436,436" \
     "TABS height=48 widths=338,338"
 
 # The indicator has to hug the rendered label rather than the cell, and the two labels are

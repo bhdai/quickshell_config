@@ -42,11 +42,16 @@ const HEADER_H = 72;
 const COL_GAP = PAD;
 
 // The weather tiles are square, and their edge is the number the rest of this destination is
-// built from: six of them in two columns of three fix both the tile column's width and the
+// built from: six of them in three columns of two fix both the tile column's width and the
 // body's height, and through the body the size of the whole tab.
-const TILE = 108;
-const TILE_COL_W = 2 * TILE + COL_GAP;
-const BODY_H = 3 * TILE + 2 * COL_GAP;
+//
+// The edge is not free to pick. The calendar shares BODY_H and needs a little under 348px
+// for six week rows, so with two rows of tiles the edge is pinned near half of that. Laying
+// the six out wide rather than tall is what buys them the size — a tile small enough to keep
+// the old width would leave the calendar rattling around in a body built for nothing.
+const TILE = 168;
+const TILE_COL_W = 3 * TILE + 2 * COL_GAP;
+const BODY_H = 2 * TILE + COL_GAP;
 
 // The calendar keeps the width it had when the two columns were equal halves of a 700px
 // card — squaring the tiles is what takes this destination narrower, not squeezing the

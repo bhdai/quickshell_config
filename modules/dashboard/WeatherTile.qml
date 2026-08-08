@@ -43,10 +43,13 @@ Rectangle {
             // Filled and set on the surface's own foreground, not the variant tone: two of
             // these tiles paint under their header, and an outlined glyph in a dimmed colour
             // disappears into whatever is behind it.
+            // 20 is the smallest optical master Material Symbols ships; below it the glyph is
+            // that master scaled down, and the detailed ones here lose their strokes — `air`'s
+            // three lines merge and `rainy`'s drops smear into a block.
             MaterialSymbol {
                 id: glyph
                 text: root.symbol
-                iconSize: 14
+                iconSize: 24
                 fill: 1
                 color: Appearance.colors.colOnLayer2
                 anchors.verticalCenter: parent.verticalCenter
@@ -59,7 +62,7 @@ Rectangle {
                 elide: Text.ElideRight
                 text: root.label
                 font.family: Appearance.font.family.main
-                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.pixelSize: Appearance.font.pixelSize.normal
                 font.weight: Font.DemiBold
                 color: Appearance.colors.colOnLayer2
                 anchors.verticalCenter: parent.verticalCenter
@@ -75,7 +78,7 @@ Rectangle {
             Text {
                 text: root.figure
                 font.family: Appearance.font.family.main
-                font.pixelSize: 26
+                font.pixelSize: 48
                 color: Appearance.colors.colOnLayer2
                 anchors.bottom: parent.bottom
             }
@@ -83,10 +86,12 @@ Rectangle {
             Text {
                 text: root.unit
                 font.family: Appearance.font.family.main
-                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.pixelSize: Appearance.font.pixelSize.normal
                 color: Appearance.colors.colSubtext
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 4
+                // Lifted off the row's baseline so the unit sits with the figure's digits
+                // rather than hanging under them; the offset tracks the figure's size.
+                anchors.bottomMargin: 8
             }
         }
 
@@ -105,7 +110,7 @@ Rectangle {
             text: root.caption
             elide: Text.ElideRight
             font.family: Appearance.font.family.main
-            font.pixelSize: Appearance.font.pixelSize.smaller
+            font.pixelSize: Appearance.font.pixelSize.normal
             color: Appearance.colors.colSubtext
         }
     }
