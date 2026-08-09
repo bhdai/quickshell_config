@@ -29,6 +29,14 @@ Item {
     property color secondaryColor: Appearance.colors.colTertiary
     property string primaryKey: ""
     property string secondaryKey: ""
+    // A number each key carries about its own series. A caller that puts values on the keys
+    // says what they are in `windowLabel`, so the kind of reading is stated once for the row
+    // rather than repeated on every key.
+    property string primaryValue: ""
+    property string secondaryValue: ""
+    // What the legend calls the window the plot covers. The default states the window alone,
+    // which is all there is to say when the keys carry no values.
+    property string windowLabel: "Last 60 seconds"
 
     // The top of the scale, in the roles' own units. Bounded metrics pass their ceiling and
     // never move it; an unbounded one passes whatever it has settled on.
@@ -171,7 +179,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        implicitHeight: windowLabel.implicitHeight
+        implicitHeight: caption.implicitHeight
         // Kept in the layout while it is hidden: the plot area would otherwise grow by a
         // line the moment the second sample lands, and the card would rearrange under a
         // reader who was watching for exactly that.
@@ -186,21 +194,23 @@ Item {
             // without a lookup somewhere else on the card.
             PlotKey {
                 text: root.primaryKey
+                value: root.primaryValue
                 color: root.primaryColor
             }
 
             PlotKey {
                 text: root.secondaryKey
+                value: root.secondaryValue
                 color: root.secondaryColor
             }
         }
 
         Text {
-            id: windowLabel
+            id: caption
 
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: "Last 60 seconds"
+            text: root.windowLabel
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.smaller
             color: Appearance.colors.colSubtext

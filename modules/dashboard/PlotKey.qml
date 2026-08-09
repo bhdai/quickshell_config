@@ -9,6 +9,10 @@ Row {
     id: root
 
     property alias text: label.text
+    // A number about this series and nothing else — a peak, a share, whatever the card is
+    // stating per line. What window it belongs to is the legend's to say once, not each
+    // key's to repeat.
+    property alias value: valueLabel.text
     property color color: Appearance.colors.colPrimary
 
     spacing: 4
@@ -28,6 +32,17 @@ Row {
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: Appearance.colors.colOnLayer1
+        anchors.verticalCenter: parent.verticalCenter
+    }
+
+    Text {
+        id: valueLabel
+
+        visible: valueLabel.text !== ""
+        font.family: Appearance.font.family.main
+        font.pixelSize: Appearance.font.pixelSize.smaller
+        font.weight: Font.DemiBold
+        color: Appearance.colors.colOnLayer2
         anchors.verticalCenter: parent.verticalCenter
     }
 }

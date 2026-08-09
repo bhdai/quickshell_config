@@ -100,6 +100,11 @@ const CARD_GAP = PAD;
 const PERFORMANCE_ROW_H = (PERFORMANCE_PANE_H - CARD_GAP) / 2;
 const PERFORMANCE_TOP_CARD_W = (PERFORMANCE_PANE_W - CARD_GAP) / 2;
 
+// The widest card on the destination, because it is the one carrying two series that move
+// every second. Sixty samples of that across half a pane would be a scribble; the width is
+// what makes the shape of a minute's traffic readable at all.
+const PERFORMANCE_NETWORK_CARD_W = 580;
+
 // What an inner card holds its content in, away from its own rounded edge.
 const PERFORMANCE_CARD_PAD = 12;
 
@@ -116,6 +121,12 @@ const PERFORMANCE_CARD = {
         x: PERFORMANCE_TOP_CARD_W + CARD_GAP,
         y: 0,
         width: PERFORMANCE_TOP_CARD_W,
+        height: PERFORMANCE_ROW_H
+    },
+    network: {
+        x: 0,
+        y: PERFORMANCE_ROW_H + CARD_GAP,
+        width: PERFORMANCE_NETWORK_CARD_W,
         height: PERFORMANCE_ROW_H
     }
 };
