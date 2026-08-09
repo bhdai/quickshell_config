@@ -32,4 +32,11 @@ Item {
         width: Metrics.PERFORMANCE_CARD.network.width
         height: Metrics.PERFORMANCE_CARD.network.height
     }
+
+    StorageCard {
+        x: Metrics.PERFORMANCE_CARD.storage.x
+        y: Metrics.PERFORMANCE_CARD.storage.y
+        width: Metrics.PERFORMANCE_CARD.storage.width
+        height: Metrics.PERFORMANCE_CARD.storage.height
+    }
 }

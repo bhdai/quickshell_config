@@ -105,6 +105,10 @@ const PERFORMANCE_TOP_CARD_W = (PERFORMANCE_PANE_W - CARD_GAP) / 2;
 // what makes the shape of a minute's traffic readable at all.
 const PERFORMANCE_NETWORK_CARD_W = 580;
 
+// What is left of the row, and enough: this is the only card with no plot on it, so it is
+// sized for a figure rather than for a minute of one.
+const PERFORMANCE_STORAGE_CARD_W = PERFORMANCE_PANE_W - PERFORMANCE_NETWORK_CARD_W - CARD_GAP;
+
 // What an inner card holds its content in, away from its own rounded edge.
 const PERFORMANCE_CARD_PAD = 12;
 
@@ -127,6 +131,12 @@ const PERFORMANCE_CARD = {
         x: 0,
         y: PERFORMANCE_ROW_H + CARD_GAP,
         width: PERFORMANCE_NETWORK_CARD_W,
+        height: PERFORMANCE_ROW_H
+    },
+    storage: {
+        x: PERFORMANCE_NETWORK_CARD_W + CARD_GAP,
+        y: PERFORMANCE_ROW_H + CARD_GAP,
+        width: PERFORMANCE_STORAGE_CARD_W,
         height: PERFORMANCE_ROW_H
     }
 };
