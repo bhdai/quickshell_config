@@ -1,6 +1,7 @@
 import QtQuick
 import qs.modules.common
 import qs.services
+import "warning_state.js" as Warning
 
 /**
  * RAM now with the capacity behind it, and swap as a second reading on the same card and a
@@ -9,9 +10,16 @@ import qs.services
  * Swap is here rather than on a card of its own because a machine reaching past RAM is one
  * movement: split across two cards it would read as two unrelated numbers, and the reader
  * would have to line up their timelines to see that one caused the other.
+ *
+ * Swap warns lower than RAM does and warns on its own. A machine paging heavily while RAM is
+ * still under its threshold is exactly the state worth catching, and it is invisible if one
+ * reading can only go red behind the other.
  */
 PerformanceCard {
     id: root
+
+    readonly property bool memoryWarning: Warning.atThreshold(ResourceUsage.memoryUsedPercentage, Warning.MEMORY_USAGE)
+    readonly property bool swapWarning: Warning.atThreshold(ResourceUsage.swapUsedPercentage, Warning.SWAP_USAGE)
 
     // Swap that was never configured is not swap sitting empty. A zero reading would report
     // on a resource this machine does not have, so the reading and the series both go — and
@@ -32,8 +40,16 @@ PerformanceCard {
             text: Math.round(ResourceUsage.memoryUsedPercentage * 100)
             font.family: Appearance.font.family.main
             font.pixelSize: 36
-            color: Appearance.colors.colOnLayer2
+            color: root.memoryWarning ? Appearance.colors.colError : Appearance.colors.colOnLayer2
             anchors.bottom: parent.bottom
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Appearance.animation.elementMove.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
+                }
+            }
         }
 
         Text {
@@ -78,8 +94,16 @@ PerformanceCard {
             text: `${ResourceUsage.swapUsedString} / ${ResourceUsage.swapTotalString}`
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.larger
-            color: Appearance.colors.colOnLayer2
+            color: root.swapWarning ? Appearance.colors.colError : Appearance.colors.colOnLayer2
             anchors.right: parent.right
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Appearance.animation.elementMove.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
+                }
+            }
         }
     }
 

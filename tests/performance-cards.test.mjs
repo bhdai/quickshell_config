@@ -278,7 +278,9 @@ test("the filesystem the card reports on is named as root", () => {
 test("occupancy is drawn in the card's own colour against the room it has left", () => {
     const [track, active] = blocks(storageCard, "ShapePath");
 
-    assert.match(active, /strokeColor: Appearance\.colors\.colSecondary\b/);
+    // Its ordinary colour. What the arc does when the filesystem is nearly full is warning
+    // state, pinned in `warning-state.test.mjs` along with the rest of that contract.
+    assert.match(active, /strokeColor: .*Appearance\.colors\.colSecondary\b/);
     assert.match(active, /sweepAngle: root\.arcs\.activeSweep/);
     assert.match(track, /strokeColor: Appearance\.colors\.colSecondaryContainer/);
     assert.match(track, /sweepAngle: root\.arcs\.trackSweep/);

@@ -1,6 +1,7 @@
 import QtQuick
 import qs.modules.common
 import qs.services
+import "warning_state.js" as Warning
 
 /**
  * Aggregate CPU usage now, with the last minute of it under the number, and the package
@@ -10,9 +11,15 @@ import qs.services
  * scale, and putting them on one would make the plot's vertical axis mean two things at
  * once. It carries the machine's own critical threshold because 78°C means nothing until it
  * is read against the limit of the part it was measured on.
+ *
+ * The two readings warn independently. A busy machine is not a hot one, and a card that
+ * reddened both would take the reader to the fan when the answer was a runaway process.
  */
 PerformanceCard {
     id: root
+
+    readonly property bool usageWarning: Warning.atThreshold(ResourceUsage.cpuUsage, Warning.CPU_USAGE)
+    readonly property bool temperatureWarning: Warning.temperatureWarning(ResourceUsage.cpuTemperature, ResourceUsage.cpuTemperatureCritical)
 
     // 0°C is a reading a machine can genuinely take, so an absent sensor has to be absent
     // rather than cold.
@@ -36,8 +43,16 @@ PerformanceCard {
             text: Math.round(ResourceUsage.cpuUsage * 100)
             font.family: Appearance.font.family.main
             font.pixelSize: 36
-            color: Appearance.colors.colOnLayer2
+            color: root.usageWarning ? Appearance.colors.colError : Appearance.colors.colOnLayer2
             anchors.bottom: parent.bottom
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Appearance.animation.elementMove.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
+                }
+            }
         }
 
         Text {
@@ -61,8 +76,16 @@ PerformanceCard {
             text: root.temperatureText
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.larger
-            color: Appearance.colors.colOnLayer2
+            color: root.temperatureWarning ? Appearance.colors.colError : Appearance.colors.colOnLayer2
             anchors.right: parent.right
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Appearance.animation.elementMove.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.expressiveEffects
+                }
+            }
         }
 
         Text {

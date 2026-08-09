@@ -3,6 +3,7 @@ import QtQuick.Shapes
 import qs.modules.common
 import qs.services
 import "storage_gauge.js" as Gauge
+import "warning_state.js" as Warning
 
 /**
  * How full the root filesystem is, as a gauge, a percentage and the capacity behind it.
@@ -15,10 +16,16 @@ import "storage_gauge.js" as Gauge
  * The gauge is Material 3's progress anatomy at gauge size, the same one `StyledProgressBar`
  * draws flat — a rounded active arc, a track broken away from it by the same 4px, and a dot
  * marking where a full filesystem would end. Occupancy and the percentage are the same
- * reading twice, which is why they share a colour and, in warning state, will share that too.
+ * reading twice, which is why they share a colour and share it in warning state too. The
+ * track keeps its own: what is left of the filesystem is not the reading that crossed.
  */
 PerformanceCard {
     id: root
+
+    // The reading itself, not the sweep below — the arc counts up to its figure on every
+    // arrival at the destination, and a warning taken off that would light on the way past
+    // 90% of a disk that is only half full.
+    readonly property bool occupancyWarning: Warning.atThreshold(ResourceUsage.diskUsedPercentage, Warning.STORAGE_OCCUPANCY)
 
     readonly property int gaugeSize: 128
     readonly property int gaugeStroke: 8
@@ -83,10 +90,18 @@ PerformanceCard {
             }
 
             ShapePath {
-                strokeColor: Appearance.colors.colSecondary
+                strokeColor: root.occupancyWarning ? Appearance.colors.colError : Appearance.colors.colSecondary
                 strokeWidth: root.gaugeStroke
                 fillColor: "transparent"
                 capStyle: ShapePath.RoundCap
+
+                Behavior on strokeColor {
+                    ColorAnimation {
+                        duration: Appearance.animation.elementMove.duration
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.animation.expressiveEffects
+                    }
+                }
 
                 PathAngleArc {
                     centerX: gauge.width / 2
@@ -124,8 +139,16 @@ PerformanceCard {
                     text: root.occupancyKnown ? Math.round(root.shownOccupancy * 100) : "—"
                     font.family: Appearance.font.family.main
                     font.pixelSize: 36
-                    color: Appearance.colors.colOnLayer2
+                    color: root.occupancyWarning ? Appearance.colors.colError : Appearance.colors.colOnLayer2
                     anchors.bottom: parent.bottom
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Appearance.animation.elementMove.duration
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.animation.expressiveEffects
+                        }
+                    }
                 }
 
                 Text {
