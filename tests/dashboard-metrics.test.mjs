@@ -12,7 +12,7 @@ const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MAR
 test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.MARGIN, 10);
     assert.equal(metrics.PAD, 12);
-    assert.equal(metrics.TABBAR_H, 48);
+    assert.equal(metrics.TABBAR_H, 64);
     assert.equal(metrics.GAP, 8);
 
     assert.equal(metrics.cardWidth(100), 100 + 2 * metrics.PAD);
@@ -25,12 +25,12 @@ test("each destination names its own canvas", () => {
     assert.equal(metrics.CALENDAR_PANE_W, 872);
     assert.equal(metrics.CALENDAR_PANE_H, 428);
     assert.equal(metrics.cardWidth(metrics.CALENDAR_PANE_W), 896);
-    assert.equal(metrics.cardHeight(metrics.CALENDAR_PANE_H), 508);
+    assert.equal(metrics.cardHeight(metrics.CALENDAR_PANE_H), 524);
 
     assert.equal(metrics.WALLPAPER_PANE_W, 676);
     assert.equal(metrics.WALLPAPER_PANE_H, 424);
     assert.equal(metrics.cardWidth(metrics.WALLPAPER_PANE_W), 700);
-    assert.equal(metrics.cardHeight(metrics.WALLPAPER_PANE_H), 504);
+    assert.equal(metrics.cardHeight(metrics.WALLPAPER_PANE_H), 520);
 
     assert.notEqual(metrics.CALENDAR_PANE_W, metrics.WALLPAPER_PANE_W);
 });
@@ -109,7 +109,7 @@ test("the window holds still at the largest destination and masks to the card", 
     // The calendar is now the widest destination; before the tiles went three abreast the
     // wallpaper grid was, so this is the tab whose card the window is cut to.
     assert.equal(metrics.WINDOW_W, 916);
-    assert.equal(metrics.WINDOW_H, 528);
+    assert.equal(metrics.WINDOW_H, 544);
 
     const [panel] = blocks(read(dashboardDir, "Dashboard.qml"), "PanelWindow");
 

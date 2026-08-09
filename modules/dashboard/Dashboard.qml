@@ -19,8 +19,8 @@ Scope {
 
     property bool isOpen: false
     readonly property var tabs: [
-        { key: "dashboard", label: "Dashboard" },
-        { key: "wallpaper", label: "Wallpaper" }
+        { key: "dashboard", label: "Dashboard", icon: "dashboard" },
+        { key: "wallpaper", label: "Wallpaper", icon: "wallpaper" }
     ]
     property string currentTab: "dashboard"
 

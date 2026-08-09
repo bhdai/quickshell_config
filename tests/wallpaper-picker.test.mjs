@@ -134,7 +134,7 @@ test("an empty library is one message naming the directory and what it accepts",
 });
 
 test("the dashboard has exactly the two destinations and routes both to a pane", () => {
-    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper" \}\s*\]/);
+    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard", icon: "dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper", icon: "wallpaper" \}\s*\]/);
 
     const [loader] = blocks(card, "Loader");
     assert.match(loader, /case "dashboard":\s*return dashboardComponent;/);

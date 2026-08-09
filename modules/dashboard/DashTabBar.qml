@@ -4,9 +4,9 @@ import qs.modules.common.widgets
 import "dashboard_metrics.js" as Metrics
 
 /**
- * Material 3 primary tabs: equal-width, label-only, with the indicator hugging the
- * rendered label rather than the cell. Each tab carries a stable key separately from its
- * presentation label, and the signal carries that key.
+ * Material 3 primary tabs: equal-width cells holding an icon over a label, with the indicator
+ * hugging those two lines rather than the cell. Each tab carries a stable key separately from
+ * its presentation label and icon, and the signal carries that key.
  */
 Item {
     id: root
@@ -52,22 +52,18 @@ Item {
             id: repeater
             model: root.tabs
 
-            delegate: RippleButton {
+            delegate: Item {
                 id: tab
                 required property int index
                 required property var modelData
                 readonly property bool active: root.current === modelData.key
                 // Published from the delegate because only the delegate knows how wide its
-                // own label drew.
-                readonly property real labelX: x + (width - label.implicitWidth) / 2
-                readonly property real labelWidth: label.implicitWidth
+                // own two lines drew.
+                readonly property real contentX: x + (width - contentWidth) / 2
+                readonly property real contentWidth: Math.max(icon.implicitWidth, label.implicitWidth)
 
                 width: row.width / repeater.count
                 height: row.height
-                buttonRadius: Appearance.rounding.small
-                colBackground: "transparent"
-                colBackgroundHover: Appearance.colors.colLayer1Hover
-                onClicked: root.selected(modelData.key)
 
                 Keys.priority: Keys.BeforeItem
                 Keys.onPressed: event => {
@@ -79,22 +75,78 @@ Item {
                     }
                 }
 
-                contentItem: Text {
-                    id: label
-                    text: tab.modelData.label
-                    font.family: Appearance.font.family.main
-                    font.pixelSize: Appearance.font.pixelSize.small
-                    font.weight: Font.Medium
-                    color: tab.active ? Appearance.colors.colPrimary : Appearance.colors.colOnSurfaceVariant
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                // The whole cell is what accepts the pointer, so the whole cell is what
+                // lights up. A layer hugging the two lines was tried and reads wrong: it
+                // lit from anywhere in the tab, which puts the response on a shape the
+                // pointer is not necessarily over.
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Appearance.rounding.small
+                    color: hover.hovered ? Appearance.colors.colLayer1Hover : "transparent"
 
                     Behavior on color {
                         ColorAnimation {
                             duration: Appearance.animation.elementMove.duration
-                            easing.type: Appearance.animation.elementMove.type
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.animation.expressiveEffects
                         }
                     }
+                }
+
+                Column {
+                    id: content
+                    anchors.centerIn: parent
+
+                    MaterialSymbol {
+                        id: icon
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: tab.modelData.icon
+                        iconSize: 24
+                        fill: tab.active ? 1 : 0
+                        color: tab.active ? Appearance.colors.colPrimary : Appearance.colors.colOnSurfaceVariant
+
+                        // The glyph filling in is what says the destination became current,
+                        // so it runs on the same clock as the colour it fills into.
+                        Behavior on fill {
+                            NumberAnimation {
+                                duration: Appearance.animation.elementMove.duration
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.animation.expressiveEffects
+                            }
+                        }
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Appearance.animation.elementMove.duration
+                                easing.type: Appearance.animation.elementMove.type
+                            }
+                        }
+                    }
+
+                    Text {
+                        id: label
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: tab.modelData.label
+                        font.family: Appearance.font.family.main
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.weight: Font.Medium
+                        color: tab.active ? Appearance.colors.colPrimary : Appearance.colors.colOnSurfaceVariant
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Appearance.animation.elementMove.duration
+                                easing.type: Appearance.animation.elementMove.type
+                            }
+                        }
+                    }
+                }
+
+                HoverHandler {
+                    id: hover
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                TapHandler {
+                    onTapped: root.selected(tab.modelData.key)
                 }
             }
         }
@@ -126,12 +178,12 @@ Item {
             return null;
         }
 
-        // Both targets are a function of the active label alone. Deliberately not
+        // Both targets are a function of the active tab's content alone. Deliberately not
         // `x: … - width / 2`: an x binding that reads the animating width re-targets its own
         // animation on every frame the width advances, so the slide chases a destination that
         // keeps moving and never runs its curve to a clean arrival.
-        readonly property real targetWidth: activeTab ? Math.max(root.minimumIndicator, activeTab.labelWidth) : 0
-        readonly property real targetX: activeTab ? activeTab.labelX + (activeTab.labelWidth - targetWidth) / 2 : 0
+        readonly property real targetWidth: activeTab ? Math.max(root.minimumIndicator, activeTab.contentWidth) : 0
+        readonly property real targetX: activeTab ? activeTab.contentX + (activeTab.contentWidth - targetWidth) / 2 : 0
 
         // The card is destroyed and rebuilt every time the dashboard opens, so the first
         // placement is not a move. Without this the indicator slides in from the row's left

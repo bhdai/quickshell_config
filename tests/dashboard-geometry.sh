@@ -104,7 +104,7 @@ run_case full "$test_dir/full-library/03.png"
 # number the two columns have to agree on, so the tile edge and the calendar's six week rows
 # are both checked against it here.
 expect full \
-    "card=896x508" \
+    "card=896x524" \
     "pane=872x428" \
     "band=872x72" \
     "calendar=0,80 332x348" \
@@ -156,7 +156,7 @@ done
 
 # Every month is six rows and the Today control is opacity-gated, so navigating cannot change
 # a single one of those numbers. The card resizes between destinations and nowhere else.
-if ! grep -qF "navigated=896x508,896x508,896x508 today=28@1" <<<"$results"; then
+if ! grep -qF "navigated=896x524,896x524,896x524 today=28@1" <<<"$results"; then
     echo "$results"
     echo "The dashboard resized while navigating months"
     exit 1
@@ -170,16 +170,29 @@ if [[ "$(grep -o 'natural=[0-9.]*' <<<"$results" | sort -u | wc -l)" != 1 ]]; th
     exit 1
 fi
 
-# Two equal, label-only targets across the row, at M3's 48px. The row is as wide as the card
-# it is in, so the two destinations put the same tabs at different widths.
+# Two equal icon-over-label targets across the row, at M3's 64px for a two-line tab. The row
+# is as wide as the card it is in, so the two destinations put the same tabs at different
+# widths.
 expect full \
-    "TABS height=48 widths=436,436" \
-    "TABS height=48 widths=338,338"
+    "TABS height=64 widths=436,436" \
+    "TABS height=64 widths=338,338"
 
-# The indicator has to hug the rendered label rather than the cell, and the two labels are
-# not the same width, so this compares the two measured segments rather than pinning numbers
-# that come from font metrics. Both tabs are checked because an indicator bound to the first
-# cell would look correct on Calendar and wrong nowhere else.
+# TABBAR_H is 64 because a 24px icon over a 15px label measures 49 and is given 6px above and
+# below plus the indicator's 3px lane. The content is centred in the bar rather than padded to
+# it, so font metrics that drifted far from 49 would silently move that padding instead of
+# failing. Only the span is the contract; the exact number comes from the font.
+for lines in $(grep -o 'lines=[0-9]*' <<<"$results" | cut -d= -f2); do
+    if ((lines < 45 || lines > 53)); then
+        echo "$results"
+        echo "The tab's two lines no longer fit the 6px above and below that make the bar 64: lines=$lines"
+        exit 1
+    fi
+done
+
+# The indicator has to hug the wider of a tab's two rendered lines rather than the cell, and
+# no two tabs draw the same width, so this compares the two measured segments rather than
+# pinning numbers that come from font metrics. Both tabs are checked because an indicator
+# bound to the first cell would look correct on Dashboard and wrong nowhere else.
 indicators=()
 while read -r indicator active; do
     indicators+=("$indicator")
@@ -205,7 +218,7 @@ fi
 # width, four 160x100 cells to a row at the accepted gaps, four rows of them visible, and the
 # twenty-image library scrolling rather than compressing to fit.
 expect full \
-    "GRID card=700x504 pane=676x424" \
+    "GRID card=700x520 pane=676x424" \
     "viewport=676x424 content=532" \
     "tiles=20 sizes=160x100" \
     "columns=0,172,344,516" \
@@ -219,7 +232,7 @@ expect full \
 run_case sparse "$test_dir/pixel.png"
 
 expect sparse \
-    "GRID card=700x504 pane=676x424" \
+    "GRID card=700x520 pane=676x424" \
     "viewport=676x424 content=100" \
     "tiles=2 sizes=160x100" \
     "columns=0,172" \
@@ -231,7 +244,7 @@ run_case empty
 
 # One message, and it has to say which directory was looked in and what would have counted.
 expect empty \
-    "GRID card=700x504 pane=676x424" \
+    "GRID card=700x520 pane=676x424" \
     "tiles=0" \
     "empty=true" \
     "$test_dir/empty-library" \

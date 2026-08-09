@@ -20,7 +20,11 @@
 // tab bar and the gap under it.
 const MARGIN = 10;
 const PAD = 12;
-const TABBAR_H = 48;
+// Two lines rather than one: a 24px icon over a 15px label measures 49 in this font, which
+// with 6px above and below and the 3px indicator lane is M3's icon-and-label tab height
+// exactly rather than padded up to it. Every destination's card carries this, so moving it
+// moves every pane down and rebakes WINDOW_H.
+const TABBAR_H = 64;
 const GAP = 8;
 
 // What the card adds around a pane of a given size. The window is this plus MARGIN on

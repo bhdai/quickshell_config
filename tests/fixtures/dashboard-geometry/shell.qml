@@ -26,29 +26,33 @@ ShellRoot {
         DashboardCard {
             id: card
             tabs: [
-                { key: "dashboard", label: "Dashboard" },
-                { key: "wallpaper", label: "Wallpaper" }
+                { key: "dashboard", label: "Dashboard", icon: "dashboard" },
+                { key: "wallpaper", label: "Wallpaper", icon: "wallpaper" }
             ]
             currentTab: "dashboard"
         }
 
-        // Where the indicator ended up, against the label it is supposed to be under. Both
-        // are reported within the row, so a failure shows which way they drifted.
+        // Where the indicator ended up, against the two lines it is supposed to be under.
+        // Both are reported within the row, so a failure shows which way they drifted.
         function measureTabs(): string {
             const bar = card.tabBarItem;
-            const labels = [];
+            const tabs = [];
+            // A tab is what knows whether it is the current destination. Its two lines are
+            // Text items, which carry a contentWidth of their own.
             const walk = item => {
-                if (item.labelWidth !== undefined)
-                    labels.push(item);
+                if (item.active !== undefined && item.contentWidth !== undefined)
+                    tabs.push(item);
                 for (const child of item.children)
                     walk(child);
             };
             walk(bar);
-            labels.sort((first, second) => first.x - second.x);
+            tabs.sort((first, second) => first.x - second.x);
 
             const indicator = bar.indicatorItem;
-            const active = labels.find(label => label.active);
-            return `TABS height=${bar.height} widths=${labels.map(label => Math.round(label.width)).join(",")}` + ` indicator=${Math.round(indicator.x)}+${Math.round(indicator.width)}@${indicator.height}` + ` active=${Math.round(active.labelX)}+${Math.round(active.labelWidth)}`;
+            const active = tabs.find(tab => tab.active);
+            // The two lines together, which is the number the bar's height was built from.
+            const lines = active.children.find(child => child.height > 0 && child.children.length === 2);
+            return `TABS height=${bar.height} widths=${tabs.map(tab => Math.round(tab.width)).join(",")}` + ` lines=${Math.round(lines.height)}` + ` indicator=${Math.round(indicator.x)}+${Math.round(indicator.width)}@${indicator.height}` + ` active=${Math.round(active.contentX)}+${Math.round(active.contentWidth)}`;
         }
 
         Timer {
