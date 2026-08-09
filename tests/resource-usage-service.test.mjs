@@ -91,6 +91,24 @@ test("network deltas publish current rates and their aligned history fields", ()
     assert.match(poll, /uploadBytesPerSecond: uploadSample/);
 });
 
+// The counters the rate is a delta of are cumulative to begin with, so the totals are the
+// same reading published rather than a second thing to keep. They are what the kernel says
+// the present set of non-loopback interfaces has carried, which is why an interface going
+// away takes its bytes with it — that is the counter's own meaning, not a lost total.
+test("the network counters are published as totals since boot", () => {
+    assert.match(service, /property var downloadTotalBytes: null/);
+    assert.match(service, /property var uploadTotalBytes: null/);
+
+    const [poll] = blocks(service, "function poll(appendSample: bool): void");
+    assert.match(poll, /root\.downloadTotalBytes = networkStats\.receivedBytes/);
+    assert.match(poll, /root\.uploadTotalBytes = networkStats\.transmittedBytes/);
+
+    // A failed read leaves the last totals standing, like every other scalar here: an
+    // unreadable `/proc/net/dev` is not the machine having transferred nothing.
+    const guarded = /if \(networkStats\) \{[^}]*root\.downloadTotalBytes/s;
+    assert.match(poll, guarded);
+});
+
 test("CPU temperature discovery is one label-based shell invocation in fallback order", () => {
     assert.match(service, /import "cpu_temperature\.js" as CpuTemperature/);
 

@@ -41,6 +41,12 @@ Singleton {
 
     property var downloadBytesPerSecond: null
     property var uploadBytesPerSecond: null
+    // What the present non-loopback interfaces have carried since they came up. These are the
+    // same cumulative counters the rates are deltas of, so publishing them costs nothing —
+    // but they are the kernel's totals rather than this shell's: an interface going away
+    // takes its bytes out of them, because the set they describe is the set that exists now.
+    property var downloadTotalBytes: null
+    property var uploadTotalBytes: null
     property var previousNetworkStats: null
 
     // Formatted strings for display
@@ -141,6 +147,10 @@ Singleton {
         let downloadSample = NaN;
         let uploadSample = NaN;
         let networkRates = null;
+        if (networkStats) {
+            root.downloadTotalBytes = networkStats.receivedBytes;
+            root.uploadTotalBytes = networkStats.transmittedBytes;
+        }
         if (networkStats && root.previousNetworkStats && !discontinuity)
             networkRates = ResourceUsageParse.calculateNetworkRates(root.previousNetworkStats, networkStats, elapsedMs);
         root.previousNetworkStats = networkStats;

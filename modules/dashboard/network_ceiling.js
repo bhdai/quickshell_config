@@ -24,16 +24,25 @@ const FALL_FRACTION = 0.5;
 // the ceiling label change again.
 const SETTLE_FRACTION = 0.01;
 
-// The scale both directions would need right now: the largest reading in either of them,
-// never under the floor. Non-finite entries are gaps rather than readings — scaling to one
-// would be scaling to the absence of data.
-function ceilingTarget(downloadValues, uploadValues) {
-    let peak = FLOOR_BYTES_PER_SECOND;
-    for (const values of [downloadValues, uploadValues])
-        for (const value of values)
-            if (Number.isFinite(value) && value > peak)
-                peak = value;
+// The fastest reading in one direction's window, or null if the window holds no reading at
+// all. Non-finite entries are gaps rather than readings: a direction that spent the minute
+// rebaselining has no peak, which a zero would misreport as a minute of silence.
+function peakRate(values) {
+    let peak = null;
+    for (const value of values)
+        if (Number.isFinite(value) && (peak === null || value > peak))
+            peak = value;
     return peak;
+}
+
+// The scale both directions would need right now: whichever of them peaked higher, never
+// under the floor.
+function ceilingTarget(downloadPeak, uploadPeak) {
+    let target = FLOOR_BYTES_PER_SECOND;
+    for (const peak of [downloadPeak, uploadPeak])
+        if (Number.isFinite(peak) && peak > target)
+            target = peak;
+    return target;
 }
 
 // Where the ceiling goes next, given where it is. Deliberately asymmetric: it reaches a

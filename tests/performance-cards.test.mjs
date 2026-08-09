@@ -123,13 +123,65 @@ test("RAM and swap share a fixed full-scale plot and their colours", () => {
 test("both directions are the network card's headline", () => {
     assert.match(networkCard, /symbol: "network_check"/);
 
-    // One inline component used twice, so the two readings cannot drift into different
-    // weights: what differs between them is the direction, its colour and its rate.
-    const [download, upload] = blocks(networkCard, "DirectionReading");
-    assert.match(download, /rate: ResourceUsage\.formatRate\(ResourceUsage\.downloadBytesPerSecond\)/);
-    assert.match(upload, /rate: ResourceUsage\.formatRate\(ResourceUsage\.uploadBytesPerSecond\)/);
-    assert.match(download, /accent: Appearance\.colors\.colPrimary/);
-    assert.match(upload, /accent: Appearance\.colors\.colTertiary/);
+    // One line each, from the same three components, so the two directions cannot drift into
+    // different weights: what differs between them is the direction, its colour and its
+    // readings. The grid is what lines their columns up without a width written anywhere.
+    const [headline] = blocks(networkCard, "Grid");
+    assert.match(headline, /columns: 3/);
+
+    const [downArrow, upArrow] = blocks(networkCard, "DirectionArrow");
+    assert.match(downArrow, /text: "arrow_downward"/);
+    assert.match(downArrow, /color: Appearance\.colors\.colPrimary/);
+    assert.match(upArrow, /text: "arrow_upward"/);
+    assert.match(upArrow, /color: Appearance\.colors\.colTertiary/);
+
+    const [download, upload] = blocks(networkCard, "CurrentRate");
+    assert.match(download, /text: ResourceUsage\.formatRate\(ResourceUsage\.downloadBytesPerSecond\)/);
+    assert.match(upload, /text: ResourceUsage\.formatRate\(ResourceUsage\.uploadBytesPerSecond\)/);
+});
+
+// Four readings where the CPU card has one. A 36px figure twice over would leave the peak and
+// the total nowhere to go and take the height off the plot, which is the element the whole
+// destination is built around.
+test("the current rates are stated quietly enough to leave room for the plot", () => {
+    const size = Number(/readonly property int rateSize: (\d+)/.exec(networkCard)[1]);
+    assert.ok(size < 36, `current rate at ${size}px is the size of a single-figure headline`);
+
+    const [rate] = blocks(networkCard, "component CurrentRate: Text");
+    assert.match(rate, /font\.pixelSize: root\.rateSize/);
+    assert.match(rate, /color: Appearance\.colors\.colOnLayer2/);
+
+    // The supporting readings sit in a fixed column, so the number in front of them changing
+    // width every second does not slide them back and forth under the reader.
+    assert.match(rate, /width: Math\.max\(implicitWidth, rateColumn\.width\)/);
+    const [column] = blocks(networkCard, "TextMetrics");
+    assert.match(column, /text: "1023\.9 KiB\/s"/);
+    assert.match(column, /font\.pixelSize: root\.rateSize/);
+
+    // The supporting pair is subtext: a peak and a counter are context for the current
+    // reading, not three readings competing at one weight.
+    const [past] = blocks(networkCard, "component PastReadings: Text");
+    assert.match(past, /font\.pixelSize: Appearance\.font\.pixelSize\.smaller/);
+    assert.match(past, /color: Appearance\.colors\.colSubtext/);
+});
+
+// The peak is the fastest second of the minute on the plot, so the plot's own "Last 60
+// seconds" is what dates it. The counter is not from that window at all, and says so — left
+// unqualified beside the peak it would read as another number about the same minute.
+test("each direction states its window peak and its counter since boot", () => {
+    const [download, upload] = blocks(networkCard, "PastReadings");
+    assert.match(download, /text: root\.pastText\(root\.downloadPeak, ResourceUsage\.downloadTotalBytes\)/);
+    assert.match(upload, /text: root\.pastText\(root\.uploadPeak, ResourceUsage\.uploadTotalBytes\)/);
+
+    const [pastText] = blocks(networkCard, "function pastText(peakBytesPerSecond: var, totalBytes: var): string");
+    assert.match(pastText, /peak \$\{ResourceUsage\.formatRate\(peakBytesPerSecond\)\}/);
+    assert.match(pastText, /\$\{ResourceUsage\.formatBytes\(totalBytes\)\} since boot/);
+
+    // Both peaks come off the same pass over the window that chooses the shared scale, so the
+    // number stated and the number scaled to cannot disagree.
+    const [update] = blocks(networkCard, "function updateWindow(): void");
+    assert.match(update, /root\.downloadPeak = Ceiling\.peakRate\(download\)/);
+    assert.match(update, /root\.uploadPeak = Ceiling\.peakRate\(upload\)/);
 });
 
 // An interface appearing or going away resets the counters the rate is a delta of. The
@@ -138,7 +190,7 @@ test("both directions are the network card's headline", () => {
 test("a rebaselining direction reads as an em dash without disturbing its history", () => {
     // `ResourceUsage` publishes null for that direction and the service's own formatter is
     // what turns null into an em dash — the card does not get to decide on a stand-in.
-    assert.match(networkCard, /rate: ResourceUsage\.formatRate\(/);
+    assert.match(networkCard, /text: ResourceUsage\.formatRate\(ResourceUsage\.downloadBytesPerSecond\)/);
     assert.doesNotMatch(networkCard, /\|\| 0|\?\? 0/);
 
     // The row it wrote is NaN, which is a break in the line rather than a reason to throw
@@ -154,7 +206,7 @@ test("a rebaselining direction reads as an em dash without disturbing its histor
 // draw the same movement. Stating the ceiling is what separates them.
 test("both series share one damped ceiling, and the card says what it is", () => {
     assert.match(networkCard, /property real ceiling: Ceiling\.FLOOR_BYTES_PER_SECOND/);
-    assert.match(networkCard, /Ceiling\.settleCeiling\(root\.ceiling, Ceiling\.ceilingTarget\(/);
+    assert.match(networkCard, /Ceiling\.settleCeiling\(root\.ceiling, Ceiling\.ceilingTarget\(root\.downloadPeak, root\.uploadPeak\)\)/);
 
     const [series] = blocks(networkCard, "TimeseriesPlot");
     assert.match(series, /maximum: root\.ceiling/);
@@ -162,7 +214,7 @@ test("both series share one damped ceiling, and the card says what it is", () =>
 
     const [connections] = blocks(networkCard, "Connections");
     assert.match(connections, /target: ResourceUsage/);
-    assert.match(connections, /function onHistoryUpdated\(\): void \{\s*root\.updateCeiling\(\);/);
+    assert.match(connections, /function onHistoryUpdated\(\): void \{\s*root\.updateWindow\(\);/);
 });
 
 test("a moving ceiling is stated where it does not compete with the lines", () => {
@@ -176,16 +228,20 @@ test("a moving ceiling is stated where it does not compete with the lines", () =
     assert.match(label, /visible: !root\.collecting && root\.ceilingLabel !== ""/);
 });
 
-// Bytes since boot answer a different question from the one this destination asks, and the
-// service does not carry them. Pinned as what the card reads rather than as a word it avoids.
-test("the network card reads current rates and their history, and nothing else", () => {
+// Spec #150 ruled out network totals; they are here because the shell's owner asked for them
+// after seeing the card. Pinned as the exact set the card reads, so the readings on it stay a
+// decision rather than a drift, and so the departure from the spec is visible from the tests.
+test("the network card reads current rates, their history, and the boot counters", () => {
     const referenced = [...new Set(networkCard.match(/ResourceUsage\.\w+/g))].sort();
 
     assert.deepEqual(referenced, [
         "ResourceUsage.downloadBytesPerSecond",
+        "ResourceUsage.downloadTotalBytes",
+        "ResourceUsage.formatBytes",
         "ResourceUsage.formatRate",
         "ResourceUsage.history",
-        "ResourceUsage.uploadBytesPerSecond"
+        "ResourceUsage.uploadBytesPerSecond",
+        "ResourceUsage.uploadTotalBytes"
     ]);
 });
 
