@@ -15,6 +15,12 @@ test("history is a read-only 60-row model contract with one update signal", () =
     assert.match(service, /ListModel\s*\{\s*id: historyModel\s*\}/);
 });
 
+test("current network rates remain unavailable until a delta reading exists", () => {
+    assert.match(service, /property var downloadBytesPerSecond: null/);
+    assert.match(service, /property var uploadBytesPerSecond: null/);
+    assert.match(service, /property var previousNetworkStats: null/);
+});
+
 test("rolling history publishes one coherent aligned sample before notifying", () => {
     const [append] = blocks(service, "function appendHistory(sample: var): void");
 
@@ -51,7 +57,7 @@ test("polled proc files use blocking reload-then-read I/O", () => {
         assert.match(file, /blockAllReads: true/);
 
     const [poll] = blocks(service, "function poll(appendSample: bool): void");
-    for (const id of ["fileMeminfo", "fileStat"]) {
+    for (const id of ["fileMeminfo", "fileStat", "fileNetwork"]) {
         const reload = poll.indexOf(`${id}.reload()`);
         const read = poll.indexOf(`${id}.text()`);
         assert.notEqual(reload, -1, `${id} is not reloaded`);
@@ -64,9 +70,25 @@ test("the QML service delegates parsing and formatting to its pure library", () 
     assert.match(service, /ResourceUsageParse\.parseMeminfo/);
     assert.match(service, /ResourceUsageParse\.parseCpuStat/);
     assert.match(service, /ResourceUsageParse\.calculateCpuUsage/);
+    assert.match(service, /ResourceUsageParse\.parseNetDev/);
+    assert.match(service, /ResourceUsageParse\.calculateNetworkRates/);
     assert.match(service, /return ResourceUsageParse\.formatBytes\(bytes\)/);
     assert.match(service, /return ResourceUsageParse\.formatRate\(bytesPerSecond\)/);
     assert.doesNotMatch(service, /\.match\(/);
+});
+
+test("network deltas publish current rates and their aligned history fields", () => {
+    const [poll] = blocks(service, "function poll(appendSample: bool): void");
+    const calculation = poll.indexOf("ResourceUsageParse.calculateNetworkRates(");
+    const baseline = poll.indexOf("root.previousNetworkStats = networkStats");
+
+    assert.notEqual(calculation, -1, "network rates are not calculated");
+    assert.notEqual(baseline, -1, "network counters are not rebaselined");
+    assert.ok(calculation < baseline, "network counters are replaced before their delta is calculated");
+    assert.match(poll, /root\.downloadBytesPerSecond = networkRates\.downloadBytesPerSecond/);
+    assert.match(poll, /root\.uploadBytesPerSecond = networkRates\.uploadBytesPerSecond/);
+    assert.match(poll, /downloadBytesPerSecond: downloadSample/);
+    assert.match(poll, /uploadBytesPerSecond: uploadSample/);
 });
 
 test("CPU temperature discovery is one label-based shell invocation in fallback order", () => {
