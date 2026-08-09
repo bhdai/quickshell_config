@@ -13,7 +13,14 @@ Item {
 
     required property var tabs
     required property string current
+    // The width this bar will have once the card has finished resizing to the destination
+    // being selected. Handed down rather than measured here: while a switch runs, everything
+    // this bar is laid out in is still travelling, and an indicator aimed at a width that
+    // moves every frame never gets to run its curve.
+    required property real settledBarWidth
     property Item gridFocusTarget: null
+
+    readonly property int currentIndex: root.tabs.findIndex(tab => tab.key === root.current)
 
     readonly property Item currentItem: indicator.activeTab
     readonly property bool activeTabFocused: currentItem?.activeFocus ?? false
@@ -58,8 +65,9 @@ Item {
                 required property var modelData
                 readonly property bool active: root.current === modelData.key
                 // Published from the delegate because only the delegate knows how wide its
-                // own two lines drew.
-                readonly property real contentX: x + (width - contentWidth) / 2
+                // own two lines drew. Deliberately the natural width of the content and not
+                // where the content ended up: this never depends on the cell the delegate was
+                // laid into, which makes it the one geometry the indicator may read mid-move.
                 readonly property real contentWidth: Math.max(icon.implicitWidth, label.implicitWidth)
 
                 width: row.width / repeater.count
@@ -167,8 +175,9 @@ Item {
         radius: height / 2
         color: Appearance.colors.colPrimary
 
-        // Both x and width animate: the indicator is as wide as the active label, and no
-        // two labels are the same width.
+        // Found by asking the delegates rather than by indexing them, so it is null until they
+        // exist. It is the bar's focus target as well as the content the indicator is as wide
+        // as; where that content sits is not read from it.
         readonly property Item activeTab: {
             for (let i = 0; i < repeater.count; i++) {
                 const item = repeater.itemAt(i);
@@ -178,12 +187,21 @@ Item {
             return null;
         }
 
-        // Both targets are a function of the active tab's content alone. Deliberately not
-        // `x: … - width / 2`: an x binding that reads the animating width re-targets its own
-        // animation on every frame the width advances, so the slide chases a destination that
-        // keeps moving and never runs its curve to a clean arrival.
+        // One tab's share of the bar once the card has settled — the same stride idiom the
+        // workspace indicator's row is built from, and for the same reason: a position that is
+        // arithmetic from an index and a width that does not move can be aimed at on the frame
+        // of the click. A Behavior's animation restarts from wherever it currently is every
+        // time its target changes, so an indicator placed over the laid-out row instead is
+        // re-pinned on every frame the card resizes and only sets off once the card has
+        // already arrived.
+        readonly property real stride: root.settledBarWidth / repeater.count
+
+        // The width is the active tab's content and the position is arithmetic, so the two
+        // travel on their own clocks. Deliberately not `x: … - width / 2`: an x binding that
+        // reads the animating width re-targets its own animation on every frame the width
+        // advances, which is the same freeze one level down.
         readonly property real targetWidth: activeTab ? Math.max(root.minimumIndicator, activeTab.contentWidth) : 0
-        readonly property real targetX: activeTab ? activeTab.contentX + (activeTab.contentWidth - targetWidth) / 2 : 0
+        readonly property real targetX: stride * root.currentIndex + (stride - targetWidth) / 2
 
         // The card is destroyed and rebuilt every time the dashboard opens, so the first
         // placement is not a move. Without this the indicator slides in from the row's left

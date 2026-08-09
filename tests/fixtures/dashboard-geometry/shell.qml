@@ -50,9 +50,13 @@ ShellRoot {
 
             const indicator = bar.indicatorItem;
             const active = tabs.find(tab => tab.active);
+            // Measured off the laid-out cell on purpose. The indicator places itself by
+            // arithmetic over the width the card settles at, precisely so that it never reads
+            // the row while the card is resizing — and at rest the two have to agree.
+            const activeContentX = active.x + (active.width - active.contentWidth) / 2;
             // The two lines together, which is the number the bar's height was built from.
             const lines = active.children.find(child => child.height > 0 && child.children.length === 2);
-            return `TABS height=${bar.height} widths=${tabs.map(tab => Math.round(tab.width)).join(",")}` + ` lines=${Math.round(lines.height)}` + ` indicator=${Math.round(indicator.x)}+${Math.round(indicator.width)}@${indicator.height}` + ` active=${Math.round(active.contentX)}+${Math.round(active.contentWidth)}`;
+            return `TABS height=${bar.height} widths=${tabs.map(tab => Math.round(tab.width)).join(",")}` + ` lines=${Math.round(lines.height)}` + ` indicator=${Math.round(indicator.x)}+${Math.round(indicator.width)}@${indicator.height}` + ` active=${Math.round(activeContentX)}+${Math.round(active.contentWidth)}`;
         }
 
         Timer {

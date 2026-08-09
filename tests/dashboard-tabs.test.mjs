@@ -9,6 +9,7 @@ const dashboardDir = path.join(repoRoot, "modules", "dashboard");
 
 const dashboard = read(dashboardDir, "Dashboard.qml");
 const tabBar = read(dashboardDir, "DashTabBar.qml");
+const card = read(dashboardDir, "DashboardCard.qml");
 
 // The icon is presentation, and it travels with the label in the one ordered model the tab
 // bar reads. A destination that named no icon would draw an empty line above its label.
@@ -72,4 +73,37 @@ test("the indicator hugs the wider of the two lines", () => {
     assert.match(tabBar, /targetWidth: activeTab \? Math\.max\(root\.minimumIndicator, activeTab\.contentWidth\) : 0/);
     assert.match(tabBar, /height: root\.indicatorHeight\b/);
     assert.doesNotMatch(tabBar, /labelWidth|labelX/);
+});
+
+// A Behavior's NumberAnimation restarts from wherever it currently is every time its target
+// moves, so an indicator aimed at geometry that is itself animating is re-pinned on every
+// frame of the card's resize and only sets off once the card has already settled. The width
+// the indicator is placed over has to be the one the card is travelling to.
+test("the card publishes the width it is travelling to, ahead of the Behavior", () => {
+    assert.match(card, /readonly property real settledWidth: Metrics\.cardWidth\(paneLoader\.implicitWidth\)/);
+    assert.match(card, /implicitWidth: root\.settledWidth\b/);
+
+    const [bar] = blocks(card, "DashTabBar");
+    assert.match(bar, /settledBarWidth: root\.settledWidth - 2 \* Metrics\.PAD/);
+});
+
+// The same stride idiom the workspace indicator is built from: a position is arithmetic from
+// an index and a width that does not move, so the slide is one movement on one clock.
+test("the indicator is placed by index arithmetic over the settled width", () => {
+    assert.match(tabBar, /required property real settledBarWidth\b/);
+    assert.match(tabBar, /readonly property int currentIndex: root\.tabs\.findIndex\(tab => tab\.key === root\.current\)/);
+
+    const indicator = blocks(tabBar, "Rectangle").find(block => block.includes("id: indicator"));
+    assert.match(indicator, /readonly property real stride: root\.settledBarWidth \/ repeater\.count/);
+    assert.match(indicator, /readonly property real targetX: stride \* root\.currentIndex \+ \(stride - targetWidth\) \/ 2/);
+});
+
+// The one geometry the indicator may still read mid-move is the delegate's own content width,
+// which is what its two lines drew and never depends on the cell they were laid into. A
+// position published by the delegate is a laid-out one, and travels while the card resizes.
+test("the delegate publishes no laid-out position", () => {
+    const [delegate] = blocks(tabBar, "delegate: Item");
+
+    assert.doesNotMatch(delegate, /contentX/);
+    assert.doesNotMatch(tabBar, /activeTab\.x\b/);
 });

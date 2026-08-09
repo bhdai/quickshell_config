@@ -24,7 +24,13 @@ Rectangle {
 
     signal tabSelected(string tab)
 
-    implicitWidth: Metrics.cardWidth(paneLoader.implicitWidth)
+    // The width the card is travelling to, published ahead of the Behavior that takes
+    // `implicitWidth` there. Anything that has to place itself against the destination the
+    // card is arriving at — rather than the width it happens to be passing through this
+    // frame — reads this instead.
+    readonly property real settledWidth: Metrics.cardWidth(paneLoader.implicitWidth)
+
+    implicitWidth: root.settledWidth
     implicitHeight: Metrics.cardHeight(paneLoader.implicitHeight)
 
     // The card is destroyed and rebuilt every time the dashboard opens, so the first size is
@@ -68,6 +74,9 @@ Rectangle {
         anchors.rightMargin: Metrics.PAD
         tabs: root.tabs
         current: root.currentTab
+        // The bar is anchored to both of the card's padded edges, so its settled width is the
+        // card's settled width less that padding.
+        settledBarWidth: root.settledWidth - 2 * Metrics.PAD
         gridFocusTarget: root.currentTab === "wallpaper" ? paneLoader.item : null
         onSelected: tab => root.tabSelected(tab)
     }
