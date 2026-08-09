@@ -14,8 +14,8 @@ import "dashboard_metrics.js" as Metrics
 Rectangle {
     id: root
 
-    property var tabs: ["Calendar", "Wallpaper"]
-    property string currentTab: "calendar"
+    required property var tabs
+    required property string currentTab
     // What the pane loader built and the row above it, for the offscreen geometry fixture
     // to measure.
     readonly property Item paneItem: paneLoader.item
@@ -86,7 +86,7 @@ Rectangle {
         anchors.bottomMargin: Metrics.PAD
         clip: true
 
-        // One property, one Loader, inactive destinations unloaded — so opening the calendar
+        // One property, one Loader, inactive destinations unloaded — so opening the dashboard
         // builds nothing a later tab owns, and leaving one releases it.
         //
         // Anchored to a corner rather than filled: the pane names its own size, and a filled
@@ -97,7 +97,7 @@ Rectangle {
             anchors.left: parent.left
             sourceComponent: {
                 switch (root.currentTab) {
-                case "calendar":
+                case "dashboard":
                     return calendarComponent;
                 case "wallpaper":
                     return wallpaperComponent;

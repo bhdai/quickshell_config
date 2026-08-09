@@ -10,6 +10,7 @@ const barDir = path.join(repoRoot, "modules", "bar");
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
 
 const dashboard = read(dashboardDir, "Dashboard.qml");
+const dashTabBar = read(dashboardDir, "DashTabBar.qml");
 const calendarCard = read(dashboardDir, "CalendarCard.qml");
 const weather = read(repoRoot, "services", "Weather.qml");
 
@@ -23,7 +24,7 @@ test("every dashboard IPC handler answers with a string", () => {
     assert.match(handler, /function open\(tab: string\): string/);
     assert.match(handler, /function close\(\): string/);
     assert.match(handler, /return "closed"/);
-    assert.match(handler, /return "opened " \+ tab/);
+    assert.match(handler, /return "opened " \+ canonicalTab/);
 });
 
 test("an unknown tab is named back rather than opened", () => {
@@ -31,20 +32,46 @@ test("an unknown tab is named back rather than opened", () => {
 
     const rejection = open.indexOf('return "unknown tab: " + tab');
     assert.notEqual(rejection, -1, "open() does not name an unknown tab back");
+    assert.ok(rejection < open.indexOf("root.currentTab = canonicalTab"), "open() selects an unknown tab");
     assert.ok(rejection < open.indexOf("isOpen = true"), "open() opens before it validates the tab");
 });
 
-// The tab list is the one place that says what exists, and IPC validates against it rather
-// than against a literal, so adding a destination cannot leave IPC refusing it.
-test("the tab list is what IPC validates against", () => {
-    assert.match(dashboard, /readonly property var tabs: \["Calendar", "Wallpaper"\]/);
-    assert.match(dashboard, /function knows\(tab: string\): bool \{\s*return root\.tabs\.some\(label => label\.toLowerCase\(\) === tab\);/);
+test("the calendar alias is canonical before open changes state or answers", () => {
+    const [open] = blocks(dashboard, "function open(tab: string): string");
+
+    const canonical = open.indexOf('const canonicalTab = tab === "calendar" ? "dashboard" : tab');
+    const validation = open.indexOf("root.knows(canonicalTab)");
+    const selection = open.indexOf("root.currentTab = canonicalTab");
+    const response = open.indexOf('return "opened " + canonicalTab');
+
+    assert.notEqual(canonical, -1, "open() does not retain the calendar alias");
+    assert.ok(canonical < open.indexOf('return "unknown tab: " + tab'), "open() can answer before resolving the alias");
+    assert.ok(canonical < validation, "open() validates before resolving the alias");
+    assert.ok(validation < selection, "open() changes selection before validation");
+    assert.ok(selection < response, "open() answers before selecting the canonical destination");
 });
 
-test("opening through the bar always lands on Calendar", () => {
+// Identity and presentation share one ordered model, but the key is never recovered from
+// label text. A presentation rename therefore cannot move the IPC surface.
+test("destination keys are ordered independently of their labels", () => {
+    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper" \}\s*\]/);
+    assert.match(dashboard, /function knows\(tab: string\): bool \{\s*return root\.tabs\.some\(destination => destination\.key === tab\);/);
+    assert.doesNotMatch(dashboard, /toLowerCase/);
+    assert.match(dashTabBar, /root\.current === modelData\.key/);
+    assert.match(dashTabBar, /root\.selected\(modelData\.key\)/);
+    assert.match(dashTabBar, /text: tab\.modelData\.label/);
+    assert.doesNotMatch(dashTabBar, /toLowerCase/);
+});
+
+test("the bar toggle closes in place or opens on the Dashboard destination", () => {
     const [toggle] = blocks(dashboard, "function toggle(): void");
 
-    assert.match(toggle, /root\.currentTab = "calendar";\s*root\.isOpen = true;/);
+    const close = toggle.indexOf("root.isOpen = false");
+    const earlyReturn = toggle.indexOf("return;");
+    const selection = toggle.indexOf('root.currentTab = "dashboard"');
+
+    assert.ok(close < earlyReturn && earlyReturn < selection, "toggle() changes destination while closing");
+    assert.match(toggle, /root\.currentTab = "dashboard";\s*root\.isOpen = true;/);
 });
 
 test("opening the dashboard refreshes readings that are already stale", () => {

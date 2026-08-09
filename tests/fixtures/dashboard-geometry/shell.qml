@@ -25,6 +25,11 @@ ShellRoot {
 
         DashboardCard {
             id: card
+            tabs: [
+                { key: "dashboard", label: "Dashboard" },
+                { key: "wallpaper", label: "Wallpaper" }
+            ]
+            currentTab: "dashboard"
         }
 
         // Where the indicator ended up, against the label it is supposed to be under. Both
@@ -104,7 +109,7 @@ ShellRoot {
                 const sizes = [measure(-1), measure(1), measure(7)];
                 console.log(`DASHBOARD navigated=${sizes.join(",")} today=${today.height}@${today.opacity} natural=${calendar.naturalHeight}`);
 
-                console.log(`${window.measureTabs()} on=calendar`);
+                console.log(`${window.measureTabs()} on=dashboard`);
 
                 card.currentTab = "wallpaper";
                 gridTimer.restart();

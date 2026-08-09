@@ -19,8 +19,8 @@ Item {
     readonly property Item calendarColumn: calendar
     readonly property Item tileColumn: tiles
 
-    implicitWidth: Metrics.CANVAS.calendar.width
-    implicitHeight: Metrics.CANVAS.calendar.height
+    implicitWidth: Metrics.CANVAS.dashboard.width
+    implicitHeight: Metrics.CANVAS.dashboard.height
 
     WeatherHeader {
         id: header
