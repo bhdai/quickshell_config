@@ -50,6 +50,41 @@ function calculateCpuUsage(previous, current, elapsedMs) {
     return 1 - idleDelta / totalDelta;
 }
 
+function parseNetDev(text) {
+    let receivedBytes = 0;
+    let transmittedBytes = 0;
+    let foundDevice = false;
+
+    for (const line of String(text ?? "").split("\n")) {
+        const match = line.match(/^\s*([^:]+):\s*(.*)$/);
+        if (!match)
+            continue;
+
+        const counters = match[2].trim().split(/\s+/).map(Number);
+        if (counters.length < 16 || counters.some(value => !Number.isFinite(value) || value < 0))
+            continue;
+
+        foundDevice = true;
+        if (match[1].trim() === "lo")
+            continue;
+
+        receivedBytes += counters[0];
+        transmittedBytes += counters[8];
+    }
+
+    return foundDevice ? { receivedBytes, transmittedBytes } : null;
+}
+
+function calculateNetworkRates(previous, current, elapsedMs) {
+    const seconds = elapsedMs / 1000;
+    const receivedDelta = current.receivedBytes - previous.receivedBytes;
+    const transmittedDelta = current.transmittedBytes - previous.transmittedBytes;
+    return {
+        downloadBytesPerSecond: receivedDelta >= 0 ? receivedDelta / seconds : null,
+        uploadBytesPerSecond: transmittedDelta >= 0 ? transmittedDelta / seconds : null
+    };
+}
+
 function parseDf(text) {
     const line = String(text ?? "").split("\n").find(candidate => /\s\/\s*$/.test(candidate));
     if (!line)

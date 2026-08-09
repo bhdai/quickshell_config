@@ -6,9 +6,10 @@ import "ResourceUsageParse.js" as ResourceUsageParse
 import "cpu_temperature.js" as CpuTemperature
 
 /**
- * CPU, memory, and swap scalars preserve their last valid values across transient input
- * failures; temperature becomes null when its resolved sensor disappears. Consumers treat
- * history as read-only and observe historyUpdated after coherent mutations.
+ * CPU, memory, swap, and network scalars preserve their last valid values across transient
+ * input failures; a reset network counter is unavailable until the following delta. Temperature
+ * becomes null when its resolved sensor disappears. Consumers treat history as read-only and
+ * observe historyUpdated after coherent mutations.
  */
 Singleton {
     id: root
@@ -37,6 +38,10 @@ Singleton {
     property var cpuTemperatureCritical: null
     property string cpuTemperatureChip: ""
     property string cpuTemperatureLabel: ""
+
+    property var downloadBytesPerSecond: null
+    property var uploadBytesPerSecond: null
+    property var previousNetworkStats: null
 
     // Formatted strings for display
     property string memoryTotalString: formatBytes(memoryTotal * 1024)
@@ -131,6 +136,21 @@ Singleton {
             }
         }
 
+        fileNetwork.reload();
+        const networkStats = ResourceUsageParse.parseNetDev(fileNetwork.text());
+        let downloadSample = NaN;
+        let uploadSample = NaN;
+        let networkRates = null;
+        if (networkStats && root.previousNetworkStats && !discontinuity)
+            networkRates = ResourceUsageParse.calculateNetworkRates(root.previousNetworkStats, networkStats, elapsedMs);
+        root.previousNetworkStats = networkStats;
+        if (networkRates) {
+            root.downloadBytesPerSecond = networkRates.downloadBytesPerSecond;
+            root.uploadBytesPerSecond = networkRates.uploadBytesPerSecond;
+            downloadSample = networkRates.downloadBytesPerSecond;
+            uploadSample = networkRates.uploadBytesPerSecond;
+        }
+
         let temperatureSample = NaN;
         if (fileCpuTemperature.path) {
             fileCpuTemperature.reload();
@@ -152,8 +172,8 @@ Singleton {
             cpuTemperatureC: temperatureSample,
             memoryUsedPercentage: memorySample,
             swapUsedPercentage: swapSample,
-            downloadBytesPerSecond: NaN,
-            uploadBytesPerSecond: NaN
+            downloadBytesPerSecond: downloadSample,
+            uploadBytesPerSecond: uploadSample
         });
     }
 
@@ -220,6 +240,12 @@ Singleton {
     FileView {
         id: fileStat
         path: "/proc/stat"
+        blockAllReads: true
+    }
+
+    FileView {
+        id: fileNetwork
+        path: "/proc/net/dev"
         blockAllReads: true
     }
 

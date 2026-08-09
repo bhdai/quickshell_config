@@ -3,9 +3,27 @@ import test from "node:test";
 
 import { loadQmlJs } from "./load-qml-js.mjs";
 
-const { parseMeminfo, parseCpuStat, calculateCpuUsage, parseDf, formatBytes, formatRate } = loadQmlJs(
+const {
+    parseMeminfo,
+    parseCpuStat,
+    calculateCpuUsage,
+    parseNetDev,
+    calculateNetworkRates,
+    parseDf,
+    formatBytes,
+    formatRate,
+} = loadQmlJs(
     new URL("../services/ResourceUsageParse.js", import.meta.url),
-    ["parseMeminfo", "parseCpuStat", "calculateCpuUsage", "parseDf", "formatBytes", "formatRate"],
+    [
+        "parseMeminfo",
+        "parseCpuStat",
+        "calculateCpuUsage",
+        "parseNetDev",
+        "calculateNetworkRates",
+        "parseDf",
+        "formatBytes",
+        "formatRate",
+    ],
 );
 
 test("meminfo reports memory and swap counters in KiB", () => {
@@ -78,6 +96,64 @@ test("missing, stationary, or reset CPU counters require a new baseline", () => 
     assert.equal(calculateCpuUsage(null, { total: 140, idle: 50 }, 1000), null);
     assert.equal(calculateCpuUsage({ total: 100, idle: 40 }, { total: 100, idle: 40 }, 1000), null);
     assert.equal(calculateCpuUsage({ total: 100, idle: 40 }, { total: 90, idle: 35 }, 1000), null);
+});
+
+test("network counters aggregate every non-loopback interface", () => {
+    const parsed = parseNetDev(`Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo: 5000 50 0 0 0 0 0 0 5000 50 0 0 0 0 0 0
+  eth0: 1200 12 0 0 0 0 0 0 3400 34 0 0 0 0 0 0
+ wlan0:  800  8 0 0 0 0 0 0  600  6 0 0 0 0 0 0
+`);
+
+    assert.deepEqual(parsed, {
+        receivedBytes: 2000,
+        transmittedBytes: 4000,
+    });
+});
+
+test("malformed network rows are ignored without contaminating valid counters", () => {
+    assert.deepEqual(parseNetDev(`Inter-| Receive | Transmit
+broken line
+  eth0: 100 1 0 0 0 0 0 0 200 2 0 0 0 0 0 0
+ wlan0: 300 packets 0 0 0 0 0 0 400 4 0 0 0 0 0 0
+`), {
+        receivedBytes: 100,
+        transmittedBytes: 200,
+    });
+    assert.equal(parseNetDev("Inter-| Receive | Transmit\nbroken line\neth0: not counters\n"), null);
+});
+
+test("network rates use the measured elapsed time", () => {
+    assert.deepEqual(calculateNetworkRates(
+        { receivedBytes: 2000, transmittedBytes: 4000 },
+        { receivedBytes: 3024, transmittedBytes: 4512 },
+        500,
+    ), {
+        downloadBytesPerSecond: 2048,
+        uploadBytesPerSecond: 1024,
+    });
+});
+
+test("a reset gaps only its network direction and the next reading uses the new baseline", () => {
+    const reset = { receivedBytes: 100, transmittedBytes: 5000 };
+
+    assert.deepEqual(calculateNetworkRates(
+        { receivedBytes: 400, transmittedBytes: 4000 },
+        reset,
+        1000,
+    ), {
+        downloadBytesPerSecond: null,
+        uploadBytesPerSecond: 1000,
+    });
+    assert.deepEqual(calculateNetworkRates(
+        reset,
+        { receivedBytes: 600, transmittedBytes: 5250 },
+        500,
+    ), {
+        downloadBytesPerSecond: 1000,
+        uploadBytesPerSecond: 500,
+    });
 });
 
 test("df reports root filesystem sizes in bytes", () => {
