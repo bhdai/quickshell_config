@@ -70,15 +70,18 @@ Rectangle {
         }
 
         Row {
-            anchors.top: head.bottom
-            anchors.topMargin: 2
             anchors.left: parent.left
+            // Centred in the band the header and caption leave rather than hung off the
+            // header: the tile is square and the figure is its subject, so sitting it high
+            // reads as text that ran out of room rather than as the tile's reading.
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: (head.height - captionText.height) / 2
             spacing: 1
 
             Text {
                 text: root.figure
                 font.family: Appearance.font.family.main
-                font.pixelSize: 48
+                font.pixelSize: 40
                 color: Appearance.colors.colOnLayer2
                 anchors.bottom: parent.bottom
             }
@@ -91,7 +94,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 // Lifted off the row's baseline so the unit sits with the figure's digits
                 // rather than hanging under them; the offset tracks the figure's size.
-                anchors.bottomMargin: 8
+                anchors.bottomMargin: 7
             }
         }
 
@@ -104,6 +107,7 @@ Rectangle {
         }
 
         Text {
+            id: captionText
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
