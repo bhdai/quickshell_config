@@ -69,6 +69,21 @@ test("the CPU card is the top-left of the performance pane", () => {
     });
 });
 
+// Equal status with CPU is the point of the top row, so the two share a height and a width
+// and differ only in which side of the gap they start on.
+test("the memory card is the top-right of the performance pane", () => {
+    assert.deepEqual(metrics.PERFORMANCE_CARD.memory, {
+        x: 442,
+        y: 0,
+        width: 430,
+        height: 208
+    });
+
+    const { cpu, memory } = metrics.PERFORMANCE_CARD;
+    assert.equal(memory.x, cpu.x + cpu.width + metrics.CARD_GAP);
+    assert.equal(memory.x + memory.width, metrics.PERFORMANCE_PANE_W);
+});
+
 test("the calendar body is the pane under a full-width 72px header", () => {
     assert.equal(metrics.HEADER_H, 72);
     assert.equal(metrics.BODY_H, 348);
