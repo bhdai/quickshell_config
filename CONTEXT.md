@@ -32,6 +32,13 @@ destination. It exists whether or not that destination's pane is present.
 **Rest geometry** — The Dashboard's arrangement after transition motion has settled. It is
 independent of whether the selected destination's data is complete.
 
+## Indicators
+
+**Stride** — the distance from one position an indicator can occupy to the next, in
+pixels: a workspace slot's pitch along the dot row, and a tab's share of the settled
+tab-bar width. It does not depend on the indicator's own size, so every position is
+arithmetic from an index rather than read back off a laid-out item.
+
 ## Workspaces
 
 **Workspace** — Hyprland's object, as Quickshell exposes it via
@@ -49,10 +56,6 @@ slot is position.
 
 **Occupied** — a slot whose workspace exists and holds at least one window. Not the
 same as *existing*: Hyprland keeps an empty workspace alive while it is focused.
-
-**Stride** — the distance from one slot's left edge to the next one's, in pixels. It is a
-constant, so every position in the row is arithmetic from it rather than read back off a
-laid-out item.
 
 **Urgent** — a workspace flagged by the compositor as demanding attention. A property of
 the workspace, not of the windows in it.

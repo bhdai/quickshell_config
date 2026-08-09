@@ -95,7 +95,10 @@ test("the pane's reset is a cut and only its arrival is animated", () => {
 test("the card follows the pane", () => {
     const card = read(dashboardDir, "DashboardCard.qml");
 
-    assert.match(card, /implicitWidth: Metrics\.cardWidth\(paneLoader\.implicitWidth\)/);
+    // The width goes through `settledWidth`, which is that same expression named so the tab
+    // indicator can be placed over where the card is going rather than where it is.
+    assert.match(card, /readonly property real settledWidth: Metrics\.cardWidth\(paneLoader\.implicitWidth\)/);
+    assert.match(card, /implicitWidth: root\.settledWidth\b/);
     assert.match(card, /implicitHeight: Metrics\.cardHeight\(paneLoader\.implicitHeight\)/);
 });
 
