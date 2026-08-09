@@ -133,12 +133,13 @@ test("an empty library is one message naming the directory and what it accepts",
     assert.match(message, /Wallpaper\.libraryModel\.nameFilters/);
 });
 
-test("the dashboard has exactly the two destinations and routes both to a pane", () => {
-    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard", icon: "dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper", icon: "wallpaper" \}\s*\]/);
+test("the dashboard has exactly the three destinations and routes each to a pane", () => {
+    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard", icon: "dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper", icon: "wallpaper" \},\s*\{ key: "performance", label: "Performance", icon: "speed" \}\s*\]/);
 
     const [loader] = blocks(card, "Loader");
     assert.match(loader, /case "dashboard":\s*return dashboardComponent;/);
     assert.match(loader, /case "wallpaper":\s*return wallpaperComponent;/);
+    assert.match(loader, /case "performance":\s*return performanceComponent;/);
     // Anything else is no pane at all rather than a stale one left standing.
     assert.match(loader, /return null;/);
 });

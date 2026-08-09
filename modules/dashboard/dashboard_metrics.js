@@ -88,6 +88,11 @@ const GRID_ROWS = 4;
 const WALLPAPER_PANE_W = GRID_COLUMNS * CELL_W + (GRID_COLUMNS - 1) * CELL_GAP_X;
 const WALLPAPER_PANE_H = GRID_ROWS * CELL_H + (GRID_ROWS - 1) * CELL_GAP_Y;
 
+// --- Performance: the fixed canvas its four cards will fill ---
+
+const PERFORMANCE_PANE_W = 872;
+const PERFORMANCE_PANE_H = 428;
+
 // --- The window every destination is drawn into ---
 
 // Every canvas in one place, because the window has to be the largest of them. A pane reads
@@ -101,6 +106,10 @@ const CANVAS = {
     wallpaper: {
         width: WALLPAPER_PANE_W,
         height: WALLPAPER_PANE_H
+    },
+    performance: {
+        width: PERFORMANCE_PANE_W,
+        height: PERFORMANCE_PANE_H
     }
 };
 

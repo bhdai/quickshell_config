@@ -110,6 +110,8 @@ Rectangle {
                     return dashboardComponent;
                 case "wallpaper":
                     return wallpaperComponent;
+                case "performance":
+                    return performanceComponent;
                 }
                 return null;
             }
@@ -146,5 +148,10 @@ Rectangle {
         WallpaperPane {
             tabTarget: tabBar
         }
+    }
+
+    Component {
+        id: performanceComponent
+        PerformancePane {}
     }
 }
