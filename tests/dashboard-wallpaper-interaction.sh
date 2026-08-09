@@ -14,7 +14,7 @@ chmod 700 "$test_dir/runtime"
 
 ln -s "$repo_root/modules/common" "$test_dir/config/modules/common"
 ln -s "$repo_root/assets" "$test_dir/config/assets"
-for file in DashboardCard.qml DashTabBar.qml DashboardPane.qml CalendarCard.qml WeatherHeader.qml WeatherTiles.qml WeatherTile.qml HumidityWave.qml SunPath.qml WallpaperPane.qml WallpaperTile.qml PerformancePane.qml calendar_layout.js dashboard_metrics.js weather_tile_geometry.js; do
+for file in DashboardCard.qml DashTabBar.qml DashboardPane.qml CalendarCard.qml WeatherHeader.qml WeatherTiles.qml WeatherTile.qml HumidityWave.qml SunPath.qml WallpaperPane.qml WallpaperTile.qml PerformancePane.qml PerformanceCard.qml CpuCard.qml TimeseriesPlot.qml PlotKey.qml calendar_layout.js dashboard_metrics.js weather_tile_geometry.js timeseries_plot.js; do
     ln -s "$repo_root/modules/dashboard/$file" "$test_dir/config/modules/dashboard/$file"
 done
 ln -s "$repo_root/services/Weather.qml" "$test_dir/config/services/Weather.qml"
@@ -22,6 +22,11 @@ ln -s "$repo_root/services/weather_format.js" "$test_dir/config/services/weather
 ln -s "$repo_root/services/Time.qml" "$test_dir/config/services/Time.qml"
 ln -s "$repo_root/services/Wallpaper.qml" "$test_dir/config/services/Wallpaper.qml"
 ln -s "$repo_root/services/WallpaperLogic.js" "$test_dir/config/services/WallpaperLogic.js"
+# The Performance cards read the resource ring, and an `import qs.services` compiles the
+# whole directory, so the service arrives with the two libraries it parses through.
+ln -s "$repo_root/services/ResourceUsage.qml" "$test_dir/config/services/ResourceUsage.qml"
+ln -s "$repo_root/services/ResourceUsageParse.js" "$test_dir/config/services/ResourceUsageParse.js"
+ln -s "$repo_root/services/cpu_temperature.js" "$test_dir/config/services/cpu_temperature.js"
 ln -s "$repo_root/tests/fixtures/wallpaper-service/apply-colors.sh" \
     "$test_dir/config/scripts/colors/apply-colors.sh"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"

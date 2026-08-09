@@ -7,7 +7,7 @@ import { blocks, read } from "./qml-source.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
-const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
+const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CARD_GAP", "PERFORMANCE_ROW_H", "PERFORMANCE_TOP_CARD_W", "PERFORMANCE_CARD_PAD", "PERFORMANCE_CARD", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
 
 test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.MARGIN, 10);
@@ -47,6 +47,26 @@ test("the transition track gives every destination its fixed-width segment", () 
         performance: 1548
     });
     assert.equal(metrics.TRACK_W, 2420);
+});
+
+// Four cards on one canvas, so the pane is divided rather than filled: the two rows and the
+// two cards in the top row have to come out at the pane's own edges, gaps included.
+test("the performance cards divide the pane they sit on", () => {
+    assert.equal(metrics.CARD_GAP, 12);
+    assert.equal(metrics.PERFORMANCE_ROW_H, 208);
+    assert.equal(metrics.PERFORMANCE_TOP_CARD_W, 430);
+
+    assert.equal(2 * metrics.PERFORMANCE_ROW_H + metrics.CARD_GAP, metrics.PERFORMANCE_PANE_H);
+    assert.equal(2 * metrics.PERFORMANCE_TOP_CARD_W + metrics.CARD_GAP, metrics.PERFORMANCE_PANE_W);
+});
+
+test("the CPU card is the top-left of the performance pane", () => {
+    assert.deepEqual(metrics.PERFORMANCE_CARD.cpu, {
+        x: 0,
+        y: 0,
+        width: 430,
+        height: 208
+    });
 });
 
 test("the calendar body is the pane under a full-width 72px header", () => {

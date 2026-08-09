@@ -85,10 +85,34 @@ const GRID_ROWS = 4;
 const WALLPAPER_PANE_W = GRID_COLUMNS * CELL_W + (GRID_COLUMNS - 1) * CELL_GAP_X;
 const WALLPAPER_PANE_H = GRID_ROWS * CELL_H + (GRID_ROWS - 1) * CELL_GAP_Y;
 
-// --- Performance: the fixed canvas its four cards will fill ---
+// --- Performance: four cards dividing a fixed canvas ---
 
 const PERFORMANCE_PANE_W = 872;
 const PERFORMANCE_PANE_H = 428;
+
+// The gap between two cards on this destination. Deliberately not a universal inner-card
+// padding rule — it is how this pane is divided, and nothing outside it is measured from it.
+const CARD_GAP = PAD;
+
+// Two rows, and a top row of two cards of equal status: neither CPU nor memory is the
+// metric the other is read against. The bottom row divides unevenly, which is why its cards
+// name their own widths when they arrive rather than deriving from this.
+const PERFORMANCE_ROW_H = (PERFORMANCE_PANE_H - CARD_GAP) / 2;
+const PERFORMANCE_TOP_CARD_W = (PERFORMANCE_PANE_W - CARD_GAP) / 2;
+
+// What an inner card holds its content in, away from its own rounded edge.
+const PERFORMANCE_CARD_PAD = 12;
+
+// Every card's rectangle in the pane, so that a card is placed by name rather than by an
+// inline size written next to it.
+const PERFORMANCE_CARD = {
+    cpu: {
+        x: 0,
+        y: 0,
+        width: PERFORMANCE_TOP_CARD_W,
+        height: PERFORMANCE_ROW_H
+    }
+};
 
 // --- The window every destination is drawn into ---
 
