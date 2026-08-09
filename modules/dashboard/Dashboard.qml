@@ -10,9 +10,9 @@ import "dashboard_metrics.js" as Metrics
  * The surface behind the bar clock. It owns the window, the focus grab, which destination is
  * showing, and the `dashboard` IPC target.
  *
- * Destinations are entries in `tabs`, branches in the card's pane loader, and panes naming the
- * canvases they want as their implicit sizes; nothing here is per-destination, and nothing here
- * decides how big any of them are.
+ * Destinations are entries in `tabs` and panes naming the canvases they want as their implicit
+ * sizes; the card owns their temporary transition residency, while nothing here decides how
+ * big any of them are.
  */
 Scope {
     id: root

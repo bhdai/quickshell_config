@@ -81,7 +81,7 @@ test("the indicator hugs the wider of the two lines", () => {
 // frame of the card's resize and only sets off once the card has already settled. The width
 // the indicator is placed over has to be the one the card is travelling to.
 test("the card publishes the width it is travelling to, ahead of the Behavior", () => {
-    assert.match(card, /readonly property real settledWidth: Metrics\.cardWidth\(paneLoader\.implicitWidth\)/);
+    assert.match(card, /readonly property real settledWidth: Metrics\.cardWidth\(Metrics\.CANVAS\[transitionState\.destination\]\.width\)/);
     assert.match(card, /implicitWidth: root\.settledWidth\b/);
 
     const [bar] = blocks(card, "DashTabBar");
