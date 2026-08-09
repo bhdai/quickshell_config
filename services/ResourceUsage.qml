@@ -2,14 +2,19 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "ResourceUsageParse.js" as ResourceUsageParse
 
 /**
- * ResourceUsage - Singleton service for system resource monitoring
- * Polls /proc/meminfo and /proc/stat to provide CPU, RAM, and Swap usage.
- * Adapted from dots-hyprland.
+ * Current scalar readings preserve their last valid values across transient input failures.
+ * Consumers treat history as read-only and observe historyUpdated after coherent mutations.
  */
 Singleton {
     id: root
+
+    readonly property alias history: historyModel
+    readonly property int historyCapacity: 60
+
+    signal historyUpdated()
 
     // Memory properties (in KB)
     property real memoryTotal: 1
@@ -28,67 +33,112 @@ Singleton {
     property var previousCpuStats: null
 
     // Formatted strings for display
-    property string memoryTotalString: kbToGbString(memoryTotal)
-    property string memoryUsedString: kbToGbString(memoryUsed)
-    property string swapTotalString: kbToGbString(swapTotal)
-    property string swapUsedString: kbToGbString(swapUsed)
+    property string memoryTotalString: formatBytes(memoryTotal * 1024)
+    property string memoryUsedString: formatBytes(memoryUsed * 1024)
+    property string swapTotalString: formatBytes(swapTotal * 1024)
+    property string swapUsedString: formatBytes(swapUsed * 1024)
 
-    // Configuration
-    property int updateInterval: 3000  // ms between updates
+    property real previousPollTimestamp: 0
 
-    function kbToGbString(kb: real): string {
-        return (kb / (1024 * 1024)).toFixed(1) + " GB";
+    function formatBytes(bytes: var): string {
+        return ResourceUsageParse.formatBytes(bytes);
     }
+
+    function formatRate(bytesPerSecond: var): string {
+        return ResourceUsageParse.formatRate(bytesPerSecond);
+    }
+
+    function appendHistory(sample: var): void {
+        if (historyModel.count >= root.historyCapacity)
+            historyModel.remove(0);
+
+        historyModel.append({
+            cpuUsage: Number.isFinite(sample.cpuUsage) ? sample.cpuUsage : NaN,
+            cpuTemperatureC: Number.isFinite(sample.cpuTemperatureC) ? sample.cpuTemperatureC : NaN,
+            memoryUsedPercentage: Number.isFinite(sample.memoryUsedPercentage) ? sample.memoryUsedPercentage : NaN,
+            swapUsedPercentage: Number.isFinite(sample.swapUsedPercentage) ? sample.swapUsedPercentage : NaN,
+            downloadBytesPerSecond: Number.isFinite(sample.downloadBytesPerSecond) ? sample.downloadBytesPerSecond : NaN,
+            uploadBytesPerSecond: Number.isFinite(sample.uploadBytesPerSecond) ? sample.uploadBytesPerSecond : NaN
+        });
+        root.historyUpdated();
+    }
+
+    function clearHistory(): void {
+        historyModel.clear();
+        root.historyUpdated();
+    }
+
+    function poll(appendSample: bool): void {
+        const now = Date.now();
+        const elapsedMs = root.previousPollTimestamp > 0 ? now - root.previousPollTimestamp : 0;
+        const discontinuity = root.previousPollTimestamp > 0 && elapsedMs > 2500;
+        root.previousPollTimestamp = now;
+
+        fileMeminfo.reload();
+        const memory = ResourceUsageParse.parseMeminfo(fileMeminfo.text());
+        let memorySample = NaN;
+        let swapSample = NaN;
+        if (memory) {
+            root.memoryTotal = memory.memoryTotal;
+            root.memoryFree = memory.memoryAvailable;
+            root.swapTotal = memory.swapTotal;
+            root.swapFree = memory.swapFree;
+            memorySample = root.memoryUsedPercentage;
+            swapSample = root.swapUsedPercentage;
+        }
+
+        fileStat.reload();
+        const cpuStats = ResourceUsageParse.parseCpuStat(fileStat.text());
+        let cpuSample = NaN;
+        if (cpuStats) {
+            const usage = ResourceUsageParse.calculateCpuUsage(root.previousCpuStats, cpuStats, elapsedMs);
+            root.previousCpuStats = cpuStats;
+            if (usage !== null) {
+                root.cpuUsage = usage;
+                cpuSample = usage;
+            }
+        }
+
+        if (discontinuity) {
+            root.clearHistory();
+            return;
+        }
+        if (!appendSample)
+            return;
+
+        root.appendHistory({
+            cpuUsage: cpuSample,
+            cpuTemperatureC: NaN,
+            memoryUsedPercentage: memorySample,
+            swapUsedPercentage: swapSample,
+            downloadBytesPerSecond: NaN,
+            uploadBytesPerSecond: NaN
+        });
+    }
+
+    Component.onCompleted: root.poll(false)
 
     Timer {
         id: pollTimer
-        interval: 1  // Start immediately, then use configured interval
+        interval: 1000
         running: true
         repeat: true
-        onTriggered: {
-            // Reload files
-            fileMeminfo.reload();
-            fileStat.reload();
-
-            // Parse memory and swap usage from /proc/meminfo
-            const textMeminfo = fileMeminfo.text();
-            root.memoryTotal = Number(textMeminfo.match(/MemTotal: *(\d+)/)?.[1] ?? 1);
-            root.memoryFree = Number(textMeminfo.match(/MemAvailable: *(\d+)/)?.[1] ?? 0);
-            root.swapTotal = Number(textMeminfo.match(/SwapTotal: *(\d+)/)?.[1] ?? 1);
-            root.swapFree = Number(textMeminfo.match(/SwapFree: *(\d+)/)?.[1] ?? 0);
-
-            // Parse CPU usage from /proc/stat
-            const textStat = fileStat.text();
-            const cpuLine = textStat.match(/^cpu\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
-            if (cpuLine) {
-                const stats = cpuLine.slice(1).map(Number);
-                const total = stats.reduce((a, b) => a + b, 0);
-                const idle = stats[3];
-
-                if (root.previousCpuStats) {
-                    const totalDiff = total - root.previousCpuStats.total;
-                    const idleDiff = idle - root.previousCpuStats.idle;
-                    root.cpuUsage = totalDiff > 0 ? (1 - idleDiff / totalDiff) : 0;
-                }
-
-                root.previousCpuStats = {
-                    total,
-                    idle
-                };
-            }
-
-            // Switch to configured interval after first run
-            pollTimer.interval = root.updateInterval;
-        }
+        onTriggered: root.poll(true)
     }
 
     FileView {
         id: fileMeminfo
         path: "/proc/meminfo"
+        blockAllReads: true
     }
 
     FileView {
         id: fileStat
         path: "/proc/stat"
+        blockAllReads: true
+    }
+
+    ListModel {
+        id: historyModel
     }
 }
