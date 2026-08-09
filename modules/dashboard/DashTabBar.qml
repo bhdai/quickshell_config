@@ -5,14 +5,14 @@ import "dashboard_metrics.js" as Metrics
 
 /**
  * Material 3 primary tabs: equal-width, label-only, with the indicator hugging the
- * rendered label rather than the cell. `tabs` are labels; the signal carries the
- * lowercased name the dashboard and its IPC use.
+ * rendered label rather than the cell. Each tab carries a stable key separately from its
+ * presentation label, and the signal carries that key.
  */
 Item {
     id: root
 
-    property var tabs: ["Calendar", "Wallpaper"]
-    property string current: "calendar"
+    required property var tabs
+    required property string current
     property Item gridFocusTarget: null
 
     readonly property Item currentItem: indicator.activeTab
@@ -56,7 +56,7 @@ Item {
                 id: tab
                 required property int index
                 required property var modelData
-                readonly property bool active: root.current === modelData.toLowerCase()
+                readonly property bool active: root.current === modelData.key
                 // Published from the delegate because only the delegate knows how wide its
                 // own label drew.
                 readonly property real labelX: x + (width - label.implicitWidth) / 2
@@ -67,7 +67,7 @@ Item {
                 buttonRadius: Appearance.rounding.small
                 colBackground: "transparent"
                 colBackgroundHover: Appearance.colors.colLayer1Hover
-                onClicked: root.selected(modelData.toLowerCase())
+                onClicked: root.selected(modelData.key)
 
                 Keys.priority: Keys.BeforeItem
                 Keys.onPressed: event => {
@@ -81,7 +81,7 @@ Item {
 
                 contentItem: Text {
                     id: label
-                    text: tab.modelData
+                    text: tab.modelData.label
                     font.family: Appearance.font.family.main
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.Medium

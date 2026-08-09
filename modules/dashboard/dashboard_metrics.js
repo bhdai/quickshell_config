@@ -90,7 +90,7 @@ const WALLPAPER_PANE_H = GRID_ROWS * CELL_H + (GRID_ROWS - 1) * CELL_GAP_Y;
 // its own entry rather than being told a size, so a destination cannot ask for a canvas the
 // window was not sized for.
 const CANVAS = {
-    calendar: {
+    dashboard: {
         width: CALENDAR_PANE_W,
         height: CALENDAR_PANE_H
     },
