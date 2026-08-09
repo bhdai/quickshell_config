@@ -3,44 +3,121 @@ import qs.modules.common
 import "dashboard_metrics.js" as Metrics
 
 /**
- * The dashboard's card: a tab bar over one pane. Split from the window so it can be measured
- * offscreen, where no layer surface can be built.
- *
- * The card is chrome and nothing else. Each destination names the canvas it wants as its
- * pane's implicit size, and the card — and through it the window — is that plus the padding,
- * the tab bar and the gap. Nothing is sized by its content: a pane that does not fit the size
- * its own tab asked for should be seen not fitting rather than quietly growing the window.
+ * The Dashboard's clipped card and its destination track. A destination change first makes
+ * the complete swept corridor resident, then moves the fixed-size pane segments and card on
+ * the same clock. Only the selected pane survives a confirmed final settle.
  */
 Rectangle {
     id: root
 
     required property var tabs
     required property string currentTab
-    // What the pane loader built and the row above it, for the offscreen geometry fixture
-    // to measure.
-    readonly property Item paneItem: paneLoader.item
-    readonly property Item tabBarItem: tabBar
-    readonly property bool activeTabFocused: tabBar.activeTabFocused
 
+    readonly property Item paneItem: transitionState.segmentFor(root.currentTab)?.paneItem ?? null
+    readonly property Item tabBarItem: tabBar
+    readonly property Item indicatorItem: tabBar.indicatorItem
+    readonly property bool activeTabFocused: tabBar.activeTabFocused
+    readonly property bool transitionMotionRunning: trackMotion.running
+    readonly property real transitionTrackPosition: track.x
+    readonly property real targetTrackPosition: -Metrics.TRACK_START[transitionState.destination]
+    readonly property var residentDestinationKeys: {
+        const resident = [];
+        for (let i = 0; i < paneRepeater.count; i++) {
+            const segment = paneRepeater.itemAt(i);
+            if (segment?.paneItem)
+                resident.push(segment.destinationKey);
+        }
+        return resident;
+    }
+
+    // The card is rebuilt on every open, so its first geometry is placement rather than a
+    // destination transition.
+    property bool placed: false
     signal tabSelected(string tab)
 
-    // The width the card is travelling to, published ahead of the Behavior that takes
-    // `implicitWidth` there. Anything that has to place itself against the destination the
-    // card is arriving at — rather than the width it happens to be passing through this
-    // frame — reads this instead.
-    readonly property real settledWidth: Metrics.cardWidth(paneLoader.implicitWidth)
+    // The tab indicator needs the destination width before the card's Behavior starts moving.
+    readonly property real settledWidth: Metrics.cardWidth(Metrics.CANVAS[transitionState.destination].width)
 
     implicitWidth: root.settledWidth
-    implicitHeight: Metrics.cardHeight(paneLoader.implicitHeight)
+    implicitHeight: Metrics.cardHeight(Metrics.CANVAS[transitionState.destination].height)
 
-    // The card is destroyed and rebuilt every time the dashboard opens, so the first size is
-    // not a resize. Without this every open would animate up from nothing.
-    property bool placed: false
-    Component.onCompleted: Qt.callLater(() => root.placed = true)
+    Component.onCompleted: {
+        transitionState.requestedKeys = [root.currentTab];
+        transitionState.destination = root.currentTab;
+        Qt.callLater(() => root.placed = true);
+    }
 
-    // One animation for the whole move, here rather than in the window above or the panes
-    // below: two of them animating the same change reads as a single sluggish resize with a
-    // soft landing.
+    onCurrentTabChanged: {
+        if (root.placed)
+            transitionState.prepare(root.currentTab);
+        else {
+            transitionState.requestedKeys = [root.currentTab];
+            transitionState.destination = root.currentTab;
+        }
+    }
+    onTransitionMotionRunningChanged: transitionState.pruneIfSettled()
+
+    QtObject {
+        id: transitionState
+
+        property string destination: root.currentTab
+        property var requestedKeys: [root.currentTab]
+
+        function segmentFor(key: string): Item {
+            for (let i = 0; i < paneRepeater.count; i++) {
+                const segment = paneRepeater.itemAt(i);
+                if (segment?.destinationKey === key)
+                    return segment;
+            }
+            return null;
+        }
+
+        function componentFor(key: string): Component {
+            switch (key) {
+            case "dashboard":
+                return dashboardComponent;
+            case "wallpaper":
+                return wallpaperComponent;
+            case "performance":
+                return performanceComponent;
+            }
+            return null;
+        }
+
+        function prepare(destination: string): void {
+            const from = root.tabs.findIndex(tab => tab.key === transitionState.destination);
+            const to = root.tabs.findIndex(tab => tab.key === destination);
+            if (from < 0 || to < 0)
+                return;
+
+            const requested = new Set(transitionState.requestedKeys);
+            for (let i = Math.min(from, to); i <= Math.max(from, to); i++)
+                requested.add(root.tabs[i].key);
+            transitionState.requestedKeys = root.tabs.filter(tab => requested.has(tab.key)).map(tab => tab.key);
+            transitionState.commit(destination);
+        }
+
+        function commit(destination: string): void {
+            if (root.currentTab !== destination)
+                return;
+            for (const key of transitionState.requestedKeys) {
+                if (!transitionState.segmentFor(key)?.paneItem) {
+                    Qt.callLater(() => transitionState.commit(destination));
+                    return;
+                }
+            }
+            transitionState.destination = destination;
+        }
+
+        function pruneIfSettled(): void {
+            if (root.transitionMotionRunning
+                    || root.transitionTrackPosition !== root.targetTrackPosition
+                    || transitionState.destination !== root.currentTab)
+                return;
+            transitionState.requestedKeys = [transitionState.destination];
+        }
+    }
+
     Behavior on implicitWidth {
         enabled: root.placed
         NumberAnimation {
@@ -74,16 +151,11 @@ Rectangle {
         anchors.rightMargin: Metrics.PAD
         tabs: root.tabs
         current: root.currentTab
-        // The bar is anchored to both of the card's padded edges, so its settled width is the
-        // card's settled width less that padding.
         settledBarWidth: root.settledWidth - 2 * Metrics.PAD
-        gridFocusTarget: root.currentTab === "wallpaper" ? paneLoader.item : null
+        gridFocusTarget: root.currentTab === "wallpaper" ? root.paneItem : null
         onSelected: tab => root.tabSelected(tab)
     }
 
-    // The card is still travelling to the new size while the pane inside it is already at
-    // one, so the pane has to be revealed and hidden by the card's edge rather than stretched
-    // through whatever width the card is passing through.
     Item {
         anchors.top: tabBar.bottom
         anchors.topMargin: Metrics.GAP
@@ -95,44 +167,45 @@ Rectangle {
         anchors.bottomMargin: Metrics.PAD
         clip: true
 
-        // One property, one Loader, inactive destinations unloaded — so opening the dashboard
-        // builds nothing a later tab owns, and leaving one releases it.
-        //
-        // Anchored to a corner rather than filled: the pane names its own size, and a filled
-        // loader would hand it the card's animating one instead.
-        Loader {
-            id: paneLoader
-            anchors.top: parent.top
-            anchors.left: parent.left
-            sourceComponent: {
-                switch (root.currentTab) {
-                case "dashboard":
-                    return dashboardComponent;
-                case "wallpaper":
-                    return wallpaperComponent;
-                case "performance":
-                    return performanceComponent;
+        Item {
+            id: track
+
+            x: root.targetTrackPosition
+            width: Metrics.TRACK_W
+            height: Math.max(...Object.values(Metrics.CANVAS).map(canvas => canvas.height))
+
+            Behavior on x {
+                enabled: root.placed
+                NumberAnimation {
+                    id: trackMotion
+                    duration: Appearance.animation.elementMove.duration
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
                 }
-                return null;
             }
 
-            opacity: 0
-            Component.onCompleted: opacity = 1
-            // The reset has to be a cut and only the arrival a fade. Assigning 0 and then 1
-            // through a live Behavior is not that: the second assignment retargets the first
-            // before a frame has advanced, so the animation runs 1 to 1 and the pane appears
-            // at full opacity in a card that is still resizing under it.
-            onSourceComponentChanged: {
-                fade.enabled = false;
-                opacity = 0;
-                fade.enabled = true;
-                opacity = 1;
-            }
-            Behavior on opacity {
-                id: fade
-                NumberAnimation {
-                    duration: Metrics.TAB_FADE_MS
-                    easing.type: Easing.OutQuad
+            Repeater {
+                id: paneRepeater
+                model: root.tabs
+
+                delegate: Item {
+                    id: segment
+
+                    required property var modelData
+                    readonly property string destinationKey: modelData.key
+                    readonly property alias paneItem: paneLoader.item
+
+                    x: Metrics.TRACK_START[segment.destinationKey]
+                    width: Metrics.CANVAS[segment.destinationKey].width
+                    height: Metrics.CANVAS[segment.destinationKey].height
+
+                    Loader {
+                        id: paneLoader
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        active: transitionState.requestedKeys.includes(segment.destinationKey)
+                        sourceComponent: transitionState.componentFor(segment.destinationKey)
+                    }
                 }
             }
         }

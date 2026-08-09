@@ -37,9 +37,6 @@ function cardHeight(paneHeight) {
     return paneHeight + 2 * PAD + TABBAR_H + GAP;
 }
 
-// The incoming pane fades in over this. A named 0 is the supported hard cut.
-const TAB_FADE_MS = 120;
-
 // --- Calendar: a full-width band over `calendar | weather tiles` ---
 
 const HEADER_H = 72;
@@ -112,6 +109,13 @@ const CANVAS = {
         height: PERFORMANCE_PANE_H
     }
 };
+
+const TRACK_START = {
+    dashboard: 0,
+    wallpaper: CANVAS.dashboard.width,
+    performance: CANVAS.dashboard.width + CANVAS.wallpaper.width
+};
+const TRACK_W = Object.values(CANVAS).reduce((width, canvas) => width + canvas.width, 0);
 
 // The window is the largest destination and then stays there — deliberately not the card it
 // happens to be showing. A layer surface bound to an animating size re-commits and is

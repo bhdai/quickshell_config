@@ -31,6 +31,8 @@ jobs:
         run: tests/wallpaper-service.sh
       - name: Test the dashboard geometry
         run: tests/dashboard-geometry.sh
+      - name: Test dashboard destination motion
+        run: tests/dashboard-transition.sh
       - name: Test the workspace indicator's width under a raised special
         run: tests/workspace-special-geometry.sh
       - name: Test wallpaper keyboard interactions

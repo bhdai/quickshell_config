@@ -7,7 +7,7 @@ import { blocks, read } from "./qml-source.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
-const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "TAB_FADE_MS", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CANVAS", "WINDOW_W", "WINDOW_H"]);
+const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
 
 test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.MARGIN, 10);
@@ -38,6 +38,15 @@ test("each destination names its own canvas", () => {
     assert.equal(metrics.cardHeight(metrics.PERFORMANCE_PANE_H), 524);
 
     assert.notEqual(metrics.CALENDAR_PANE_W, metrics.WALLPAPER_PANE_W);
+});
+
+test("the transition track gives every destination its fixed-width segment", () => {
+    assert.deepEqual(metrics.TRACK_START, {
+        dashboard: 0,
+        wallpaper: 872,
+        performance: 1548
+    });
+    assert.equal(metrics.TRACK_W, 2420);
 });
 
 test("the calendar body is the pane under a full-width 72px header", () => {
@@ -79,20 +88,21 @@ test("the wallpaper pane is exactly the 4x4 of 160x100 cells it shows", () => {
     assert.equal(metrics.GRID_ROWS * metrics.CELL_H + (metrics.GRID_ROWS - 1) * metrics.CELL_GAP_Y, metrics.WALLPAPER_PANE_H);
 });
 
-test("the pane fade is the prototype's 120ms, and zero is the hard cut", () => {
-    assert.equal(metrics.TAB_FADE_MS, 120);
-
+test("the pane track supplies continuity without a cut or fade", () => {
     const card = read(dashboardDir, "DashboardCard.qml");
-    assert.match(card, /duration: Metrics\.TAB_FADE_MS\b/);
+
+    assert.doesNotMatch(card, /Behavior on opacity|TAB_FADE_MS/);
+    assert.doesNotMatch(read(dashboardDir, "dashboard_metrics.js"), /TAB_FADE_MS/);
 });
 
-// Measured, not assumed: assigning 0 and then 1 through a live Behavior retargets the first
-// assignment before a frame advances, so the fade runs 1 to 1 and never plays. The reset has
-// to bypass the Behavior for the arrival to be a fade at all.
-test("the pane's reset is a cut and only its arrival is animated", () => {
-    const [handler] = blocks(read(dashboardDir, "DashboardCard.qml"), "onSourceComponentChanged:");
+test("the transition lifecycle is observable through read-only card properties", () => {
+    const card = read(dashboardDir, "DashboardCard.qml");
 
-    assert.match(handler, /fade\.enabled = false;\s*opacity = 0;\s*fade\.enabled = true;\s*opacity = 1;/);
+    assert.match(card, /readonly property bool transitionMotionRunning: trackMotion\.running/);
+    assert.match(card, /readonly property real transitionTrackPosition: track\.x/);
+    assert.match(card, /readonly property real targetTrackPosition:/);
+    assert.match(card, /readonly property var residentDestinationKeys:/);
+    assert.match(card, /readonly property Item indicatorItem: tabBar\.indicatorItem/);
 });
 
 // The card is chrome around the pane. A card that took its size from anything else would put
@@ -100,11 +110,9 @@ test("the pane's reset is a cut and only its arrival is animated", () => {
 test("the card follows the pane", () => {
     const card = read(dashboardDir, "DashboardCard.qml");
 
-    // The width goes through `settledWidth`, which is that same expression named so the tab
-    // indicator can be placed over where the card is going rather than where it is.
-    assert.match(card, /readonly property real settledWidth: Metrics\.cardWidth\(paneLoader\.implicitWidth\)/);
+    assert.match(card, /readonly property real settledWidth: Metrics\.cardWidth\(Metrics\.CANVAS\[transitionState\.destination\]\.width\)/);
     assert.match(card, /implicitWidth: root\.settledWidth\b/);
-    assert.match(card, /implicitHeight: Metrics\.cardHeight\(paneLoader\.implicitHeight\)/);
+    assert.match(card, /implicitHeight: Metrics\.cardHeight\(Metrics\.CANVAS\[transitionState\.destination\]\.height\)/);
 });
 
 // The window is the one thing that must not follow the card: a layer surface bound to an
@@ -160,5 +168,5 @@ test("the resize animates between destinations but not into the first one", () =
 
     assert.deepEqual(gates, ["root.placed", "root.placed"]);
     assert.equal(card.match(/Behavior on implicit(?:Width|Height)/g)?.length, gates.length);
-    assert.match(card, /Component\.onCompleted: Qt\.callLater\(\(\) => root\.placed = true\)/);
+    assert.match(card, /Qt\.callLater\(\(\) => root\.placed = true\)/);
 });
