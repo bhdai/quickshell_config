@@ -18,4 +18,11 @@ Item {
         width: Metrics.PERFORMANCE_CARD.cpu.width
         height: Metrics.PERFORMANCE_CARD.cpu.height
     }
+
+    MemoryCard {
+        x: Metrics.PERFORMANCE_CARD.memory.x
+        y: Metrics.PERFORMANCE_CARD.memory.y
+        width: Metrics.PERFORMANCE_CARD.memory.width
+        height: Metrics.PERFORMANCE_CARD.memory.height
+    }
 }

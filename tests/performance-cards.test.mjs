@@ -10,18 +10,21 @@ const dashboardDir = path.join(repoRoot, "modules", "dashboard");
 const pane = read(dashboardDir, "PerformancePane.qml");
 const card = read(dashboardDir, "PerformanceCard.qml");
 const cpuCard = read(dashboardDir, "CpuCard.qml");
+const memoryCard = read(dashboardDir, "MemoryCard.qml");
 const plot = read(dashboardDir, "TimeseriesPlot.qml");
 
 // The pane is a fixed canvas divided between cards, so where a card sits is a fact about
 // the destination rather than about the card. Written inline, four cards' worth of these
 // numbers could no longer be shown to add up to the pane.
 test("a card is placed at the rectangle the metrics module names for it", () => {
-    const [cpu] = blocks(pane, "CpuCard");
+    for (const [type, name] of [["CpuCard", "cpu"], ["MemoryCard", "memory"]]) {
+        const [placement] = blocks(pane, type);
 
-    assert.match(cpu, /x: Metrics\.PERFORMANCE_CARD\.cpu\.x/);
-    assert.match(cpu, /y: Metrics\.PERFORMANCE_CARD\.cpu\.y/);
-    assert.match(cpu, /width: Metrics\.PERFORMANCE_CARD\.cpu\.width/);
-    assert.match(cpu, /height: Metrics\.PERFORMANCE_CARD\.cpu\.height/);
+        assert.match(placement, new RegExp(`x: Metrics\\.PERFORMANCE_CARD\\.${name}\\.x`));
+        assert.match(placement, new RegExp(`y: Metrics\\.PERFORMANCE_CARD\\.${name}\\.y`));
+        assert.match(placement, new RegExp(`width: Metrics\\.PERFORMANCE_CARD\\.${name}\\.width`));
+        assert.match(placement, new RegExp(`height: Metrics\\.PERFORMANCE_CARD\\.${name}\\.height`));
+    }
 });
 
 test("the inner card is the dashboard's existing grammar", () => {
@@ -64,6 +67,53 @@ test("temperature is a reading beside the plot rather than a series on it", () =
     // The ceiling is the machine fully busy, and it never moves.
     assert.match(series, /maximum: 1\b/);
     assert.doesNotMatch(series, /ceilingLabel/);
+});
+
+// A percentage on a machine the reader does not know the size of says how full it is without
+// saying how much that is.
+test("the memory card leads with the RAM percentage against the capacity behind it", () => {
+    assert.match(memoryCard, /symbol: "memory"/);
+    assert.match(memoryCard, /text: Math\.round\(ResourceUsage\.memoryUsedPercentage \* 100\)/);
+    assert.match(memoryCard, /ResourceUsage\.memoryUsedString.*ResourceUsage\.memoryTotalString/);
+});
+
+// The machine reaching past RAM is one movement. Swap on a card of its own would put the
+// cause and the consequence side by side and leave the reader to line up their timelines.
+test("swap is a second reading on the memory card", () => {
+    assert.match(memoryCard, /ResourceUsage\.swapUsedString.*ResourceUsage\.swapTotalString/);
+
+    const [series] = blocks(memoryCard, "TimeseriesPlot");
+    assert.match(series, /primaryRole: "memoryUsedPercentage"/);
+    assert.match(series, /secondaryRole: root\.swapConfigured \? "swapUsedPercentage" : ""/);
+});
+
+// Zero of a resource that does not exist is a reading about nothing, and a machine without
+// swap is not a degraded version of one that has it.
+test("with no swap configured its reading and its series are both omitted", () => {
+    assert.match(memoryCard, /readonly property bool swapConfigured: ResourceUsage\.swapTotal > 0/);
+
+    const [reading] = blocks(memoryCard, "Column");
+    assert.match(reading, /visible: root\.swapConfigured/);
+
+    const [series] = blocks(memoryCard, "TimeseriesPlot");
+    assert.match(series, /secondaryKey: root\.swapConfigured \? "Swap" : ""/);
+
+    // The plot fills whatever series is left alone on the scale, and the card's rectangle is
+    // the pane's to name — so neither presentation follows from whether swap is there.
+    assert.match(plot, /readonly property bool filled: root\.secondaryRole === ""/);
+    assert.doesNotMatch(memoryCard, /^\s*(width|height|implicitWidth|implicitHeight):/m);
+});
+
+// Two metrics on one plot only mean anything against each other if they are on one scale, and
+// a line is only identifiable if its key carries its own colour.
+test("RAM and swap share a fixed full-scale plot and their colours", () => {
+    const [series] = blocks(memoryCard, "TimeseriesPlot");
+
+    assert.match(series, /maximum: 1\b/);
+    assert.doesNotMatch(series, /ceilingLabel/);
+    assert.match(series, /primaryColor: Appearance\.colors\.colPrimary/);
+    assert.match(series, /secondaryColor: Appearance\.colors\.colTertiary/);
+    assert.match(series, /primaryKey: "RAM"/);
 });
 
 // The ring rolls at capacity, so its count stops changing while its contents do not. Nothing

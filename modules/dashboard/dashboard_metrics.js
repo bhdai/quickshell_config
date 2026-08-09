@@ -111,6 +111,12 @@ const PERFORMANCE_CARD = {
         y: 0,
         width: PERFORMANCE_TOP_CARD_W,
         height: PERFORMANCE_ROW_H
+    },
+    memory: {
+        x: PERFORMANCE_TOP_CARD_W + CARD_GAP,
+        y: 0,
+        width: PERFORMANCE_TOP_CARD_W,
+        height: PERFORMANCE_ROW_H
     }
 };
 
