@@ -12,7 +12,7 @@ mkdir -p "$test_dir/config/modules/dashboard" "$test_dir/config/services" "$test
 
 ln -s "$repo_root/modules/common" "$test_dir/config/modules/common"
 ln -s "$repo_root/assets" "$test_dir/config/assets"
-for file in DashboardCard.qml DashTabBar.qml DashboardPane.qml CalendarCard.qml WeatherHeader.qml WeatherTiles.qml WeatherTile.qml HumidityWave.qml SunPath.qml WallpaperPane.qml WallpaperTile.qml PerformancePane.qml PerformanceCard.qml CpuCard.qml MemoryCard.qml NetworkCard.qml StorageCard.qml TimeseriesPlot.qml PlotKey.qml calendar_layout.js dashboard_metrics.js weather_tile_geometry.js timeseries_plot.js network_ceiling.js storage_gauge.js; do
+for file in DashboardCard.qml DashTabBar.qml DashboardPane.qml CalendarCard.qml WeatherHeader.qml WeatherTiles.qml WeatherTile.qml HumidityWave.qml SunPath.qml WallpaperPane.qml WallpaperTile.qml PerformancePane.qml PerformanceCard.qml CpuCard.qml MemoryCard.qml NetworkCard.qml StorageCard.qml TimeseriesPlot.qml PlotKey.qml calendar_layout.js dashboard_metrics.js weather_tile_geometry.js timeseries_plot.js network_ceiling.js storage_gauge.js warning_state.js; do
     ln -s "$repo_root/modules/dashboard/$file" "$test_dir/config/modules/dashboard/$file"
 done
 ln -s "$repo_root/services/Weather.qml" "$test_dir/config/services/Weather.qml"
