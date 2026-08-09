@@ -6,10 +6,12 @@ import "ResourceUsageParse.js" as ResourceUsageParse
 import "cpu_temperature.js" as CpuTemperature
 
 /**
- * CPU, memory, swap, and network scalars preserve their last valid values across transient
- * input failures; a reset network counter is unavailable until the following delta. Temperature
- * becomes null when its resolved sensor disappears. Consumers treat history as read-only and
- * observe historyUpdated after coherent mutations.
+ * CPU, memory, swap, network and root-filesystem scalars preserve their last valid values
+ * across transient input failures; a reset network counter is unavailable until the following
+ * delta. Temperature becomes null when its resolved sensor disappears. Occupancy is
+ * current-only, is read on its own minute-long cadence rather than the aligned one-second
+ * poll, and so has no history role. Consumers treat history as read-only and observe
+ * historyUpdated after coherent mutations.
  */
 Singleton {
     id: root
@@ -48,6 +50,14 @@ Singleton {
     property var downloadTotalBytes: null
     property var uploadTotalBytes: null
     property var previousNetworkStats: null
+
+    // Occupancy of the root filesystem, in bytes and as a 0–1 fraction. Null until the first
+    // `df` returns: 0% is a filesystem that exists and is empty, which is a different thing
+    // from not having looked yet.
+    property var diskTotalBytes: null
+    property var diskUsedBytes: null
+    property var diskAvailableBytes: null
+    property var diskUsedPercentage: null
 
     // Formatted strings for display
     property string memoryTotalString: formatBytes(memoryTotal * 1024)
@@ -100,6 +110,20 @@ Singleton {
         root.cpuTemperatureLabel = sensor.label;
         root.cpuTemperatureCritical = sensor.criticalCelsius;
         fileCpuTemperature.path = sensor.path;
+    }
+
+    function acceptDiskUsage(stdout: string): void {
+        const occupancy = ResourceUsageParse.parseDf(stdout);
+        // A `df` that failed is not the filesystem having gone away, and the next reading is
+        // a minute off — long enough that dropping this one would leave an em dash where a
+        // number that is still very nearly right was.
+        if (!occupancy)
+            return;
+
+        root.diskTotalBytes = occupancy.totalBytes;
+        root.diskUsedBytes = occupancy.usedBytes;
+        root.diskAvailableBytes = occupancy.availableBytes;
+        root.diskUsedPercentage = occupancy.usedPercentage;
     }
 
     function rediscoverCpuTemperature(): void {
@@ -239,6 +263,30 @@ Singleton {
             id: cpuTemperatureResolverOutput
         }
         onExited: root.acceptCpuTemperatureSensor(cpuTemperatureResolverOutput.text)
+    }
+
+    Process {
+        id: diskUsageReader
+
+        running: true
+        // Bytes rather than the default 1K blocks, so nothing downstream has to remember
+        // which unit this one number arrived in.
+        command: ["df", "-B1", "/"]
+        stdout: StdioCollector {
+            id: diskUsageOutput
+        }
+        onExited: root.acceptDiskUsage(diskUsageOutput.text)
+    }
+
+    Timer {
+        id: diskUsageTimer
+
+        // A filesystem fills over hours. On the one-second tick this would be a process
+        // spawned every second to redraw a figure that had not moved in the last hundred.
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: diskUsageReader.running = true
     }
 
     FileView {

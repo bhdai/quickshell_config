@@ -214,6 +214,61 @@ test("parse failures leave current scalars standing and only gap their sample", 
     assert.match(poll, /let cpuSample = NaN/);
 });
 
+// A filesystem fills over hours. On the one-second tick this would be a `df` every second
+// forever, to redraw a figure that had not moved since the last hundred of them.
+test("root-filesystem occupancy runs on its own minute-long cadence", () => {
+    const occupancy = blocks(service, "Process").find(block => block.includes("id: diskUsageReader"));
+    assert.ok(occupancy, "occupancy is not read");
+    assert.match(occupancy, /command: \["df", "-B1", "\/"\]/);
+    assert.match(occupancy, /running: true/);
+    assert.match(occupancy, /onExited: root\.acceptDiskUsage\(diskUsageOutput\.text\)/);
+
+    const timer = blocks(service, "Timer").find(block => block.includes("id: diskUsageTimer"));
+    assert.ok(timer, "occupancy is never re-read");
+    assert.match(timer, /interval: 60000/);
+    assert.match(timer, /repeat: true/);
+    assert.match(timer, /onTriggered: diskUsageReader\.running = true/);
+
+    // The one-second poll is where every other metric is read, and occupancy is not in it.
+    const [poll] = blocks(service, "function poll(appendSample: bool): void");
+    assert.doesNotMatch(poll, /disk/i);
+});
+
+// 0% is a filesystem that exists and is empty. Before the first `df` returns there is no
+// filesystem reading at all, and the card has to be able to tell those apart.
+test("occupancy reads as unavailable until the first df returns", () => {
+    for (const property of ["diskTotalBytes", "diskUsedBytes", "diskAvailableBytes", "diskUsedPercentage"])
+        assert.match(service, new RegExp(`property var ${property}: null`));
+});
+
+test("occupancy parsing is delegated to the pure library", () => {
+    const [accept] = blocks(service, "function acceptDiskUsage(stdout: string): void");
+
+    assert.match(accept, /ResourceUsageParse\.parseDf\(stdout\)/);
+    assert.match(accept, /root\.diskTotalBytes = occupancy\.totalBytes/);
+    assert.match(accept, /root\.diskUsedBytes = occupancy\.usedBytes/);
+    assert.match(accept, /root\.diskAvailableBytes = occupancy\.availableBytes/);
+    assert.match(accept, /root\.diskUsedPercentage = occupancy\.usedPercentage/);
+});
+
+// A `df` that failed is not the filesystem having gone away, and a minute is a long time to
+// show an em dash for a number that was correct a minute ago.
+test("a failed df leaves the last occupancy standing", () => {
+    const [accept] = blocks(service, "function acceptDiskUsage(stdout: string): void");
+    const rejected = accept.indexOf("return;");
+    const published = accept.indexOf("root.diskTotalBytes =");
+
+    assert.match(accept, /if \(!occupancy\)/);
+    assert.ok(rejected !== -1 && rejected < published, "a rejected reading reaches the properties");
+});
+
+// Sixty aligned rows a minute apart is not the same series as sixty a second apart, and one
+// occupancy row per sixty samples would be a line drawn between two points an hour wide.
+test("occupancy is current-only and never enters the aligned history", () => {
+    const [append] = blocks(service, "function appendHistory(sample: var): void");
+    assert.doesNotMatch(append, /disk/i);
+});
+
 test("the bar keeps its existing scalar bindings", () => {
     assert.match(barResources, /percentage: ResourceUsage\.memoryUsedPercentage/);
     assert.match(barResources, /percentage: ResourceUsage\.swapUsedPercentage/);

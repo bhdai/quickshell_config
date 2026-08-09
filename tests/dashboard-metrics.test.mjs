@@ -7,7 +7,7 @@ import { blocks, read } from "./qml-source.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
-const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CARD_GAP", "PERFORMANCE_ROW_H", "PERFORMANCE_TOP_CARD_W", "PERFORMANCE_NETWORK_CARD_W", "PERFORMANCE_CARD_PAD", "PERFORMANCE_CARD", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
+const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CARD_GAP", "PERFORMANCE_ROW_H", "PERFORMANCE_TOP_CARD_W", "PERFORMANCE_NETWORK_CARD_W", "PERFORMANCE_STORAGE_CARD_W", "PERFORMANCE_CARD_PAD", "PERFORMANCE_CARD", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
 
 test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.MARGIN, 10);
@@ -99,6 +99,23 @@ test("the network card is the wide half of the performance pane's bottom row", (
     assert.equal(network.y, cpu.y + cpu.height + metrics.CARD_GAP);
     assert.equal(network.y + network.height, metrics.PERFORMANCE_PANE_H);
     assert.ok(network.width > metrics.PERFORMANCE_TOP_CARD_W);
+});
+
+// The compact one, because it is the only card with no plot on it: a current-only reading
+// needs a figure's width, not a minute's.
+test("the storage card is what the network card leaves of the bottom row", () => {
+    assert.deepEqual(metrics.PERFORMANCE_CARD.storage, {
+        x: 592,
+        y: 220,
+        width: 280,
+        height: 208
+    });
+
+    const { network, storage } = metrics.PERFORMANCE_CARD;
+    assert.equal(storage.x, network.x + network.width + metrics.CARD_GAP);
+    assert.equal(storage.x + storage.width, metrics.PERFORMANCE_PANE_W);
+    assert.equal(storage.y, network.y);
+    assert.equal(storage.height, network.height);
 });
 
 test("the calendar body is the pane under a full-width 72px header", () => {

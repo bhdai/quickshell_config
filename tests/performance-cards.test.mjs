@@ -12,13 +12,14 @@ const card = read(dashboardDir, "PerformanceCard.qml");
 const cpuCard = read(dashboardDir, "CpuCard.qml");
 const memoryCard = read(dashboardDir, "MemoryCard.qml");
 const networkCard = read(dashboardDir, "NetworkCard.qml");
+const storageCard = read(dashboardDir, "StorageCard.qml");
 const plot = read(dashboardDir, "TimeseriesPlot.qml");
 
 // The pane is a fixed canvas divided between cards, so where a card sits is a fact about
 // the destination rather than about the card. Written inline, four cards' worth of these
 // numbers could no longer be shown to add up to the pane.
 test("a card is placed at the rectangle the metrics module names for it", () => {
-    for (const [type, name] of [["CpuCard", "cpu"], ["MemoryCard", "memory"], ["NetworkCard", "network"]]) {
+    for (const [type, name] of [["CpuCard", "cpu"], ["MemoryCard", "memory"], ["NetworkCard", "network"], ["StorageCard", "storage"]]) {
         const [placement] = blocks(pane, type);
 
         assert.match(placement, new RegExp(`x: Metrics\\.PERFORMANCE_CARD\\.${name}\\.x`));
@@ -248,6 +249,82 @@ test("both series share one damped ceiling, and the card says what it is", () =>
     const [connections] = blocks(networkCard, "Connections");
     assert.match(connections, /target: ResourceUsage/);
     assert.match(connections, /function onHistoryUpdated\(\): void \{\s*root\.updateWindow\(\);/);
+});
+
+// The gauge, the figure and the capacity are one reading stated three ways, which is the
+// whole card: shape for the glance, percentage for the reading, bytes for the decision.
+test("the storage card states root occupancy as a gauge over a percentage", () => {
+    assert.match(storageCard, /symbol: "hard_drive"/);
+    assert.match(storageCard, /title: "Storage"/);
+    assert.match(storageCard, /text: root\.occupancyKnown \? Math\.round\(root\.shownOccupancy \* 100\) : "—"/);
+    assert.match(storageCard, /text: ResourceUsage\.formatBytes\(ResourceUsage\.diskUsedBytes\)/);
+    assert.match(storageCard, /text: `of \$\{ResourceUsage\.formatBytes\(ResourceUsage\.diskTotalBytes\)\}`/);
+});
+
+// A number that moves on the scale of hours dressed up as a timeseries would draw a flat
+// line and claim it was worth watching, and the mount is not the reader's to choose.
+test("the storage card carries no plot and no mount selector", () => {
+    assert.doesNotMatch(storageCard, /TimeseriesPlot|PlotKey|ResourceUsage\.history/);
+    assert.doesNotMatch(storageCard, /MouseArea|RippleButton|GroupButton|ComboBox|Repeater/);
+});
+
+// One mount, named, so the figure is not read as the machine's whole disk.
+test("the filesystem the card reports on is named as root", () => {
+    assert.match(storageCard, /text: "Root filesystem"/);
+});
+
+// The arc and the percentage encode the same reading, so the card spends its one identity
+// colour on the arc and leaves the figure in the ordinary reading colour the other cards use.
+test("occupancy is drawn in the card's own colour against the room it has left", () => {
+    const [track, active] = blocks(storageCard, "ShapePath");
+
+    assert.match(active, /strokeColor: Appearance\.colors\.colSecondary\b/);
+    assert.match(active, /sweepAngle: root\.arcs\.activeSweep/);
+    assert.match(track, /strokeColor: Appearance\.colors\.colSecondaryContainer/);
+    assert.match(track, /sweepAngle: root\.arcs\.trackSweep/);
+    // Material 3's break between the indicator and the track, and the rounded ends that go
+    // with it: without the gap the pair reads as one ring in two colours.
+    assert.match(track, /startAngle: root\.arcs\.trackStartAngle/);
+    for (const path of [track, active])
+        assert.match(path, /capStyle: ShapePath\.RoundCap/);
+
+    const [stop] = blocks(storageCard, "Rectangle");
+    assert.match(stop, /color: Appearance\.colors\.colSecondary\b/);
+    assert.match(stop, /visible: root\.arcs\.stopVisible/);
+});
+
+test("the gauge's geometry comes from the pure module rather than the card", () => {
+    assert.match(storageCard, /import "storage_gauge\.js" as Gauge/);
+    assert.match(storageCard, /Gauge\.occupancyArcs\(root\.shownOccupancy, root\.gaugeRadius\)/);
+    assert.match(storageCard, /startAngle: Gauge\.START_ANGLE/);
+    assert.doesNotMatch(storageCard, /270|135/);
+});
+
+// The pane is destroyed at rest, so this is what the card does on every arrival rather than
+// once a session. The overshooting curve is the wrong one here: an arc that ran past its
+// reading would report a fuller disk than the machine has, however briefly.
+test("the gauge sweeps up to its reading when the destination opens", () => {
+    assert.match(storageCard, /property real revealed: 0/);
+    assert.match(storageCard, /Component\.onCompleted: root\.revealed = 1/);
+    assert.match(storageCard, /shownOccupancy: root\.occupancyKnown \? ResourceUsage\.diskUsedPercentage \* root\.revealed : 0/);
+
+    const [reveal] = blocks(storageCard, "Behavior on revealed");
+    assert.match(reveal, /easing\.bezierCurve: Appearance\.animation\.expressiveEffects/);
+});
+
+// Free space is not the total less the used — a filesystem holds blocks back that nothing
+// here can spend — so it is the one number on this card that is not the gauge restated.
+test("the space left is stated as its own reading", () => {
+    assert.match(storageCard, /text: `\$\{ResourceUsage\.formatBytes\(ResourceUsage\.diskAvailableBytes\)\} free`/);
+
+    const referenced = [...new Set(storageCard.match(/ResourceUsage\.\w+/g))].sort();
+    assert.deepEqual(referenced, [
+        "ResourceUsage.diskAvailableBytes",
+        "ResourceUsage.diskTotalBytes",
+        "ResourceUsage.diskUsedBytes",
+        "ResourceUsage.diskUsedPercentage",
+        "ResourceUsage.formatBytes"
+    ]);
 });
 
 test("a moving ceiling is stated where it does not compete with the lines", () => {
