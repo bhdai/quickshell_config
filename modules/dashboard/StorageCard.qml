@@ -12,16 +12,16 @@ import "storage_gauge.js" as Gauge
  * it gets instead is the destination's only closed shape: everything else here is a line
  * running off the left edge, and this is a quantity with an end.
  *
- * The gauge is Material 3's progress anatomy at gauge size — a rounded active arc, a track
- * broken away from it, and a dot marking where a full filesystem would end. Occupancy and
- * the percentage are the same reading twice, which is why they share a colour and, in
- * warning state, will share that too.
+ * The gauge is Material 3's progress anatomy at gauge size, the same one `StyledProgressBar`
+ * draws flat — a rounded active arc, a track broken away from it by the same 4px, and a dot
+ * marking where a full filesystem would end. Occupancy and the percentage are the same
+ * reading twice, which is why they share a colour and, in warning state, will share that too.
  */
 PerformanceCard {
     id: root
 
     readonly property int gaugeSize: 128
-    readonly property int gaugeStroke: 12
+    readonly property int gaugeStroke: 8
     // The stroke straddles the path, so the arc is drawn half a stroke inside the edge.
     readonly property real gaugeRadius: (root.gaugeSize - root.gaugeStroke) / 2
 
@@ -35,7 +35,7 @@ PerformanceCard {
     // an hour at a time.
     property real revealed: 0
     readonly property real shownOccupancy: root.occupancyKnown ? ResourceUsage.diskUsedPercentage * root.revealed : 0
-    readonly property var arcs: Gauge.occupancyArcs(root.shownOccupancy, root.gaugeRadius)
+    readonly property var arcs: Gauge.occupancyArcs(root.shownOccupancy, root.gaugeRadius, root.gaugeStroke)
 
     symbol: "hard_drive"
     title: "Storage"

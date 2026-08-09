@@ -295,7 +295,9 @@ test("occupancy is drawn in the card's own colour against the room it has left",
 
 test("the gauge's geometry comes from the pure module rather than the card", () => {
     assert.match(storageCard, /import "storage_gauge\.js" as Gauge/);
-    assert.match(storageCard, /Gauge\.occupancyArcs\(root\.shownOccupancy, root\.gaugeRadius\)/);
+    // The stroke goes in because the round caps spend it: the geometry cannot leave a 4px
+    // break showing without knowing how much paint sits past each arc's end.
+    assert.match(storageCard, /Gauge\.occupancyArcs\(root\.shownOccupancy, root\.gaugeRadius, root\.gaugeStroke\)/);
     assert.match(storageCard, /startAngle: Gauge\.START_ANGLE/);
     assert.doesNotMatch(storageCard, /270|135/);
 });
