@@ -69,6 +69,76 @@ test("the QML service delegates parsing and formatting to its pure library", () 
     assert.doesNotMatch(service, /\.match\(/);
 });
 
+test("CPU temperature discovery is one label-based shell invocation in fallback order", () => {
+    assert.match(service, /import "cpu_temperature\.js" as CpuTemperature/);
+
+    const [resolver] = blocks(service, "Process");
+    assert.match(resolver, /running: true/);
+    assert.match(resolver, /command: \["sh", "-c",/);
+    assert.match(resolver, /for want in coretemp k10temp acpitz/);
+    assert.match(resolver, /for l in .*temp\*_label/);
+    assert.match(resolver, /Package id .*\*\|Tdie/);
+    assert.match(resolver, /Tctl\) \[ -n .*\$pick.* \] \|\| pick=\$c/);
+    assert.doesNotMatch(resolver, /thinkpad/);
+});
+
+test("resolved CPU temperature metadata and path are published from the parse library", () => {
+    assert.match(service, /property var cpuTemperature: null/);
+    assert.match(service, /property var cpuTemperatureCritical: null/);
+    assert.match(service, /property string cpuTemperatureChip: ""/);
+    assert.match(service, /property string cpuTemperatureLabel: ""/);
+
+    const [accept] = blocks(service, "function acceptCpuTemperatureSensor(stdout: string): void");
+    assert.match(accept, /CpuTemperature\.parseSensorLine\(stdout\)/);
+    assert.match(accept, /root\.cpuTemperatureChip = sensor\.chip/);
+    assert.match(accept, /root\.cpuTemperatureLabel = sensor\.label/);
+    assert.match(accept, /root\.cpuTemperatureCritical = sensor\.criticalCelsius/);
+    assert.match(accept, /fileCpuTemperature\.path = sensor\.path/);
+
+    const [resolver] = blocks(service, "Process");
+    assert.match(resolver, /stdout: StdioCollector/);
+    assert.match(resolver, /root\.acceptCpuTemperatureSensor/);
+
+    const temperatureView = blocks(service, "FileView")
+        .find(block => block.includes("id: fileCpuTemperature"));
+    assert.ok(temperatureView);
+    assert.match(temperatureView, /blockAllReads: true/);
+    assert.match(temperatureView, /printErrors: false/);
+});
+
+test("CPU temperature is read on the aligned poll and gaps history when unavailable", () => {
+    const [poll] = blocks(service, "function poll(appendSample: bool): void");
+    const reload = poll.indexOf("fileCpuTemperature.reload()");
+    const read = poll.indexOf("CpuTemperature.parseTemperature(fileCpuTemperature.text())");
+
+    assert.notEqual(reload, -1, "temperature is not polled");
+    assert.ok(reload < read, "temperature is read before its blocking reload");
+    assert.match(poll, /let temperatureSample = NaN/);
+    assert.match(poll, /root\.cpuTemperature = temperature/);
+    assert.match(poll, /temperatureSample = temperature/);
+    assert.match(poll, /cpuTemperatureC: temperatureSample/);
+
+    const temperatureView = blocks(service, "FileView")
+        .find(block => block.includes("id: fileCpuTemperature"));
+    assert.match(temperatureView, /onLoaded: root\.cpuTemperature = CpuTemperature\.parseTemperature\(fileCpuTemperature\.text\(\)\)/);
+});
+
+test("a failed temperature path clears the sensor and runs discovery again", () => {
+    const [rediscover] = blocks(service, "function rediscoverCpuTemperature(): void");
+    const clearPath = rediscover.indexOf('fileCpuTemperature.path = ""');
+    const restart = rediscover.indexOf("cpuTemperatureResolver.running = true");
+
+    assert.match(rediscover, /root\.cpuTemperature = null/);
+    assert.match(rediscover, /root\.cpuTemperatureCritical = null/);
+    assert.match(rediscover, /root\.cpuTemperatureChip = ""/);
+    assert.match(rediscover, /root\.cpuTemperatureLabel = ""/);
+    assert.ok(clearPath < restart, "discovery restarts before the failed path is cleared");
+
+    const temperatureView = blocks(service, "FileView")
+        .find(block => block.includes("id: fileCpuTemperature"));
+    assert.match(temperatureView, /onLoadFailed: root\.rediscoverCpuTemperature\(\)/);
+});
+
 test("clearing history emits exactly once after the model is empty", () => {
     const [clear] = blocks(service, "function clearHistory(): void");
     const modelClear = clear.indexOf("historyModel.clear()");
