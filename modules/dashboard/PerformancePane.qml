@@ -25,4 +25,11 @@ Item {
         width: Metrics.PERFORMANCE_CARD.memory.width
         height: Metrics.PERFORMANCE_CARD.memory.height
     }
+
+    NetworkCard {
+        x: Metrics.PERFORMANCE_CARD.network.x
+        y: Metrics.PERFORMANCE_CARD.network.y
+        width: Metrics.PERFORMANCE_CARD.network.width
+        height: Metrics.PERFORMANCE_CARD.network.height
+    }
 }

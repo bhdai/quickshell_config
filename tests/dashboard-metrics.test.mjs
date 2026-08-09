@@ -7,7 +7,7 @@ import { blocks, read } from "./qml-source.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
-const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CARD_GAP", "PERFORMANCE_ROW_H", "PERFORMANCE_TOP_CARD_W", "PERFORMANCE_CARD_PAD", "PERFORMANCE_CARD", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
+const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CARD_GAP", "PERFORMANCE_ROW_H", "PERFORMANCE_TOP_CARD_W", "PERFORMANCE_NETWORK_CARD_W", "PERFORMANCE_CARD_PAD", "PERFORMANCE_CARD", "CANVAS", "TRACK_START", "TRACK_W", "WINDOW_W", "WINDOW_H"]);
 
 test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.MARGIN, 10);
@@ -82,6 +82,23 @@ test("the memory card is the top-right of the performance pane", () => {
     const { cpu, memory } = metrics.PERFORMANCE_CARD;
     assert.equal(memory.x, cpu.x + cpu.width + metrics.CARD_GAP);
     assert.equal(memory.x + memory.width, metrics.PERFORMANCE_PANE_W);
+});
+
+// The bottom row is the uneven one: two volatile series need the horizontal room more than
+// a number that moves on the scale of hours does, so the widths are named here rather than
+// halved out of the pane.
+test("the network card is the wide half of the performance pane's bottom row", () => {
+    assert.deepEqual(metrics.PERFORMANCE_CARD.network, {
+        x: 0,
+        y: 220,
+        width: 580,
+        height: 208
+    });
+
+    const { cpu, network } = metrics.PERFORMANCE_CARD;
+    assert.equal(network.y, cpu.y + cpu.height + metrics.CARD_GAP);
+    assert.equal(network.y + network.height, metrics.PERFORMANCE_PANE_H);
+    assert.ok(network.width > metrics.PERFORMANCE_TOP_CARD_W);
 });
 
 test("the calendar body is the pane under a full-width 72px header", () => {

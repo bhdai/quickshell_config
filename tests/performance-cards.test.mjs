@@ -11,13 +11,14 @@ const pane = read(dashboardDir, "PerformancePane.qml");
 const card = read(dashboardDir, "PerformanceCard.qml");
 const cpuCard = read(dashboardDir, "CpuCard.qml");
 const memoryCard = read(dashboardDir, "MemoryCard.qml");
+const networkCard = read(dashboardDir, "NetworkCard.qml");
 const plot = read(dashboardDir, "TimeseriesPlot.qml");
 
 // The pane is a fixed canvas divided between cards, so where a card sits is a fact about
 // the destination rather than about the card. Written inline, four cards' worth of these
 // numbers could no longer be shown to add up to the pane.
 test("a card is placed at the rectangle the metrics module names for it", () => {
-    for (const [type, name] of [["CpuCard", "cpu"], ["MemoryCard", "memory"]]) {
+    for (const [type, name] of [["CpuCard", "cpu"], ["MemoryCard", "memory"], ["NetworkCard", "network"]]) {
         const [placement] = blocks(pane, type);
 
         assert.match(placement, new RegExp(`x: Metrics\\.PERFORMANCE_CARD\\.${name}\\.x`));
@@ -114,6 +115,87 @@ test("RAM and swap share a fixed full-scale plot and their colours", () => {
     assert.match(series, /primaryColor: Appearance\.colors\.colPrimary/);
     assert.match(series, /secondaryColor: Appearance\.colors\.colTertiary/);
     assert.match(series, /primaryKey: "RAM"/);
+});
+
+// Neither direction is the one the other is read against: a download buried under an upload
+// or beside it in smaller type would make the card an answer to only one of the two questions
+// a reader opens it with.
+test("both directions are the network card's headline", () => {
+    assert.match(networkCard, /symbol: "network_check"/);
+
+    // One inline component used twice, so the two readings cannot drift into different
+    // weights: what differs between them is the direction, its colour and its rate.
+    const [download, upload] = blocks(networkCard, "DirectionReading");
+    assert.match(download, /rate: ResourceUsage\.formatRate\(ResourceUsage\.downloadBytesPerSecond\)/);
+    assert.match(upload, /rate: ResourceUsage\.formatRate\(ResourceUsage\.uploadBytesPerSecond\)/);
+    assert.match(download, /accent: Appearance\.colors\.colPrimary/);
+    assert.match(upload, /accent: Appearance\.colors\.colTertiary/);
+});
+
+// An interface appearing or going away resets the counters the rate is a delta of. The
+// direction that lost its baseline has no reading until the next one, and substituting a zero
+// would draw a topology change as traffic stopping.
+test("a rebaselining direction reads as an em dash without disturbing its history", () => {
+    // `ResourceUsage` publishes null for that direction and the service's own formatter is
+    // what turns null into an em dash — the card does not get to decide on a stand-in.
+    assert.match(networkCard, /rate: ResourceUsage\.formatRate\(/);
+    assert.doesNotMatch(networkCard, /\|\| 0|\?\? 0/);
+
+    // The row it wrote is NaN, which is a break in the line rather than a reason to throw
+    // away the minute either direction already has.
+    assert.doesNotMatch(networkCard, /clearHistory|history\.clear/);
+    const [series] = blocks(networkCard, "TimeseriesPlot");
+    assert.match(series, /primaryRole: "downloadBytesPerSecond"/);
+    assert.match(series, /secondaryRole: "uploadBytesPerSecond"/);
+});
+
+// Throughput has no capacity to be plotted against, so the scale comes from the traffic — and
+// a scale that moves is a way for the card to lie, because a rescale and a change in traffic
+// draw the same movement. Stating the ceiling is what separates them.
+test("both series share one damped ceiling, and the card says what it is", () => {
+    assert.match(networkCard, /property real ceiling: Ceiling\.FLOOR_BYTES_PER_SECOND/);
+    assert.match(networkCard, /Ceiling\.settleCeiling\(root\.ceiling, Ceiling\.ceilingTarget\(/);
+
+    const [series] = blocks(networkCard, "TimeseriesPlot");
+    assert.match(series, /maximum: root\.ceiling/);
+    assert.match(series, /ceilingLabel: ResourceUsage\.formatRate\(root\.ceiling\)/);
+
+    const [connections] = blocks(networkCard, "Connections");
+    assert.match(connections, /target: ResourceUsage/);
+    assert.match(connections, /function onHistoryUpdated\(\): void \{\s*root\.updateCeiling\(\);/);
+});
+
+test("a moving ceiling is stated where it does not compete with the lines", () => {
+    const [label] = blocks(plot, "Text").filter(text => text.includes("root.ceilingLabel"));
+
+    assert.match(label, /anchors\.top: parent\.top/);
+    assert.match(label, /anchors\.right: parent\.right/);
+    assert.match(label, /font\.pixelSize: Appearance\.font\.pixelSize\.smallest/);
+    assert.match(label, /color: Appearance\.colors\.colSubtext/);
+    // Nothing to state on a plot whose ceiling is a fixed 100%.
+    assert.match(label, /visible: !root\.collecting && root\.ceilingLabel !== ""/);
+});
+
+// Bytes since boot answer a different question from the one this destination asks, and the
+// service does not carry them. Pinned as what the card reads rather than as a word it avoids.
+test("the network card reads current rates and their history, and nothing else", () => {
+    const referenced = [...new Set(networkCard.match(/ResourceUsage\.\w+/g))].sort();
+
+    assert.deepEqual(referenced, [
+        "ResourceUsage.downloadBytesPerSecond",
+        "ResourceUsage.formatRate",
+        "ResourceUsage.history",
+        "ResourceUsage.uploadBytesPerSecond"
+    ]);
+});
+
+test("download and upload keep one colour between their line and their key", () => {
+    const [series] = blocks(networkCard, "TimeseriesPlot");
+
+    assert.match(series, /primaryColor: Appearance\.colors\.colPrimary/);
+    assert.match(series, /secondaryColor: Appearance\.colors\.colTertiary/);
+    assert.match(series, /primaryKey: "Download"/);
+    assert.match(series, /secondaryKey: "Upload"/);
 });
 
 // The ring rolls at capacity, so its count stops changing while its contents do not. Nothing
