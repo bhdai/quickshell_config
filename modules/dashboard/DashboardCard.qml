@@ -98,7 +98,7 @@ Rectangle {
             sourceComponent: {
                 switch (root.currentTab) {
                 case "dashboard":
-                    return calendarComponent;
+                    return dashboardComponent;
                 case "wallpaper":
                     return wallpaperComponent;
                 }
@@ -128,8 +128,8 @@ Rectangle {
     }
 
     Component {
-        id: calendarComponent
-        CalendarPane {}
+        id: dashboardComponent
+        DashboardPane {}
     }
 
     Component {

@@ -126,8 +126,8 @@ test("the window holds still at the largest destination and masks to the card", 
 // from its content would put the card on a spring — a month with a sixth row, a longer
 // condition string or a sparse library would each move it.
 test("a pane takes the canvas its destination named rather than growing to its content", () => {
-    assert.match(read(dashboardDir, "CalendarPane.qml"), /implicitWidth: Metrics\.CANVAS\.dashboard\.width\b/);
-    assert.match(read(dashboardDir, "CalendarPane.qml"), /implicitHeight: Metrics\.CANVAS\.dashboard\.height\b/);
+    assert.match(read(dashboardDir, "DashboardPane.qml"), /implicitWidth: Metrics\.CANVAS\.dashboard\.width\b/);
+    assert.match(read(dashboardDir, "DashboardPane.qml"), /implicitHeight: Metrics\.CANVAS\.dashboard\.height\b/);
     assert.match(read(dashboardDir, "WallpaperPane.qml"), /implicitWidth: Metrics\.CANVAS\.wallpaper\.width\b/);
     assert.match(read(dashboardDir, "WallpaperPane.qml"), /implicitHeight: Metrics\.CANVAS\.wallpaper\.height\b/);
 });
