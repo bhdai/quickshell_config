@@ -16,6 +16,7 @@ const card = read(dashboardDir, "DashboardCard.qml");
 test("every destination names the symbol drawn above its label", () => {
     assert.match(dashboard, /\{ key: "dashboard", label: "Dashboard", icon: "dashboard" \}/);
     assert.match(dashboard, /\{ key: "wallpaper", label: "Wallpaper", icon: "wallpaper" \}/);
+    assert.match(dashboard, /\{ key: "performance", label: "Performance", icon: "speed" \}/);
 });
 
 // The label stays at `small` deliberately. `smaller` would fit, but the indicator hugs the

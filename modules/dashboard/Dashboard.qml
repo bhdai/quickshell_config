@@ -10,9 +10,9 @@ import "dashboard_metrics.js" as Metrics
  * The surface behind the bar clock. It owns the window, the focus grab, which destination is
  * showing, and the `dashboard` IPC target.
  *
- * Dashboard and Wallpaper are the destinations. A further one is an entry in `tabs`, a branch in
- * the card's pane loader, and a pane naming the canvas it wants as its implicit size; nothing
- * here is per-destination, and nothing here decides how big any of them are.
+ * Destinations are entries in `tabs`, branches in the card's pane loader, and panes naming the
+ * canvases they want as their implicit sizes; nothing here is per-destination, and nothing here
+ * decides how big any of them are.
  */
 Scope {
     id: root
@@ -20,7 +20,8 @@ Scope {
     property bool isOpen: false
     readonly property var tabs: [
         { key: "dashboard", label: "Dashboard", icon: "dashboard" },
-        { key: "wallpaper", label: "Wallpaper", icon: "wallpaper" }
+        { key: "wallpaper", label: "Wallpaper", icon: "wallpaper" },
+        { key: "performance", label: "Performance", icon: "speed" }
     ]
     property string currentTab: "dashboard"
 

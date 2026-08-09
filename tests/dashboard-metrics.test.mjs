@@ -7,7 +7,7 @@ import { blocks, read } from "./qml-source.mjs";
 
 const repoRoot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const dashboardDir = path.join(repoRoot, "modules", "dashboard");
-const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "TAB_FADE_MS", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "CANVAS", "WINDOW_W", "WINDOW_H"]);
+const metrics = loadQmlJs(path.join(dashboardDir, "dashboard_metrics.js"), ["MARGIN", "PAD", "TABBAR_H", "GAP", "cardWidth", "cardHeight", "TAB_FADE_MS", "HEADER_H", "COL_GAP", "TILE", "TILE_COL_W", "BODY_H", "CALENDAR_COL_W", "CALENDAR_PANE_W", "CALENDAR_PANE_H", "GRID_COLUMNS", "GRID_ROWS", "CELL_W", "CELL_H", "CELL_GAP_X", "CELL_GAP_Y", "WALLPAPER_PANE_W", "WALLPAPER_PANE_H", "PERFORMANCE_PANE_W", "PERFORMANCE_PANE_H", "CANVAS", "WINDOW_W", "WINDOW_H"]);
 
 test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.MARGIN, 10);
@@ -19,8 +19,8 @@ test("the chrome is what the card adds around whatever pane is showing", () => {
     assert.equal(metrics.cardHeight(100), 100 + 2 * metrics.PAD + metrics.TABBAR_H + metrics.GAP);
 });
 
-// The point of per-destination sizing: the two tabs are different canvases, and the chrome
-// around them is the same.
+// The point of per-destination sizing: every tab names its canvas, and the chrome around
+// them is the same.
 test("each destination names its own canvas", () => {
     assert.equal(metrics.CALENDAR_PANE_W, 872);
     assert.equal(metrics.CALENDAR_PANE_H, 428);
@@ -31,6 +31,11 @@ test("each destination names its own canvas", () => {
     assert.equal(metrics.WALLPAPER_PANE_H, 424);
     assert.equal(metrics.cardWidth(metrics.WALLPAPER_PANE_W), 700);
     assert.equal(metrics.cardHeight(metrics.WALLPAPER_PANE_H), 520);
+
+    assert.equal(metrics.PERFORMANCE_PANE_W, 872);
+    assert.equal(metrics.PERFORMANCE_PANE_H, 428);
+    assert.equal(metrics.cardWidth(metrics.PERFORMANCE_PANE_W), 896);
+    assert.equal(metrics.cardHeight(metrics.PERFORMANCE_PANE_H), 524);
 
     assert.notEqual(metrics.CALENDAR_PANE_W, metrics.WALLPAPER_PANE_W);
 });
@@ -107,8 +112,8 @@ test("the card follows the pane", () => {
 // the edges. It is fixed at the largest destination, and the mask is what stops the resulting
 // transparent border from eating the clicks that dismiss the dashboard.
 test("the window holds still at the largest destination and masks to the card", () => {
-    assert.equal(metrics.WINDOW_W, Math.max(metrics.cardWidth(metrics.CALENDAR_PANE_W), metrics.cardWidth(metrics.WALLPAPER_PANE_W)) + 2 * metrics.MARGIN);
-    assert.equal(metrics.WINDOW_H, Math.max(metrics.cardHeight(metrics.CALENDAR_PANE_H), metrics.cardHeight(metrics.WALLPAPER_PANE_H)) + 2 * metrics.MARGIN);
+    assert.equal(metrics.WINDOW_W, Math.max(metrics.cardWidth(metrics.CALENDAR_PANE_W), metrics.cardWidth(metrics.WALLPAPER_PANE_W), metrics.cardWidth(metrics.PERFORMANCE_PANE_W)) + 2 * metrics.MARGIN);
+    assert.equal(metrics.WINDOW_H, Math.max(metrics.cardHeight(metrics.CALENDAR_PANE_H), metrics.cardHeight(metrics.WALLPAPER_PANE_H), metrics.cardHeight(metrics.PERFORMANCE_PANE_H)) + 2 * metrics.MARGIN);
     // The calendar is now the widest destination; before the tiles went three abreast the
     // wallpaper grid was, so this is the tab whose card the window is cut to.
     assert.equal(metrics.WINDOW_W, 916);
@@ -133,6 +138,8 @@ test("a pane takes the canvas its destination named rather than growing to its c
     assert.match(read(dashboardDir, "DashboardPane.qml"), /implicitHeight: Metrics\.CANVAS\.dashboard\.height\b/);
     assert.match(read(dashboardDir, "WallpaperPane.qml"), /implicitWidth: Metrics\.CANVAS\.wallpaper\.width\b/);
     assert.match(read(dashboardDir, "WallpaperPane.qml"), /implicitHeight: Metrics\.CANVAS\.wallpaper\.height\b/);
+    assert.match(read(dashboardDir, "PerformancePane.qml"), /implicitWidth: Metrics\.CANVAS\.performance\.width\b/);
+    assert.match(read(dashboardDir, "PerformancePane.qml"), /implicitHeight: Metrics\.CANVAS\.performance\.height\b/);
 });
 
 // The window is sized from CANVAS, so a destination the map does not know about is one the
