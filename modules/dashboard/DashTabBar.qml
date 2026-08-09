@@ -4,10 +4,9 @@ import qs.modules.common.widgets
 import "dashboard_metrics.js" as Metrics
 
 /**
- * Material 3 primary tabs: equal-width cells holding an icon over a label, with the state
- * layer and the indicator both hugging those two lines rather than the cell. Each tab carries
- * a stable key separately from its presentation label and icon, and the signal carries that
- * key.
+ * Material 3 primary tabs: equal-width cells holding an icon over a label, with the indicator
+ * hugging those two lines rather than the cell. Each tab carries a stable key separately from
+ * its presentation label and icon, and the signal carries that key.
  */
 Item {
     id: root
@@ -26,11 +25,6 @@ Item {
     // The lane at the bottom the indicator and the divider share. The tabs stop above it, so
     // a tab's state layer never draws over the indicator or the rule under it.
     readonly property real indicatorHeight: 3
-    // What the two lines are given above and below them, and what the state layer takes past
-    // them to the sides. The vertical one is the number TABBAR_H was built from: 49px of icon
-    // and label, 6 either side, and the indicator's lane.
-    readonly property real contentPadding: 6
-    readonly property real statePadding: 12
     // For the offscreen geometry fixture: whether the indicator ends up on the active label
     // is a measurement, not something a source assertion can see.
     readonly property Item indicatorItem: indicator
@@ -81,12 +75,12 @@ Item {
                     }
                 }
 
-                // The state layer describes the tab, not the cell it was laid into, so it
-                // hugs the two lines rather than filling the width the row divided out.
+                // The whole cell is what accepts the pointer, so the whole cell is what
+                // lights up. A layer hugging the two lines was tried and reads wrong: it
+                // lit from anywhere in the tab, which puts the response on a shape the
+                // pointer is not necessarily over.
                 Rectangle {
-                    anchors.centerIn: content
-                    width: tab.contentWidth + 2 * root.statePadding
-                    height: content.height + 2 * root.contentPadding
+                    anchors.fill: parent
                     radius: Appearance.rounding.small
                     color: hover.hovered ? Appearance.colors.colLayer1Hover : "transparent"
 

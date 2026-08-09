@@ -29,15 +29,17 @@ test("a tab is a 24px symbol over a label at the small size", () => {
     assert.match(label, /font\.pixelSize: Appearance\.font\.pixelSize\.small\b/);
 });
 
-// A ripple spreads from where it was clicked across whatever it is drawn on, so it belongs to
-// a cell. Hovering a tab has to describe the tab.
-test("the state layer is a pill on the two lines rather than a ripple on the cell", () => {
+// The whole cell is the hover target, so the whole cell is what lights up. Measured on the
+// desktop: a state layer that hugged only the two lines lit from anywhere in the tab, which
+// reads as the wrong shape responding. What the ripple leaves behind is a colour transition,
+// not a spread from wherever the pointer entered.
+test("the state layer is the tab the pointer is actually over", () => {
     const [pill] = blocks(tabBar, "Rectangle");
 
-    assert.match(pill, /width: tab\.contentWidth \+ 2 \* root\.statePadding\b/);
-    assert.match(pill, /height: content\.height \+ 2 \* root\.contentPadding\b/);
+    assert.match(pill, /anchors\.fill: parent\b/);
     assert.match(pill, /radius: Appearance\.rounding\.small\b/);
     assert.match(pill, /color: hover\.hovered \? Appearance\.colors\.colLayer1Hover : "transparent"/);
+    assert.match(tabBar, /HoverHandler \{\s*id: hover/);
 
     assert.doesNotMatch(tabBar, /RippleButton|ripple/i);
 });
