@@ -54,11 +54,11 @@ test("the calendar alias is canonical before open changes state or answers", () 
 // Identity and presentation share one ordered model, but the key is never recovered from
 // label text. A presentation rename therefore cannot move the IPC surface.
 test("destination keys are ordered independently of their labels", () => {
-    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper" \}\s*\]/);
+    assert.match(dashboard, /readonly property var tabs: \[\s*\{ key: "dashboard", label: "Dashboard", icon: "dashboard" \},\s*\{ key: "wallpaper", label: "Wallpaper", icon: "wallpaper" \}\s*\]/);
     assert.match(dashboard, /function knows\(tab: string\): bool \{\s*return root\.tabs\.some\(destination => destination\.key === tab\);/);
     assert.doesNotMatch(dashboard, /toLowerCase/);
     assert.match(dashTabBar, /root\.current === modelData\.key/);
-    assert.match(dashTabBar, /root\.selected\(modelData\.key\)/);
+    assert.match(dashTabBar, /root\.selected\(tab\.modelData\.key\)/);
     assert.match(dashTabBar, /text: tab\.modelData\.label/);
     assert.doesNotMatch(dashTabBar, /toLowerCase/);
 });

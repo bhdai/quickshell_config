@@ -56,8 +56,8 @@ ShellRoot {
         DashboardCard {
             id: card
             tabs: [
-                { key: "dashboard", label: "Dashboard" },
-                { key: "wallpaper", label: "Wallpaper" }
+                { key: "dashboard", label: "Dashboard", icon: "dashboard" },
+                { key: "wallpaper", label: "Wallpaper", icon: "wallpaper" }
             ]
             currentTab: "wallpaper"
         }
