@@ -105,7 +105,7 @@ Scope {
                         buttonIcon: "dark_mode"
                         buttonText: "Sleep"
                         onClicked: Session.suspend()
-                        Keys.onPressed: event => handleNavigation(event, btnLock, btnLogout, btnHibernate, null)
+                        Keys.onPressed: event => handleNavigation(event, btnLock, btnLogout, btnFirmware, null)
                     }
 
                     SessionActionButton {
@@ -121,14 +121,14 @@ Scope {
                         buttonIconSource: "system-shutdown-symbolic.svg"
                         buttonText: "Shutdown"
                         onClicked: Session.poweroff()
-                        Keys.onPressed: event => handleNavigation(event, null, btnHibernate, null, btnLock)
+                        Keys.onPressed: event => handleNavigation(event, null, btnFirmware, null, btnLock)
                     }
 
                     SessionActionButton {
-                        id: btnHibernate
-                        buttonIcon: "downloading"
-                        buttonText: "Hibernate"
-                        onClicked: Session.hibernate()
+                        id: btnFirmware
+                        buttonIcon: "developer_board"
+                        buttonText: "BIOS"
+                        onClicked: Session.rebootToFirmware()
                         Keys.onPressed: event => handleNavigation(event, btnShutdown, btnReboot, null, btnSleep)
                     }
 
@@ -137,7 +137,7 @@ Scope {
                         buttonIconSource: "system-reboot-symbolic.svg"
                         buttonText: "Reboot"
                         onClicked: Session.reboot()
-                        Keys.onPressed: event => handleNavigation(event, btnHibernate, null, null, btnLogout)
+                        Keys.onPressed: event => handleNavigation(event, btnFirmware, null, null, btnLogout)
                     }
                 }
 
@@ -173,8 +173,8 @@ Scope {
                 function onFocusChanged() { if (btnLogout.focus) sessionPanel.subtitle = btnLogout.buttonText; }
             }
             Connections {
-                target: btnHibernate
-                function onFocusChanged() { if (btnHibernate.focus) sessionPanel.subtitle = btnHibernate.buttonText; }
+                target: btnFirmware
+                function onFocusChanged() { if (btnFirmware.focus) sessionPanel.subtitle = btnFirmware.buttonText; }
             }
             Connections {
                 target: btnShutdown
