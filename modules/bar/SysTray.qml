@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
-import Quickshell.Widgets
 import qs.modules.bar
 import qs.modules.common
 import qs.modules.common.widgets
@@ -12,11 +11,15 @@ import qs.services
 /**
  * SysTray - System tray with pinned items inline and overflow popup for unpinned items
  */
-MouseArea {
+Item {
     id: root
-    implicitWidth: backgroundRect.implicitWidth
+    implicitWidth: trayIconsLayout.implicitWidth
     implicitHeight: 30
-    hoverEnabled: true
+
+    // Nothing to show is the common case for a tray, and a zero-width widget is not enough:
+    // the bar's RowLayout still spends its spacing on either side of one, leaving a gap where
+    // the empty container used to be.
+    visible: TrayService.pinnedItems.length > 0 || TrayService.unpinnedItems.length > 0
 
     property bool trayOverflowOpen: false
     property bool menuActive: false
@@ -53,71 +56,59 @@ MouseArea {
         }
     }
 
-    WrapperRectangle {
-        id: backgroundRect
-        implicitHeight: 30
-        color: root.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer1
-        radius: 15
+    // No background of its own, for the same reason WorkspaceIndicator has none: a stadium
+    // sized to whatever the tray happens to hold is a container that appears, resizes and
+    // vanishes as apps come and go. The icons sit directly on the bar, and deliberately carry
+    // no hover state layer either — a translucent circle behind a full-colour app icon reads
+    // as grime rather than as feedback. The per-item tooltip is the hover response.
+    RowLayout {
+        id: trayIconsLayout
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 0
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 150
-                easing.type: Easing.OutQuad
+        // Pinned items - always visible inline
+        Repeater {
+            model: SystemTray.items
+
+            delegate: SysTrayItem {
+                visible: TrayService.isPinned(modelData.id)
+                onMenuOpened: root.openMenu()
+                onMenuClosed: root.closeMenu()
             }
         }
 
-        leftMargin: 8
-        rightMargin: 8
+        // Overflow button - only visible when unpinned items exist
+        Loader {
+            id: overflowButtonLoader
+            active: TrayService.unpinnedItems.length > 0
+            visible: active
+            Layout.preferredWidth: active ? 30 : 0
+            Layout.preferredHeight: active ? 30 : 0
 
-        RowLayout {
-            id: trayIconsLayout
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 0
+            sourceComponent: MouseArea {
+                id: overflowButton
+                implicitWidth: 30
+                implicitHeight: 30
+                hoverEnabled: true
 
-            // Pinned items - always visible inline
-            Repeater {
-                model: SystemTray.items
-
-                delegate: SysTrayItem {
-                    visible: TrayService.isPinned(modelData.id)
-                    onMenuOpened: root.openMenu()
-                    onMenuClosed: root.closeMenu()
+                onClicked: {
+                    root.trayOverflowOpen = !root.trayOverflowOpen;
                 }
-            }
 
-            // Overflow button - only visible when unpinned items exist
-            Loader {
-                id: overflowButtonLoader
-                active: TrayService.unpinnedItems.length > 0
-                visible: active
-                Layout.preferredWidth: active ? 30 : 0
-                Layout.preferredHeight: active ? 30 : 0
+                CustomIcon {
+                    anchors.centerIn: parent
+                    source: "go-down-symbolic"
+                    width: 16
+                    height: 16
+                    colorize: true
+                    color: root.trayOverflowOpen ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
 
-                sourceComponent: MouseArea {
-                    id: overflowButton
-                    implicitWidth: 30
-                    implicitHeight: 30
-                    hoverEnabled: true
+                    rotation: root.trayOverflowOpen ? 180 : 0
 
-                    onClicked: {
-                        root.trayOverflowOpen = !root.trayOverflowOpen;
-                    }
-
-                    CustomIcon {
-                        anchors.centerIn: parent
-                        source: "go-down-symbolic"
-                        width: 16
-                        height: 16
-                        colorize: true
-                        color: root.trayOverflowOpen ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
-
-                        rotation: root.trayOverflowOpen ? 180 : 0
-
-                        Behavior on rotation {
-                            NumberAnimation {
-                                duration: 200
-                                easing.type: Easing.OutQuad
-                            }
+                    Behavior on rotation {
+                        NumberAnimation {
+                            duration: 200
+                            easing.type: Easing.OutQuad
                         }
                     }
                 }

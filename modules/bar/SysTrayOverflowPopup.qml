@@ -91,6 +91,15 @@ Scope {
 
                         delegate: SysTrayItem {
                             visible: !TrayService.isPinned(modelData.id)
+
+                            // The panel's implicit size above is computed from itemSize, so
+                            // the cells must actually be that size. Left at SysTrayItem's own
+                            // 30 the grid ran narrower than the window it was measured for,
+                            // and GridLayout parks a non-filling item at one edge of its
+                            // cell — the whole slack landed on the right.
+                            Layout.preferredWidth: popupPanel.itemSize
+                            Layout.preferredHeight: popupPanel.itemSize
+
                             onMenuOpened: root.menuOpened()
                             onMenuClosed: root.menuClosed()
                         }
