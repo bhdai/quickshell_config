@@ -54,7 +54,7 @@ if grep -v 'quickshell\.ipc' "$log" | grep -qE 'ERROR|TypeError|ReferenceError|U
     exit 1
 fi
 
-if ! results="$(grep -o 'PLAIN .*\|WRAPPED .*\|RICH .*\|RICHBODY .*\|SCENE .*' "$log")"; then
+if ! results="$(grep -o 'PLAIN .*\|WRAPPED .*\|RICH .*\|RICHBODY .*\|CUSTOM .*\|SCENE .*' "$log")"; then
     cat "$log"
     echo "The tooltip never finished measuring"
     exit 1
@@ -94,6 +94,13 @@ richbody_h="$(dimension RICHBODY | cut -dx -f2)"
 # Rich vertical padding is 12 above and 8 below a 20px line box, so a subheadless rich tooltip
 # is exactly 40. This is what catches the subhead's Text still taking a layout slot when empty.
 ((richbody_h == 40)) || fail "A rich tooltip with no subhead is not 12+20+8 tall: height=$richbody_h"
+
+# Custom content gets the same rich padding as the two-string variant and nothing else: three
+# 18px rows at 10px spacing is 74, plus 12 above and 8 below; 120 wide plus 16 either side.
+custom_w="$(dimension CUSTOM | cut -dx -f1)"
+custom_h="$(dimension CUSTOM | cut -dx -f2)"
+((custom_w == 152)) || fail "Custom tooltip content is not padded 16px either side: width=$custom_w"
+((custom_h == 94)) || fail "Custom tooltip content is not padded 12 above and 8 below: height=$custom_h"
 
 # Shadow margin is what a host has to leave around the card. Plain has no elevation token in
 # M3 at all, so it must ask for no room; rich must ask for some.

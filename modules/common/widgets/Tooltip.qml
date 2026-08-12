@@ -39,6 +39,8 @@ Item {
     /// Rich only. Setting it does not switch variant — set `variant` too.
     property string subhead: ""
     property int variant: TooltipContainer.Variant.Plain
+    /// Rich only. See TooltipContainer.contentComponent — it must not be interactive.
+    property Component contentComponent: null
 
     /**
      * `Popup` puts the tooltip in its own Wayland surface so it can leave the window that
@@ -59,8 +61,9 @@ Item {
     /// which means something else and propagates to children.
     property bool active: true
 
-    // Either string is enough to be worth showing: a rich tooltip may carry only a subhead.
-    readonly property bool showing: root.hovered && root.active && (root.text !== "" || root.subhead !== "")
+    // Any one of the three is enough to be worth showing: a rich tooltip may carry only a
+    // subhead, or none of the two strings at all when it supplies its own content.
+    readonly property bool showing: root.hovered && root.active && (root.text !== "" || root.subhead !== "" || root.contentComponent !== null)
     /// Distance between the anchor's edge and the tooltip's, for an anchor with a boundary.
     readonly property real gap: 4
 
@@ -125,6 +128,7 @@ Item {
                 variant: root.variant
                 text: root.text
                 subhead: root.subhead
+                contentComponent: root.contentComponent
             }
 
             TooltipMotion {
@@ -153,6 +157,7 @@ Item {
             variant: root.variant
             text: root.text
             subhead: root.subhead
+            contentComponent: root.contentComponent
 
             TooltipMotion {
                 target: sceneContainer

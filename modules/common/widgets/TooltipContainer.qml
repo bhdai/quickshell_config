@@ -28,7 +28,19 @@ Item {
     /// Rich only, and optional — a rich container with no subhead is just wrapped body text.
     property string subhead: ""
 
+    /**
+     * Content to render instead of `subhead`/`text`, for the one case M3's two-string anatomy
+     * cannot express: the battery readout's labelled rows with their own icons.
+     *
+     * It must not be interactive. Tooltips here dismiss the moment the pointer leaves the
+     * anchor, so there is no way to reach anything inside one — a button here would be a
+     * button nobody can press. It sizes itself; the 320px rich ceiling is the caller's to
+     * respect.
+     */
+    property Component contentComponent: null
+
     readonly property bool rich: root.variant === TooltipContainer.Variant.Rich
+    readonly property bool custom: root.contentComponent !== null
     /// Room a host must leave around this container for the elevation shadow to draw.
     readonly property real shadowMargin: root.rich ? Appearance.sizes.elevationMargin : 0
 
@@ -58,15 +70,30 @@ Item {
         readonly property real bottomPadding: root.rich ? 8 : 4
         readonly property real maxWidth: root.rich ? 320 : 200
 
-        width: Math.max(root.rich ? 0 : 40, content.width + horizontalPadding * 2)
-        height: Math.max(root.rich ? 0 : 24, content.implicitHeight + topPadding + bottomPadding)
+        readonly property Item body: root.custom ? customContent : content
+
+        width: Math.max(root.rich ? 0 : 40, body.width + horizontalPadding * 2)
+        height: Math.max(root.rich ? 0 : 24, body.implicitHeight + topPadding + bottomPadding)
 
         color: root.rich ? Appearance.colors.colSurfaceContainer : Appearance.colors.colTooltip
         radius: root.rich ? Appearance.rounding.small : Appearance.rounding.extraSmall
 
+        Loader {
+            id: customContent
+
+            // Left to its own implicit size: forcing a width here would resize the item, and
+            // an item whose own children fill that width would feed its new implicit width
+            // straight back into this binding.
+            active: root.custom
+            sourceComponent: root.contentComponent
+            x: card.horizontalPadding
+            y: card.topPadding
+        }
+
         ColumnLayout {
             id: content
 
+            visible: !root.custom
             // Bound rather than anchored so the wrapped text drives the card's height.
             x: card.horizontalPadding
             y: card.topPadding

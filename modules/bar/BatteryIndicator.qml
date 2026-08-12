@@ -23,10 +23,6 @@ MouseArea {
 
     hoverEnabled: true
 
-    onContainsMouseChanged: {
-        batteryPopup.isOpen = containsMouse;
-    }
-
     ClippedProgressBar {
         id: batteryProgress
         anchors.centerIn: parent
@@ -59,8 +55,15 @@ MouseArea {
         }
     }
 
-    BatteryPopup {
-        id: batteryPopup
-        anchorItem: root
+    Tooltip {
+        target: root
+        side: Tooltip.Side.Below
+        variant: TooltipContainer.Variant.Rich
+        contentComponent: batteryDetails
+    }
+
+    Component {
+        id: batteryDetails
+        BatteryDetails {}
     }
 }

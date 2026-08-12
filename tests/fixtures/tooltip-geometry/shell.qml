@@ -46,6 +46,26 @@ ShellRoot {
             text: "Body with no subhead"
         }
 
+        // Stands in for the battery readout: rows of a fixed size, so the card's size is
+        // arithmetic on them and a padding regression is visible as an exact number.
+        TooltipContainer {
+            id: custom
+            variant: TooltipContainer.Variant.Rich
+            contentComponent: Component {
+                Column {
+                    spacing: 10
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            width: 120
+                            height: 18
+                            color: "transparent"
+                        }
+                    }
+                }
+            }
+        }
+
         // Room above and below: the tooltip should take the side it was asked for.
         Item {
             id: middle
@@ -109,6 +129,7 @@ ShellRoot {
                 console.log(window.report("WRAPPED", wrapped));
                 console.log(window.report("RICH", rich));
                 console.log(window.report("RICHBODY", richBody));
+                console.log(window.report("CUSTOM", custom));
                 middleTip.hovered = true;
                 centred.start();
             }

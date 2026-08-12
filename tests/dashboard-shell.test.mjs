@@ -101,10 +101,10 @@ test("the bar clock drives the one dashboard rather than owning a popup", () => 
 });
 
 // The bar already shows the time the click came from, so the popup no longer repeats it.
-test("the duplicated clock is gone and uptime moved to the battery popup", () => {
+test("the duplicated clock is gone and uptime moved to the battery readout", () => {
     assert.doesNotMatch(calendarCard, /Time\.hoursMinutes/);
     assert.doesNotMatch(calendarCard, /Time\.uptime/);
-    assert.match(read(barDir, "BatteryPopup.qml"), /text: Time\.uptime/);
+    assert.match(read(barDir, "BatteryDetails.qml"), /text: Time\.uptime/);
 });
 
 test("a day cell is a ripple and nothing else", () => {
