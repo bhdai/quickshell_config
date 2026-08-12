@@ -22,7 +22,7 @@ Item {
 
     // Roles on a `ResourceUsage.history` row. Both series are read from the same rows, so
     // two lines on one plot are always the same instants side by side. An empty secondary
-    // role is one series, which is the case that gets the area fill.
+    // role is one series.
     required property string primaryRole
     property string secondaryRole: ""
     property color primaryColor: Appearance.colors.colPrimary
@@ -48,8 +48,6 @@ Item {
     property real strokeWidth: 2
 
     readonly property bool collecting: ResourceUsage.history.count < Plot.MIN_SAMPLES
-    // One series gets the area under it; two would hide one another's line where they cross.
-    readonly property bool filled: root.secondaryRole === ""
 
     property var primaryLines: []
     property var primaryAreas: []
@@ -76,7 +74,7 @@ Item {
 
         const segments = Plot.seriesSegments(root.readSeries(root.primaryRole), root.maximum, ResourceUsage.historyCapacity, body.width, body.height);
         root.primaryLines = root.polylines(segments);
-        root.primaryAreas = root.filled ? root.polylines(segments.map(segment => Plot.areaPolygon(segment, body.height))) : [];
+        root.primaryAreas = root.polylines(segments.map(segment => Plot.areaPolygon(segment, body.height)));
         root.secondaryLines = root.secondaryRole === "" ? [] : root.polylines(Plot.seriesSegments(root.readSeries(root.secondaryRole), root.maximum, ResourceUsage.historyCapacity, body.width, body.height));
     }
 
@@ -115,9 +113,10 @@ Item {
             visible: !root.collecting
             preferredRendererType: Shape.CurveRenderer
 
+            // Drawn under both lines, so the secondary crossing it is never covered.
             ShapePath {
                 strokeColor: "transparent"
-                fillColor: ColorUtils.transparentize(root.primaryColor, 0.85)
+                fillColor: ColorUtils.transparentize(root.primaryColor, 0.8)
 
                 PathMultiline {
                     paths: root.primaryAreas
@@ -136,11 +135,17 @@ Item {
                 }
             }
 
+            // Dashed because only the primary has a filled body: beside it a bare stroke of
+            // the same weight reads as a line that failed to draw rather than as the second
+            // series. Flat-capped because a round cap adds half a stroke width to both ends
+            // of every dash, which at this pattern closes most of the gap it needs.
             ShapePath {
                 strokeColor: root.secondaryColor
                 strokeWidth: root.strokeWidth
                 fillColor: "transparent"
-                capStyle: ShapePath.RoundCap
+                strokeStyle: ShapePath.DashLine
+                dashPattern: [4, 3]
+                capStyle: ShapePath.FlatCap
                 joinStyle: ShapePath.RoundJoin
 
                 PathMultiline {
@@ -202,6 +207,7 @@ Item {
                 text: root.secondaryKey
                 value: root.secondaryValue
                 color: root.secondaryColor
+                dashed: true
             }
         }
 

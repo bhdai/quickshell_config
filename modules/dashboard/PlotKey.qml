@@ -2,8 +2,8 @@ import QtQuick
 import qs.modules.common
 
 /**
- * One line of a plot named in the colour it is drawn in. Empty text is a series the card
- * does not have, and takes no room.
+ * One line of a plot named in the colour and the stroke it is drawn in. Empty text is a
+ * series the card does not have, and takes no room.
  */
 Row {
     id: root
@@ -14,16 +14,45 @@ Row {
     // key's to repeat.
     property alias value: valueLabel.text
     property color color: Appearance.colors.colPrimary
+    // Whether the line this names is drawn dashed. Colour alone would under-report a plot
+    // that distinguishes its series twice, and a reader who noticed the dash would come to
+    // the legend to find two identical dots.
+    property bool dashed: false
 
     spacing: 4
     visible: root.text !== ""
 
-    Rectangle {
-        width: 8
-        height: 8
-        radius: width / 2
-        color: root.color
+    // One footprint either way: a legend that changed width with the shape of its swatch
+    // would shift the keys sideways for a reason that says nothing about the data.
+    Item {
+        implicitWidth: 8
+        implicitHeight: 8
         anchors.verticalCenter: parent.verticalCenter
+
+        Rectangle {
+            anchors.fill: parent
+            visible: !root.dashed
+            radius: width / 2
+            color: root.color
+        }
+
+        Row {
+            anchors.centerIn: parent
+            visible: root.dashed
+            spacing: 2
+
+            Rectangle {
+                width: 3
+                height: 2
+                color: root.color
+            }
+
+            Rectangle {
+                width: 3
+                height: 2
+                color: root.color
+            }
+        }
     }
 
     Text {

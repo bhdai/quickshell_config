@@ -100,9 +100,8 @@ test("with no swap configured its reading and its series are both omitted", () =
     const [series] = blocks(memoryCard, "TimeseriesPlot");
     assert.match(series, /secondaryKey: root\.swapConfigured \? "Swap" : ""/);
 
-    // The plot fills whatever series is left alone on the scale, and the card's rectangle is
-    // the pane's to name — so neither presentation follows from whether swap is there.
-    assert.match(plot, /readonly property bool filled: root\.secondaryRole === ""/);
+    // The card's rectangle is the pane's to name, so nothing about its size follows from
+    // whether swap is there.
     assert.doesNotMatch(memoryCard, /^\s*(width|height|implicitWidth|implicitHeight):/m);
 });
 
@@ -399,13 +398,34 @@ test("the plot never infers its own vertical scale", () => {
     assert.match(rebuild, /Plot\.seriesSegments\(root\.readSeries\(root\.primaryRole\), root\.maximum,/);
 });
 
-// Two filled series would each hide the other where they cross, and a line drawn over a
-// second series' fill is a different colour from the same line drawn over the card.
-test("the area fill belongs to a plot with one series on it", () => {
-    assert.match(plot, /readonly property bool filled: root\.secondaryRole === ""/);
+// The fill is what makes the primary the plot's subject, so it is not conditional on what
+// else is drawn. Only the primary gets it: two filled series would each hide the other where
+// they cross, and the second is told apart by its stroke instead.
+test("the primary series is always filled and the secondary never is", () => {
+    assert.doesNotMatch(plot, /property bool filled/);
 
     const [rebuild] = blocks(plot, "function rebuild(): void");
-    assert.match(rebuild, /root\.primaryAreas = root\.filled \?/);
+    assert.match(rebuild, /root\.primaryAreas = root\.polylines\(segments\.map\(segment => Plot\.areaPolygon\(/);
+    assert.doesNotMatch(rebuild, /secondaryAreas/);
+});
+
+// A bare stroke beside a filled one reads as a line that failed to draw, and round caps at
+// this pattern would close the gaps that carry the distinction.
+test("the secondary line is dashed and flat-capped, and its key says so", () => {
+    const [area, primary, secondary] = blocks(plot, "ShapePath");
+
+    assert.doesNotMatch(area, /strokeStyle/);
+    assert.doesNotMatch(primary, /strokeStyle/);
+    assert.match(secondary, /strokeStyle: ShapePath\.DashLine/);
+    assert.match(secondary, /dashPattern: \[4, 3\]/);
+    assert.match(secondary, /capStyle: ShapePath\.FlatCap/);
+    assert.match(primary, /capStyle: ShapePath\.RoundCap/);
+
+    // Both lines keep one weight: the fill and the pattern already say which is which.
+    assert.deepEqual([primary, secondary].map(path => /strokeWidth: (\S+)/.exec(path)[1]), ["root.strokeWidth", "root.strokeWidth"]);
+
+    const keys = blocks(plot, "PlotKey");
+    assert.deepEqual(keys.map(key => /dashed: true/.test(key)), [false, true]);
 });
 
 // A key that named its series in the card's foreground colour would need a legend of its
