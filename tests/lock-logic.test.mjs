@@ -390,9 +390,9 @@ test("the fingerprint backoff is finite", () => {
     // The budget is what keeps a genuinely missing quickshell-fprint policy from
     // retrying forever behind a locked screen — the fork loop, slowed down but still a
     // loop. A negative delay is the applier's signal to latch the stop for good.
-    const exhausted = fingerprintRetryDelay(3);
+    const exhausted = fingerprintRetryDelay(4);
 
-    assert.ok(exhausted < 0, `expected exhaustion at attempt 3, got ${exhausted}`);
+    assert.ok(exhausted < 0, `expected exhaustion at attempt 4, got ${exhausted}`);
     assert.ok(fingerprintRetryDelay(100) < 0);
 });
 
@@ -406,6 +406,30 @@ test("the fingerprint backoff outlasts a reader re-enumerating", () => {
     }
 
     assert.ok(total >= 10000, `budget of ${total}ms is too short to outlast a re-enumeration`);
+});
+
+test("the fingerprint backoff outlasts an fprintd that enumerated no reader", () => {
+    // After a resume the adversary is fprintd rather than the bus. It looks for readers
+    // once, at startup, and serves that answer for its whole life — so an instance
+    // D-Bus-activated while the reader is still re-enumerating has an empty device list
+    // until it idle-exits thirty seconds later. Every retry inside that window reaches
+    // that same instance and is refused, and each one restarts its idle timer, so a
+    // schedule of short waits cannot outlive the thing refusing it however many it has.
+    // One wait has to outlast the daemon, or the budget only ever confirms the same
+    // corpse.
+    //
+    // Observed 2026-08-11 20:14: lid opened, the frozen arm fired and started fprintd
+    // 0.3s later against a reader still 1.2s from ready, the budget was spent at t+17.7s,
+    // and the empty instance exited at t+30.5s — thirteen seconds after the shell had
+    // given up. The chip was absent for the rest of that lock.
+    const fprintdIdleExit = 30000;
+
+    let longest = 0;
+    for (let attempt = 0; fingerprintRetryDelay(attempt) > 0; attempt++) {
+        longest = Math.max(longest, fingerprintRetryDelay(attempt));
+    }
+
+    assert.ok(longest > fprintdIdleExit, `longest wait of ${longest}ms cannot outlive a ${fprintdIdleExit}ms daemon`);
 });
 
 test("the affordance stays absent until a message has proven the reader", () => {

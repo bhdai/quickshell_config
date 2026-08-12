@@ -256,7 +256,16 @@ function fingerprintAction(result, sawMessageThisCycle) {
 // Finite because an unslowed retry is the fork loop again: a missing quickshell-fprint
 // policy refuses instantly and forever, and only exhausting a budget distinguishes that
 // from hardware that is coming back.
-const FingerprintRetryDelays = [2000, 5000, 10000];
+//
+// The last wait outlives an fprintd, and has to. fprintd enumerates readers once at
+// startup and serves that answer until it exits, so an instance activated while the reader
+// is still re-enumerating after a resume holds an empty device list for its whole
+// thirty-second idle life. Every retry landing inside that window reaches the same
+// instance, and each one restarts its idle timer — so short waits cannot outlast the thing
+// refusing them, and adding more of them makes recovery strictly less likely rather than
+// more. Only a wait that outlives the daemon reaches a fresh one, which enumerates a bus
+// that has since settled.
+const FingerprintRetryDelays = [2000, 5000, 10000, 35000];
 
 /**
  * How long to wait before the nth re-arm of a stopped reader, or a negative number once
