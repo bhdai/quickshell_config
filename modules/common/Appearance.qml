@@ -218,6 +218,10 @@ Singleton {
         readonly property QtObject pixelSize: QtObject {
             readonly property int smallest: 10
             readonly property int smaller: 12
+            // Material 3 sets both titleSmall and bodyMedium at 14, which is the rich
+            // tooltip's whole type scale. It sits between `smaller` and `small` and there is
+            // no adjective left for it, hence the name.
+            readonly property int smallPlus: 14
             readonly property int small: 15
             readonly property int normal: 16
             readonly property int large: 17
@@ -229,6 +233,10 @@ Singleton {
 
     // Rounding values
     readonly property QtObject rounding: QtObject {
+        // Material 3 `corner-extra-small`. Well below the rest of this scale on purpose: it
+        // is the plain tooltip's radius, and a tooltip is meant to read as a transient
+        // annotation rather than as one more of this shell's rounded surfaces.
+        readonly property int extraSmall: 4
         readonly property int small: 12
         readonly property int normal: 17
         readonly property int large: 23

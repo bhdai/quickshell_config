@@ -208,30 +208,13 @@ MouseArea {
         }
     }
 
-    // lazy loaded tooltip
-    Timer {
-        id: tooltipTimer
-        interval: 500
-        running: root.containsMouse && root.activePlayer
-        onTriggered: tooltipLoader.active = true
-    }
-
-    Loader {
-        id: tooltipLoader
-        active: false
-        sourceComponent: MediaTooltip {
-            activePlayer: root.activePlayer
-            anchorItem: root
-            cleanTitleFunc: root.cleanTitle
-        }
-    }
-
-    // reset tooltip when mouse leaves
-    onContainsMouseChanged: {
-        if (!containsMouse) {
-            tooltipTimer.stop();
-            tooltipLoader.active = false;
-        }
+    Tooltip {
+        target: root
+        side: Tooltip.Side.Below
+        variant: TooltipContainer.Variant.Rich
+        active: root.activePlayer !== null
+        subhead: root.activePlayer ? root.cleanTitle(root.activePlayer.trackTitle) : ""
+        text: root.activePlayer ? (root.activePlayer.trackArtist || "Unknown Artist") : ""
     }
 
     // media controls popup

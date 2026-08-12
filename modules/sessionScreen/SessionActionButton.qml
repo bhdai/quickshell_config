@@ -76,25 +76,12 @@ RippleButton {
         }
     }
 
-    // Tooltip on hover (positioned above to avoid sibling overlap)
-    Rectangle {
-        id: tooltip
-        visible: button.hovered && !button.focus
-        z: 100
-        anchors.bottom: parent.top
-        anchors.bottomMargin: 8
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: tooltipText.implicitWidth + 16
-        height: tooltipText.implicitHeight + 8
-        color: Appearance.colors.colTooltip
-        radius: 6
-
-        Text {
-            id: tooltipText
-            anchors.centerIn: parent
-            text: buttonText
-            color: Appearance.colors.colOnTooltip
-            font.pixelSize: 12
-        }
+    Tooltip {
+        target: button
+        surface: Tooltip.Surface.InScene
+        text: button.buttonText
+        // The session screen labels the focused action itself. Two labels for one button
+        // reads as a duplicate rather than as two systems.
+        active: !button.focus
     }
 }

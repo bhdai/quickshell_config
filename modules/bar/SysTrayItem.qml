@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
+import qs.modules.common.widgets
 
 MouseArea {
     id: root
@@ -38,28 +39,16 @@ MouseArea {
         height: root.implicitHeight * 0.7
     }
 
-    Timer {
-        id: tooltipTimer
-        interval: 500
-        running: root.containsMouse && root.QsWindow && root.QsWindow.window
-        onTriggered: tooltipLoader.active = true
-    }
-
-    Loader {
-        id: tooltipLoader
-        active: false
-
-        sourceComponent: SysTrayItemTooltip {
-            item: root.modelData
-            anchorItem: root
-        }
-    }
-
-    // reset tooltip when mouse leaves
-    onContainsMouseChanged: {
-        if (!containsMouse) {
-            tooltipTimer.stop();
-            tooltipLoader.active = false;
+    Tooltip {
+        target: root
+        side: Tooltip.Side.Below
+        // Tray items expose a title and sometimes a one-line status string. Both go in the
+        // plain chip, wrapped: a rich card for the items that happen to have a description
+        // would give one strip of icons two different tooltips.
+        text: {
+            const title = root.modelData.tooltipTitle || root.modelData.title || root.modelData.id;
+            const description = root.modelData.tooltipDescription;
+            return description ? `${title}\n${description}` : title;
         }
     }
 

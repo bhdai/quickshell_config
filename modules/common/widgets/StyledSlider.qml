@@ -229,14 +229,14 @@ Slider {
             onPressed: mouse => mouse.accepted = false
         }
 
-        ToolTip {
+        // The unified tooltip's chrome, but not its behaviour: this is a value readout that
+        // tracks a dragging handle, so it stays bound to `pressed` rather than to hover.
+        TooltipContainer {
             id: tooltip
-            visible: root.showTooltip && root.pressed //&& handle.hovered
+            visible: root.showTooltip && root.pressed
             text: root.tooltipContent
-            delay: 0
-            timeout: -1
-            y: -tooltip.height - 5
-            x: -tooltip.width / 2 + handle.width / 2
+            y: -tooltip.height - 4
+            x: (handle.width - tooltip.width) / 2
         }
 
         Behavior on implicitWidth {
