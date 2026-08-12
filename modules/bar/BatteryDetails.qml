@@ -70,13 +70,16 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
-        visible: !(Battery.chargeState !== UPowerDeviceState.FullyCharged && Battery.energyRate === 0)
+        // A standstill used to hide this row, which left the charge-threshold case — plugged in,
+        // 0W, held below full — explaining itself with nothing at all. Only an unplugged
+        // standstill is genuinely unreportable now.
+        visible: Battery.isPluggedIn || Battery.chargeState === UPowerDeviceState.FullyCharged || Battery.energyRate !== 0
 
         MaterialSymbol {
             iconSize: 18
             fill: 1
             text: "bolt"
-            color: Battery.isCharging ? Appearance.colors.colBatteryCharging : Appearance.colors.colSubtext
+            color: Battery.isPluggedIn ? Appearance.colors.colBatteryCharging : Appearance.colors.colSubtext
         }
 
         Text {
@@ -85,6 +88,10 @@ ColumnLayout {
                     return "Fully charged";
                 if (Battery.isCharging)
                     return "Charging: " + Battery.energyRate.toFixed(2) + "W";
+                // Naming the cause rather than the symptom: bare "not charging" beside a full-
+                // looking battery reads as a fault, and this state is the configured one.
+                if (Battery.isPluggedIn)
+                    return "Plugged in — charge limit reached";
                 return "Discharging: " + Battery.energyRate.toFixed(2) + "W";
             }
             color: Battery.chargeState === UPowerDeviceState.FullyCharged ? Appearance.colors.colBatteryCharging : Appearance.colors.colOnSurfaceVariant

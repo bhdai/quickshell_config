@@ -23,7 +23,7 @@ ln -s "$repo_root/modules/lock/LockStatusCluster.qml" "$test_dir/config/modules/
 ln -s "$repo_root/assets" "$test_dir/config/assets"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"
 
-for service in Battery.qml BatteryFormat.js Network.qml NetworkParse.js WifiAccessPoint.qml \
+for service in Battery.qml BatteryFormat.js battery_glyph.js Network.qml NetworkParse.js WifiAccessPoint.qml \
     KeyboardLayout.qml KeyboardLayoutParse.js Lock.qml LockLogic.js; do
     ln -s "$repo_root/services/$service" "$test_dir/config/services/$service"
 done

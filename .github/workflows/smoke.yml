@@ -39,6 +39,10 @@ jobs:
         run: tests/dashboard-wallpaper-interaction.sh
       - name: Test the lock screen clock
         run: tests/lock-clock.sh
+      - name: Test the battery body's glyph in each power state
+        run: tests/battery-body.sh
+      - name: Test the battery indicator and its hover readout
+        run: tests/battery-indicator.sh
       - name: Test the lock status cluster without UPower
         run: tests/lock-status-cluster.sh
       - name: Test the lock screen power controls

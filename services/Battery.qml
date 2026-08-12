@@ -10,7 +10,12 @@ Singleton {
     property bool available: UPower.displayDevice.isLaptopBattery
     property var chargeState: UPower.displayDevice.state
     property bool isCharging: chargeState == UPowerDeviceState.Charging
-    property bool isPluggedIn: isCharging || chargeState == UPowerDeviceState.PendingCharge
+
+    // Derived from the line-power supplies rather than from the battery's own state, because
+    // the battery reports plugged-in-not-charging inconsistently: a charge threshold parks it
+    // in PendingCharge, but a full battery on AC reports FullyCharged and some hardware reports
+    // Discharging at 0W while docked. All three are "the cable is in".
+    property bool isPluggedIn: !UPower.onBattery
     property real percentage: UPower.displayDevice?.percentage ?? 1
     readonly property bool allowAutomaticSuspend: true
 
@@ -18,9 +23,12 @@ Singleton {
     property bool isCritical: available && (percentage <= 0.2)
     property bool isSuspending: available && (percentage <= 0.1)
 
-    property bool isLowAndNotCharging: isLow && !isCharging
-    property bool isCriticalAndNotCharging: isCritical && !isCharging
-    property bool isSuspendingAndNotCharging: allowAutomaticSuspend && isSuspending && !isCharging
+    // Gated on being unplugged rather than on not charging: a battery held below its start
+    // threshold is plugged in and idle, and warning about a charger that is already attached —
+    // or worse, suspending the machine — would be wrong.
+    property bool isLowAndUnplugged: isLow && !isPluggedIn
+    property bool isCriticalAndUnplugged: isCritical && !isPluggedIn
+    property bool isSuspendingAndUnplugged: allowAutomaticSuspend && isSuspending && !isPluggedIn
 
     property real energyRate: UPower.displayDevice.changeRate
     property real timeToEmpty: UPower.displayDevice.timeToEmpty
@@ -41,18 +49,18 @@ Singleton {
         return 0; // No health-supported battery found
     }
 
-    onIsLowAndNotChargingChanged: {
-        if (available && isLowAndNotCharging)
+    onIsLowAndUnpluggedChanged: {
+        if (available && isLowAndUnplugged)
             Quickshell.execDetached(["notify-send", "Low battery", "Consider plugging in your device", "-u", "critical", "-a", "Shell"]);
     }
 
-    onIsCriticalAndNotChargingChanged: {
-        if (available && isCriticalAndNotCharging)
+    onIsCriticalAndUnpluggedChanged: {
+        if (available && isCriticalAndUnplugged)
             Quickshell.execDetached(["notify-send", "Critical low battery", "Plug in your device immediately.\nAutomatic suspend at 10%", "-u", "critical", "-a", "Shell"]);
     }
 
-    onIsSuspendingAndNotChargingChanged: {
-        if (available && isSuspendingAndNotCharging) {
+    onIsSuspendingAndUnpluggedChanged: {
+        if (available && isSuspendingAndUnplugged) {
             Quickshell.execDetached(["bash", "-c", `systemctl suspend || loginctl suspend`]);
         }
     }

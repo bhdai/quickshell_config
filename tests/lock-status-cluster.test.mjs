@@ -33,21 +33,24 @@ test("the battery renders only when a laptop battery is present", () => {
 // same thing, and not BatteryIndicator itself, whose MouseArea would be a dead zone on a
 // surface where a click anywhere is what opens the password prompt.
 test("the battery is the shared bar widget rather than a lock-owned copy", () => {
-    const [battery] = blocks(cluster, "ClippedProgressBar");
+    const [battery] = blocks(cluster, "BatteryBody");
 
-    assert.ok(battery, "the battery is not drawn with ClippedProgressBar");
-    assert.match(battery, /value:\s*Battery\.percentage/);
-    assert.match(battery, /text:\s*Math\.round\(Battery\.percentage \* 100\)/);
+    assert.ok(battery, "the battery is not drawn with BatteryBody");
+    assert.match(battery, /percentage:\s*Battery\.percentage/);
 
     assert.doesNotMatch(withoutComments(cluster), /BatteryIndicator|MouseArea\s*\{/);
+    // Reaching past BatteryBody to the parts it composes is how the two surfaces drifted
+    // before: the glyph rule would then live in two places.
+    assert.doesNotMatch(withoutComments(cluster), /ClippedProgressBar|"bolt"|"power"/);
 });
 
-// The bar leaves the body size, the nob and the text style at the widget's defaults. Setting
-// any of them here is the lock screen drifting away from the bar rather than matching it.
+// The bar leaves the body size, the glyph and the text style at the widget's defaults. Setting
+// any of them here is the lock screen drifting away from the bar rather than matching it. Only
+// the foreground is the lock screen's to choose — it draws on the wallpaper, not on the bar.
 test("the battery body is left at the size the bar leaves it", () => {
-    const [battery] = blocks(cluster, "ClippedProgressBar");
+    const [battery] = blocks(cluster, "BatteryBody");
 
-    assert.doesNotMatch(battery, /valueBarWidth:|valueBarHeight:|font:|radius:/);
+    assert.doesNotMatch(battery, /valueBarWidth:|valueBarHeight:|font:|radius:|glyphSize:/);
 });
 
 // "The same as in the bar" has to be one number, not two that happen to agree today.

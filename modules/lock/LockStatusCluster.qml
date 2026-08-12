@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
-import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.services
 
@@ -20,8 +19,9 @@ import qs.services
  * Built from the widgets the bar composes its own indicators from rather than from the
  * indicators themselves: BatteryIndicator is a hover-target wrapping a popup window, and on
  * a surface where a click anywhere is what opens the password prompt, a MouseArea that
- * swallows presses is a dead zone. Consistency comes from sharing ClippedProgressBar,
- * CustomIcon and the Appearance tokens, which is where the bar's look actually lives.
+ * swallows presses is a dead zone. Sharing BatteryBody rather than that wrapper gets the
+ * battery's whole appearance — including which glyph a given power state draws — from one
+ * place, while leaving the interaction behind.
  *
  * None of the three can hold the lock up. They read singletons that are already warm in
  * this same process, and the only thing this reads off Lock is the edge it seeds on.
@@ -31,11 +31,6 @@ RowLayout {
 
     readonly property real iconSize: Appearance.sizes.statusIcon
     readonly property color foreground: Appearance.colors.colOnLayer0
-
-    // The bar's own bolt: it overhangs the battery body rather than sitting after it, which
-    // is why it is placed by anchors instead of by the layout.
-    readonly property real boltSize: 14
-    readonly property real boltOverlap: -5
 
     spacing: Appearance.font.pixelSize.normal
 
@@ -55,38 +50,15 @@ RowLayout {
         active: Battery.available
         visible: active
 
-        sourceComponent: Item {
-            implicitWidth: batteryProgress.implicitWidth
-            implicitHeight: batteryProgress.implicitHeight
-
-            // The percentage is cut out of the filled body, so the icon and the number are
-            // one shape. Body size, nob and text style are the widget's own defaults, which
-            // is exactly what BatteryIndicator leaves them at — overriding any of them here
-            // would be the lock screen drifting away from the bar rather than matching it.
-            ClippedProgressBar {
-                id: batteryProgress
-
-                anchors.verticalCenter: parent.verticalCenter
-                value: Battery.percentage
-                text: Math.round(Battery.percentage * 100)
-                highlightColor: Battery.isCharging ? Appearance.colors.colBatteryCharging : (Battery.isCritical ? Appearance.colors.colBatteryCritical : root.foreground)
-                trackColor: ColorUtils.transparentize(root.foreground, 0.5)
-                showNob: !Battery.isCharging || Battery.percentage >= 1
-                nobFilled: Battery.percentage >= 1
-            }
-
-            // Takes the nob's place while charging, which is why the two are mutually
-            // exclusive above rather than both drawn.
-            MaterialSymbol {
-                anchors.left: batteryProgress.right
-                anchors.leftMargin: root.boltOverlap
-                anchors.verticalCenter: batteryProgress.verticalCenter
-                visible: Battery.isCharging && Battery.percentage < 1
-                text: "bolt"
-                iconSize: root.boltSize
-                fill: 1
-                color: root.foreground
-            }
+        // Body size, glyph and text style are the widget's own defaults, which is exactly what
+        // BatteryIndicator leaves them at — overriding any of them here would be the lock
+        // screen drifting away from the bar rather than matching it.
+        sourceComponent: BatteryBody {
+            percentage: Battery.percentage
+            isCharging: Battery.isCharging
+            isPluggedIn: Battery.isPluggedIn
+            isCritical: Battery.isCritical
+            foreground: root.foreground
         }
     }
 
