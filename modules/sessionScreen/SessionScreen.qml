@@ -141,27 +141,20 @@ Scope {
                     }
                 }
 
-                // Currently focused action label
-                Rectangle {
+                // The label for the focused action. It wears the tooltip's chrome so it
+                // matches the hover tooltips on the same buttons, but keeps its own
+                // focus-driven visibility and width animation rather than being one.
+                TooltipContainer {
                     Layout.alignment: Qt.AlignHCenter
-                    width: subtitleText.implicitWidth + 24
-                    height: subtitleText.implicitHeight + 12
-                    color: Appearance.colors.colTooltip
-                    radius: 8
+                    Layout.preferredWidth: implicitWidth
+                    Layout.preferredHeight: implicitHeight
+                    text: sessionPanel.subtitle
 
-                    Behavior on width {
+                    Behavior on implicitWidth {
                         NumberAnimation {
                             duration: 100
                             easing.type: Easing.OutQuad
                         }
-                    }
-
-                    Text {
-                        id: subtitleText
-                        anchors.centerIn: parent
-                        text: sessionPanel.subtitle
-                        color: Appearance.colors.colOnTooltip
-                        font.pixelSize: 14
                     }
                 }
             }

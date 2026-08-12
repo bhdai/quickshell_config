@@ -4,7 +4,6 @@ import qs.modules.common.models
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
@@ -317,8 +316,9 @@ RippleButton {
 
                     onClicked: modelData.execute()
 
-                    ToolTip {
-                        visible: actionButton.hovered
+                    Tooltip {
+                        target: actionButton
+                        surface: Tooltip.Surface.InScene
                         text: modelData.name
                     }
                 }

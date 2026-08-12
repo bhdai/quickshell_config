@@ -59,7 +59,8 @@ Item {
     /// which means something else and propagates to children.
     property bool active: true
 
-    readonly property bool showing: root.hovered && root.active && root.text !== ""
+    // Either string is enough to be worth showing: a rich tooltip may carry only a subhead.
+    readonly property bool showing: root.hovered && root.active && (root.text !== "" || root.subhead !== "")
     /// Distance between the anchor's edge and the tooltip's, for an anchor with a boundary.
     readonly property real gap: 4
 

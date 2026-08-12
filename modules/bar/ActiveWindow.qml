@@ -4,6 +4,7 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
+import qs.modules.common.widgets
 
 Item {
     id: root
@@ -128,28 +129,13 @@ Item {
                     }
                 }
 
-                // Per-window tooltip
-                Timer {
-                    id: windowTooltipTimer
-                    interval: 500
-                    running: windowPillArea.containsMouse
-                    onTriggered: windowTooltipLoader.active = true
-                }
-
-                Loader {
-                    id: windowTooltipLoader
-                    active: false
-                    sourceComponent: ActiveWindowTooltip {
-                        activeWin: windowPillArea.window
-                        anchorItem: windowPillArea
-                    }
-                }
-
-                onContainsMouseChanged: {
-                    if (!containsMouse) {
-                        windowTooltipTimer.stop();
-                        windowTooltipLoader.active = false;
-                    }
+                // The pill elides the title it shows, so the tooltip's whole job is the full
+                // one. Plain rather than rich: a title is a label, not the longer explanatory
+                // text M3 reserves the rich variant for.
+                Tooltip {
+                    target: windowPillArea
+                    side: Tooltip.Side.Below
+                    text: windowPillArea.window ? (windowPillArea.window.title || "Untitled Window") : ""
                 }
             }
         }
@@ -170,55 +156,10 @@ Item {
                 font.pixelSize: 11
             }
 
-            Timer {
-                id: overflowTooltipTimer
-                interval: 500
-                running: overflowArea.containsMouse
-                onTriggered: overflowTooltipLoader.active = true
-            }
-
-            Loader {
-                id: overflowTooltipLoader
-                active: false
-                sourceComponent: PopupWindow {
-                    visible: true
-                    color: "transparent"
-                    implicitWidth: overflowTooltipRect.width
-                    implicitHeight: overflowTooltipRect.height
-
-                    anchor {
-                        window: overflowArea.QsWindow?.window
-                        item: overflowArea
-                        edges: Edges.Bottom
-                        gravity: Edges.Bottom
-                        margins.top: 8
-                    }
-
-                    Rectangle {
-                        id: overflowTooltipRect
-                        width: overflowTooltipText.implicitWidth + 16
-                        height: overflowTooltipText.implicitHeight + 12
-                        color: Appearance.m3colors.m3background
-                        radius: 6
-                        border.color: Appearance.m3colors.m3outlineVariant
-                        border.width: 1
-
-                        Text {
-                            id: overflowTooltipText
-                            anchors.centerIn: parent
-                            text: overflowCount + " more window" + (overflowCount > 1 ? "s" : "")
-                            color: Appearance.colors.colOnLayer0
-                            font.pixelSize: 11
-                        }
-                    }
-                }
-            }
-
-            onContainsMouseChanged: {
-                if (!containsMouse) {
-                    overflowTooltipTimer.stop();
-                    overflowTooltipLoader.active = false;
-                }
+            Tooltip {
+                target: overflowArea
+                side: Tooltip.Side.Below
+                text: overflowCount + " more window" + (overflowCount > 1 ? "s" : "")
             }
         }
     }
