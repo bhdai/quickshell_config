@@ -16,22 +16,25 @@ function sizeToken(name) {
     return Number(declaration[1]);
 }
 
-// The approved prototype's numbers (prototypes/auth-interaction-states at 4168ad1,
-// prototype.css:107-117): `clamp(120px, 18vw, 300px)` for the time and
-// `clamp(18px, 1.6vw, 28px)` for the date.
-test("the clock's type metrics are the prototype's", () => {
+// The date's bounds are still the approved prototype's (prototypes/auth-interaction-states
+// at 4168ad1, prototype.css:107-117). The time's ceiling and the gap were tuned down from
+// it on hardware: the prototype's 300px took about a quarter of a 1200px-tall panel's
+// height in one word.
+test("the clock's type metrics are the tuned display sizes", () => {
     assert.equal(sizeToken("lockClockMin"), 120);
-    assert.equal(sizeToken("lockClockMax"), 300);
+    assert.equal(sizeToken("lockClockMax"), 240);
     assert.equal(sizeToken("lockClockDateMin"), 18);
     assert.equal(sizeToken("lockClockDateMax"), 28);
-    assert.equal(sizeToken("lockClockGap"), 26);
+    assert.equal(sizeToken("lockClockGap"), 21);
 });
 
-// A flat size is a size tuned on one panel. The bounds are the prototype's, and so is what
-// sits between them: a fraction of the width of the output the clock is composed on.
+// A flat size is a size tuned on one panel. What sits between the bounds is a fraction of
+// the width of the output the clock is composed on, set just under where the ceiling would
+// take over on a 1920 output so the clamp still behaves as a clamp rather than collapsing
+// to a constant on every display this runs on.
 test("the clock is sized from the output between those bounds", () => {
     assert.match(clock, /property real availableWidth/);
-    assert.match(clock, /readonly property real timeFraction: 0\.18\b/);
+    assert.match(clock, /readonly property real timeFraction: 0\.145\b/);
     assert.match(clock, /readonly property real dateFraction: 0\.016\b/);
     assert.match(clock, /timeSize: Math\.max\(Appearance\.sizes\.lockClockMin, Math\.min\(root\.availableWidth \* root\.timeFraction, Appearance\.sizes\.lockClockMax\)\)/);
     assert.match(clock, /dateSize: Math\.max\(Appearance\.sizes\.lockClockDateMin, Math\.min\(root\.availableWidth \* root\.dateFraction, Appearance\.sizes\.lockClockDateMax\)\)/);
@@ -53,13 +56,18 @@ test("the surface hands the clock the width it is composed on", () => {
     assert.match(instantiation, /availableWidth: parent\.width\b/);
 });
 
-// At 300px the time is display type, not large body text. Without the negative tracking it
+// At 240px the time is display type, not large body text. Without the negative tracking it
 // reads as five separate glyphs rather than one deliberate shape, and without the tight
 // leading the date sits away from it however small the gap is set.
-test("the time carries the prototype's tracking and leading", () => {
+//
+// The coefficient is tuned against the weight, so the two are asserted together: thin
+// strokes need pulling together harder, and carrying a Light face's tracking under a
+// heavier one closes the counters.
+test("the time carries its tracking and leading", () => {
     const [time] = blocks(clock, "Text");
 
-    assert.match(time, /font\.letterSpacing: -0\.09 \* root\.timeSize\b/);
+    assert.match(time, /font\.weight: Font\.Normal\b/);
+    assert.match(time, /font\.letterSpacing: -0\.07 \* root\.timeSize\b/);
     assert.match(time, /lineHeight: 0\.86\b/);
 });
 
