@@ -254,16 +254,18 @@ Singleton {
         // about a factor already running, not a second thing to type into.
         readonly property real lockFingerprintChip: 44
         readonly property real lockPowerButton: 48
-        // The lock composition's own metrics, from the approved prototype. The clock is
-        // display type well outside the UI scale above, so it is sized here rather than
-        // squeezed into a name in font.pixelSize. It is sized from the output's width
-        // between these bounds, so the same clock reads the same on a 1280 panel as on a
-        // 4K one instead of being a fixed slab that only suits the display it was tuned on.
+        // The lock composition's own metrics. The clock is display type well outside the UI
+        // scale above, so it is sized here rather than squeezed into a name in
+        // font.pixelSize. It is sized from the output's width between these bounds, so the
+        // same clock reads the same on a 1280 panel as on a 4K one instead of being a fixed
+        // slab that only suits the display it was tuned on.
         readonly property real lockClockMin: 120
-        readonly property real lockClockMax: 300
+        readonly property real lockClockMax: 240
         readonly property real lockClockDateMin: 18
         readonly property real lockClockDateMax: 28
-        readonly property real lockClockGap: 26
+        // Scaled with the time above it, not with the date below: the gap's job is to keep
+        // the two reading as one block, and that is a proportion of the larger of them.
+        readonly property real lockClockGap: 21
         // How far the prompt and the power controls travel as they fade in.
         readonly property real lockRevealRise: 14
         // Shared by the bar's status icons and the lock screen's, so the same reading of
