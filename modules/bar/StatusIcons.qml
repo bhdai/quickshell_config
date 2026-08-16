@@ -154,6 +154,12 @@ WrapperMouseArea {
                     color: backgroundRect.iconColor
                 }
             }
+
+            // Sizes itself, unlike the glyphs above: it carries its own container and
+            // collapses to nothing while no recording is running.
+            RecordingIndicator {
+                Layout.alignment: Qt.AlignVCenter
+            }
         }
     }
 

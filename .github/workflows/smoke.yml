@@ -43,6 +43,8 @@ jobs:
         run: tests/battery-body.sh
       - name: Test the battery indicator and its hover readout
         run: tests/battery-indicator.sh
+      - name: Test the recording indicator against the recorder's state file
+        run: tests/recording-indicator.sh
       - name: Test the lock status cluster without UPower
         run: tests/lock-status-cluster.sh
       - name: Test the lock screen power controls
