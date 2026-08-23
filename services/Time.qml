@@ -20,6 +20,20 @@ Singleton {
         precision: SystemClock.Minutes
     }
 
+    function refreshClock() {
+        // Re-enabling makes SystemClock read wall time and rebuild the timer schedule that
+        // stopped advancing while the machine was asleep.
+        clock.enabled = false;
+        clock.enabled = true;
+    }
+
+    Connections {
+        target: SystemSleep
+        function onResumed() {
+            root.refreshClock();
+        }
+    }
+
     function updateUptime() {
         uptimeFetcher.running = true;
     }
