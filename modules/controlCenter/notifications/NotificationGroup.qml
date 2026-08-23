@@ -227,8 +227,14 @@ Item {
                     spacing: 4
                     Layout.topMargin: 4
 
+                    // Gated on `expanded` as well as the layout above is: a Repeater builds its
+                    // delegates whether or not the item holding them is visible, so an empty
+                    // model is the only thing that keeps a collapsed group from building a row
+                    // per notification it holds. The control center rebuilds this whole tree on
+                    // every open, and every group starts collapsed, so that cost was paid on
+                    // each open and grew with everything the notification store had kept.
                     Repeater {
-                        model: root.group ? root.group.notifications : []
+                        model: root.expanded && root.group ? root.group.notifications : []
 
                         NotificationItem {
                             Layout.fillWidth: true
