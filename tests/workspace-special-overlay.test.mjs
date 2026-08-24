@@ -60,7 +60,7 @@ test("the seed read only ever sets a name, never clears one", () => {
     assert.equal((seed.match(/root\.specialName = /g) ?? []).length, 1);
 });
 
-// The blur is what tells you something covers the desktop; the overlay says what.
+// The blur and overlay show that something covers the desktop.
 test("the row blurs and shrinks behind one MultiEffect", () => {
     assert.match(row, /layer\.enabled:/);
 
@@ -89,19 +89,11 @@ test("the widget is exactly as wide with a special raised as without", () => {
     assert.doesNotMatch(overlay, /implicitWidth|implicitHeight/);
 });
 
-test("the overlay is a filled layers glyph on a primary stadium", () => {
+test("the overlay is an empty primary stadium", () => {
     assert.match(overlay, /color: Appearance\.colors\.colPrimary/);
     assert.match(overlay, /height: root\.activeSize/);
     assert.match(overlay, /radius: Appearance\.rounding\.full/);
-
-    const [symbol] = blocks(overlay, "MaterialSymbol");
-    assert.match(symbol, /text: "layers"/);
-    assert.match(symbol, /fill: 1/);
-    assert.match(symbol, /iconSize: Math\.round\(root\.activeSize \* 0\.65\)/);
-
-    // The name is constant on this machine and the blur has already said "something is
-    // covering the desktop", so there is no text to draw.
-    assert.doesNotMatch(overlay, /StyledText|specialName/);
+    assert.doesNotMatch(overlay, /MaterialSymbol|StyledText|specialName/);
 });
 
 test("pointer over the widget suppresses the blur and fades the overlay out", () => {

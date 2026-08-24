@@ -3,7 +3,6 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Effects
 import qs.modules.common
-import qs.modules.common.widgets
 import "WorkspaceModel.js" as WorkspaceModel
 
 Item {
@@ -281,16 +280,5 @@ Item {
         color: Appearance.colors.colPrimary
         opacity: root.specialReveal
         visible: opacity > 0
-
-        MaterialSymbol {
-            anchors.centerIn: parent
-            text: "layers"
-            // Filled rather than outlined: outline strokes thin out below roughly 20 px.
-            fill: 1
-            // MaterialSymbol wires the `opsz` axis to iconSize, so the glyph is drawn for
-            // this size rather than scaled down from the 24 px master.
-            iconSize: Math.round(root.activeSize * 0.65)
-            color: Appearance.colors.colOnPrimary
-        }
     }
 }
