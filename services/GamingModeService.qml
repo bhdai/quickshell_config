@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "GamingModeParse.js" as GamingModeParse
 
 Singleton {
     id: service
@@ -22,21 +23,20 @@ Singleton {
 
     Process {
         id: fetchActiveState
-        command: ["bash", "-c", "hyprctl getoption decoration:blur:enabled 2>/dev/null | awk 'NR==1{print $2}'"]
+        command: ["hyprctl", "-j", "getoption", "decoration:blur:enabled"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                const val = text.trim();
-                if (val === "0") {
-                    service.isActive = true;
-                } else if (val === "1") {
-                    service.isActive = false;
-                } else {
-                    // hyprctl not ready yet or unexpected output.
-                    // Default to off and retry shortly.
-                    service.isActive = false;
-                    retryTimer.start();
+                const active = GamingModeParse.activeFromBlurOption(text);
+                if (active !== null) {
+                    service.isActive = active;
+                    return;
                 }
+
+                // hyprctl not ready yet or unexpected output.
+                // Default to off and retry shortly.
+                service.isActive = false;
+                retryTimer.start();
             }
         }
     }
