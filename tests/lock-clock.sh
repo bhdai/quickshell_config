@@ -21,6 +21,10 @@ chmod 700 "$test_dir/runtime"
 ln -s "$repo_root/modules/common" "$test_dir/config/modules/common"
 ln -s "$repo_root/modules/lock/LockClock.qml" "$test_dir/config/modules/lock/LockClock.qml"
 ln -s "$repo_root/services/Time.qml" "$test_dir/config/services/Time.qml"
+# Time.qml refreshes its clock off SystemSleep, so a config with one and not the other
+# throws on load rather than merely losing the refresh.
+ln -s "$repo_root/services/SystemSleep.qml" "$test_dir/config/services/SystemSleep.qml"
+ln -s "$repo_root/services/SystemSleepParse.js" "$test_dir/config/services/SystemSleepParse.js"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"
 
 if ! QT_QPA_PLATFORM=offscreen \
