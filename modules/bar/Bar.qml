@@ -91,7 +91,7 @@ Scope {
 
             Rectangle {
                 anchors.fill: parent
-                color: Appearance.m3colors.m3background
+                color: Appearance.colors.colBarBackground
 
                 // left section
                 RowLayout {

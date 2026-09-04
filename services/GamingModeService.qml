@@ -2,12 +2,23 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common
 import "GamingModeParse.js" as GamingModeParse
 
 Singleton {
     id: service
 
     property bool isActive: false
+
+    // The hyprctl eval below turns blur off compositor-wide. Translucent surfaces with nothing
+    // blurred behind them are just hard to read, so the shell's transparency has to collapse
+    // with it. A Binding rather than assignments in toggle() because isActive is also set by
+    // the startup probe and its retry, and all three paths have to move this together.
+    Binding {
+        target: Appearance
+        property: "reducedEffects"
+        value: service.isActive
+    }
 
     function toggle(): void {
         service.isActive = !service.isActive;

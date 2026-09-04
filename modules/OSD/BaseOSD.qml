@@ -66,7 +66,7 @@ PanelWindow {
             width: 260
             height: slider.handleHeight + slider.anchors.margins
             radius: 21
-            color: Appearance.m3colors.m3background
+            color: Appearance.colors.colLayer0
 
             // Right-click to emit signal
             TapHandler {
