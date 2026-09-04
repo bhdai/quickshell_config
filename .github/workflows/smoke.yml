@@ -18,7 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Quickshell and sway
         run: |
-          pacman -Syu --noconfirm pipewire quickshell qt6-5compat sway
+          # ttf-material-symbols-variable: the bar renders its icons as text in the
+          # "Material Symbols Rounded" family, and without it they measure as fallback
+          # glyphs several times an icon's width rather than failing to draw.
+          pacman -Syu --noconfirm pipewire quickshell qt6-5compat sway ttf-material-symbols-variable
           # Docker denies exec of Arch's capability-marked sway without SYS_NICE.
           setcap -r /usr/bin/sway
       - name: Test Wi-Fi password retry

@@ -21,6 +21,10 @@ chmod 700 "$test_dir/runtime"
 ln -s "$repo_root/modules/common" "$test_dir/config/modules/common"
 ln -s "$repo_root/modules/lock/LockClock.qml" "$test_dir/config/modules/lock/LockClock.qml"
 ln -s "$repo_root/services/Time.qml" "$test_dir/config/services/Time.qml"
+# Time.qml refreshes its clock off SystemSleep, so a config with one and not the other
+# throws on load rather than merely losing the refresh.
+ln -s "$repo_root/services/SystemSleep.qml" "$test_dir/config/services/SystemSleep.qml"
+ln -s "$repo_root/services/SystemSleepParse.js" "$test_dir/config/services/SystemSleepParse.js"
 ln -s "$fixture_dir/shell.qml" "$test_dir/config/shell.qml"
 
 if ! QT_QPA_PLATFORM=offscreen \
@@ -51,13 +55,14 @@ if grep -v 'quickshell\.ipc' "$test_dir/quickshell.log" | grep -qE 'ERROR|TypeEr
     exit 1
 fi
 
-# The prototype's clamps resolved for each output: 18vw of 1920 exceeds the 300px ceiling,
-# 18vw of 1280 does not. The tracking follows the size it is a proportion of, and the date
+# The prototype's clamps resolved for each output: 14.5vw of 1920 exceeds the 240px ceiling,
+# 14.5vw of 1280 does not, so the clamp is still doing work rather than pinning both outputs
+# to the same constant. The tracking follows the size it is a proportion of, and the date
 # clamps the same way. renderType=2 is Text.CurveRendering (QtRendering, NativeRendering,
 # CurveRendering) — a distance field cached at one base size and scaled up to display size is
 # what makes large type look like a blown-up bitmap.
-for expected in "output=1920 size=300 tracking=-27 leading=0.86 gap=26 date=28 render=2" \
-    "output=1280 size=230 tracking=-21 leading=0.86 gap=26 date=20 render=2"; do
+for expected in "output=1920 size=240 tracking=-17 leading=0.86 gap=21 date=28 render=2" \
+    "output=1280 size=186 tracking=-13 leading=0.86 gap=21 date=20 render=2"; do
     if ! grep -qF "$expected" <<<"$results"; then
         echo "$results"
         echo "The clock does not match the prototype: expected $expected"

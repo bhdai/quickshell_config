@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.modules.common.functions
 
 /**
@@ -18,9 +19,46 @@ import qs.modules.common.functions
 Singleton {
     id: root
 
-    // Transparency settings (opaque by default)
-    property real backgroundTransparency: 0
-    property real contentTransparency: 0
+    // Transparency settings. These only read as frosted glass where Hyprland also grants the
+    // surface's layer namespace a `blur` layer rule — nothing in QML can sample what is behind
+    // a Wayland surface, so the compositor does the blurring and this only opens the window.
+    //
+    // The bar is tuned separately and far more conservatively: panels are transient and looked
+    // at directly, while the bar sits over arbitrary wallpaper all day and its text still has
+    // to survive a bright patch.
+    property real configuredBackgroundTransparency: 0.35
+    property real configuredContentTransparency: 0.10
+    property real configuredBarTransparency: 0.12
+
+    // Gaming mode turns Hyprland's blur off globally. Transparency without blur is unreadable,
+    // so it collapses here too, through one flag GamingModeService writes. The dependency only
+    // works in that direction: services already import Appearance, so Appearance cannot import
+    // them back.
+    property bool reducedEffects: false
+
+    // The manual override, deliberately a second property rather than another writer on
+    // reducedEffects. GamingModeService holds that one with a Binding, and an imperative write
+    // from the IPC handler below would break the binding for good — gaming mode would stop
+    // restoring opacity when it exits. Two properties cannot contend.
+    property bool transparencyOff: false
+
+    readonly property bool opaque: reducedEffects || transparencyOff
+
+    readonly property real backgroundTransparency: opaque ? 0 : configuredBackgroundTransparency
+    readonly property real contentTransparency: opaque ? 0 : configuredContentTransparency
+    readonly property real barTransparency: opaque ? 0 : configuredBarTransparency
+
+    IpcHandler {
+        target: "appearance"
+
+        function toggleTransparency(): void {
+            root.transparencyOff = !root.transparencyOff;
+        }
+
+        function transparencyEnabled(): bool {
+            return !root.opaque;
+        }
+    }
 
     // Material 3 color scheme (from matugen - source #95CDF7)
     // Properties are writable so MaterialThemeLoader can apply a live palette.
@@ -165,6 +203,10 @@ Singleton {
         readonly property color colTertiaryContainerHover: ColorUtils.mix(colTertiaryContainer, colOnTertiaryContainer, 0.90)
         readonly property color colTertiaryContainerActive: ColorUtils.mix(colTertiaryContainer, colLayer1Active, 0.54)
         readonly property color colOnTertiaryContainer: m3colors.m3onTertiaryContainer
+
+        // The bar's ground. Deliberately not colLayer0: the bar carries its own transparency so
+        // it can stay near-opaque while the panels go much further.
+        readonly property color colBarBackground: ColorUtils.transparentize(colLayer0Base, root.barTransparency)
 
         // Surface semantic colors (for compatibility)
         readonly property color colBackgroundSurfaceContainer: ColorUtils.transparentize(m3colors.m3surfaceContainer, root.backgroundTransparency)

@@ -28,6 +28,10 @@ done
 ln -s "$repo_root/services/Weather.qml" "$test_dir/config/services/Weather.qml"
 ln -s "$repo_root/services/weather_format.js" "$test_dir/config/services/weather_format.js"
 ln -s "$repo_root/services/Time.qml" "$test_dir/config/services/Time.qml"
+# Time.qml refreshes its clock off SystemSleep, so a config with one and not the other
+# throws on load rather than merely losing the refresh.
+ln -s "$repo_root/services/SystemSleep.qml" "$test_dir/config/services/SystemSleep.qml"
+ln -s "$repo_root/services/SystemSleepParse.js" "$test_dir/config/services/SystemSleepParse.js"
 ln -s "$repo_root/services/Wallpaper.qml" "$test_dir/config/services/Wallpaper.qml"
 ln -s "$repo_root/services/WallpaperLogic.js" "$test_dir/config/services/WallpaperLogic.js"
 # The Performance cards read the resource ring, and an `import qs.services` compiles the

@@ -15,7 +15,7 @@ Rectangle {
     width: 400
     implicitHeight: mainLayout.implicitHeight + 10 // 5px padding on top/bottom
     radius: 15
-    color: Appearance.m3colors.m3background
+    color: Appearance.colors.colLayer0
     border.width: 1
     border.color: Appearance.m3colors.m3outlineVariant
 

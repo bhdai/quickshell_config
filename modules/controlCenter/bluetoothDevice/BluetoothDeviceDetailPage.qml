@@ -13,21 +13,16 @@ import Quickshell.Bluetooth
  * `device` is null while no subpage is open and goes null if BlueZ drops the device, so every
  * read of it is guarded.
  */
-Rectangle {
+Item {
     id: root
 
     property BluetoothDevice device
 
     signal back
 
-    color: Appearance.colors.colLayer0
-    radius: 20
-    border.width: 1
-    border.color: Appearance.colors.colOutlineVariant
-
-    // The subpage only covers the panel visually: a Rectangle consumes no input, so without
-    // this the panel's rows underneath still take the hover (and the click). Declared first,
-    // so the page's own controls sit above it.
+    // The panel's rows are still there, off to the left, for as long as the slide takes.
+    // Nothing here consumes input on its own, so without this they take the hover (and the
+    // click) through the page. Declared first, so the page's own controls sit above it.
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true

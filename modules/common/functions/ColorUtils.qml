@@ -124,4 +124,34 @@ Singleton {
         var a = Math.max(0, Math.min(1, alpha));
         return Qt.rgba(c.r, c.g, c.b, a);
     }
+
+    /**
+     * Solves for the color that, painted at `alpha` over `backdrop`, composites to `desired`.
+     *
+     * Material 3 encodes elevation as surface lightness, which assumes each layer is opaque
+     * over the one below. Once layers are translucent that assumption breaks and every tone
+     * drifts toward the backdrop. This inverts the blend so a translucent layer still lands
+     * on the tone M3 specified.
+     *
+     * The returned color already carries `alpha` — assign it to a `color:` property directly
+     * rather than reapplying alpha on top. When `desired` is far enough from `backdrop` the
+     * solution falls outside the displayable range and is clamped, so at low alpha the result
+     * approaches but cannot reach `desired`.
+     *
+     * @param {string} backdrop - The color already painted underneath.
+     * @param {string} desired - The color the composite should land on.
+     * @param {number} alpha - The alpha the result will be painted at (0-1).
+     * @returns {Qt.rgba} The color to paint, carrying `alpha`.
+     */
+    function solveOverlayColor(backdrop, desired, alpha) {
+        var a = Math.max(0, Math.min(1, alpha));
+        if (a <= 0)
+            return Qt.rgba(0, 0, 0, 0);
+
+        var bg = Qt.color(backdrop);
+        var fg = Qt.color(desired);
+        var solve = (want, under) => Math.max(0, Math.min(1, (want - under * (1 - a)) / a));
+
+        return Qt.rgba(solve(fg.r, bg.r), solve(fg.g, bg.g), solve(fg.b, bg.b), a);
+    }
 }

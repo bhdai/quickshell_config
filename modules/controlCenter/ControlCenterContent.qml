@@ -74,7 +74,7 @@ ColumnLayout {
         Layout.minimumHeight: implicitHeight
 
         radius: root.radius
-        color: Appearance.m3colors.m3background
+        color: Appearance.colors.colLayer0
         border.width: 1
         border.color: Appearance.m3colors.m3outlineVariant
         Layout.fillWidth: true
@@ -192,7 +192,7 @@ ColumnLayout {
 
         Rectangle {
             id: notificationsPannel
-            color: Appearance.m3colors.m3background
+            color: Appearance.colors.colLayer0
             radius: root.radius
 
             // Zero when there is nothing to show, so an empty list leaves no invisible strip
