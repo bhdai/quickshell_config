@@ -31,10 +31,25 @@ Item {
             detailOpen = false;
     }
 
+    // One ground for both pages, rather than one each. Both are translucent, so an overlay
+    // would composite the two: the list stayed legible through everything on the subpage.
+    Rectangle {
+        anchors.fill: parent
+        color: Appearance.colors.colLayer0
+        radius: 20
+        border.width: 1
+        border.color: Appearance.colors.colOutlineVariant
+    }
+
     DetailPanel {
         id: panel
 
-        anchors.fill: parent
+        // The two pages travel together, so no pixel is ever covered by both. Sliding the
+        // subpage over a stationary panel would work only while the surfaces were opaque.
+        width: root.width
+        height: root.height
+        x: root.detailOpen ? -root.width : 0
+        visible: x > -root.width
         title: "Bluetooth"
         subtitle: "Tap to connect or disconnect a device"
         scanning: root.adapter?.discovering ?? false
@@ -102,6 +117,14 @@ Item {
                     root.detailDevice = device;
                     root.detailOpen = true;
                 }
+            }
+        }
+
+        Behavior on x {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animation.expressiveEffects
             }
         }
     }

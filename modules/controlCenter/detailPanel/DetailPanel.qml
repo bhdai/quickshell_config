@@ -8,10 +8,13 @@ import QtQuick.Layouts
  * centered indicator, an adapter switch row, and a Done footer. The panel's own list goes in
  * the default slot, which is an Item — anchor its content to `parent`.
  *
+ * This paints no ground of its own. The owning panel does, once, for both this and the subpage
+ * that slides over it: two translucent surfaces stacked show the list through the subpage.
+ *
  * The switch is two-way through the owner: `switchChecked` reads the adapter and
  * `switchToggled()` asks the owner to flip it, so nothing here caches adapter state.
  */
-Rectangle {
+Item {
     id: root
 
     property string title
@@ -28,11 +31,6 @@ Rectangle {
 
     signal switchToggled
     signal done
-
-    color: Appearance.colors.colLayer0
-    radius: 20
-    border.width: 1
-    border.color: Appearance.colors.colOutlineVariant
 
     ColumnLayout {
         anchors.fill: parent
