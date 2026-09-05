@@ -23,12 +23,24 @@ Singleton {
     // surface's layer namespace a `blur` layer rule — nothing in QML can sample what is behind
     // a Wayland surface, so the compositor does the blurring and this only opens the window.
     //
-    // The bar is tuned separately and far more conservatively: panels are transient and looked
-    // at directly, while the bar sits over arbitrary wallpaper all day and its text still has
-    // to survive a bright patch.
+    // The bar is tuned separately and more conservatively: panels are transient and looked at
+    // directly, while the bar sits over arbitrary wallpaper all day and its text still has to
+    // survive a bright patch.
+    //
+    // Both surfaces must stay above 0.5 alpha, which is the `ignore_alpha` threshold on their
+    // Hyprland blur layer rules. Opening one past that does not make it more frosted, it makes
+    // the compositor stop blurring behind it altogether and leaves the transparency standing on
+    // its own — the worse of the two failure modes, and the reason the ground values are lower
+    // than the effect suggests they should be.
+    //
+    // The two compose multiplicatively, and that product is the number to reason about: content
+    // is painted over its surface's own translucent ground, so the fraction of the backdrop that
+    // reaches the eye through a card is background * content, not content alone. A widget is
+    // never more see-through than the surface carrying it, which makes each ground the ceiling
+    // for everything drawn on it — a panel card lands at 14%, a bar widget at 10%.
     property real configuredBackgroundTransparency: 0.35
-    property real configuredContentTransparency: 0.10
-    property real configuredBarTransparency: 0.12
+    property real configuredContentTransparency: 0.40
+    property real configuredBarTransparency: 0.25
 
     // Gaming mode turns Hyprland's blur off globally. Transparency without blur is unreadable,
     // so it collapses here too, through one flag GamingModeService writes. The dependency only
