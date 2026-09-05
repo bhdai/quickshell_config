@@ -100,22 +100,17 @@ Scope {
                     spacing: 8
                     anchors.leftMargin: 5
 
-                    // distro logo
-                    Rectangle {
-                        id: distroLogo
-                        width: 35
-                        height: 30
-                        radius: 15
-                        color: Appearance.colors.colLayer1
+                    // distro logo. The pill it used to sit in carried the horizontal padding
+                    // that keeps it off the screen edge and off the workspace dots, so that
+                    // margin moves here rather than disappearing with the container.
+                    Text {
                         Layout.alignment: Qt.AlignVCenter
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰣇"
-                            color: Appearance.colors.colArchBlue
-                            font.bold: true
-                            font.pixelSize: 20
-                        }
+                        Layout.leftMargin: 7
+                        Layout.rightMargin: 7
+                        text: "󰣇"
+                        color: Appearance.colors.colArchBlue
+                        font.bold: true
+                        font.pixelSize: 20
                     }
                     WorkspaceIndicator {
                         screen: modelData
