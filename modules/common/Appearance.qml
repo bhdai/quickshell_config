@@ -39,7 +39,7 @@ Singleton {
     // never more see-through than the surface carrying it, which makes each ground the ceiling
     // for everything drawn on it — a panel card lands at 14%, a bar widget at 10%.
     property real configuredBackgroundTransparency: 0.35
-    property real configuredContentTransparency: 0.40
+    property real configuredContentTransparency: 0.25
     property real configuredBarTransparency: 0.25
 
     // Gaming mode turns Hyprland's blur off globally. Transparency without blur is unreadable,
