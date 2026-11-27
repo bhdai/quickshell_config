@@ -9,6 +9,7 @@ import "./quickToggles/"
 import "./notifications/"
 import "./wifiNetwork/"
 import "./bluetoothDevice/"
+import "./audio/"
 
 ColumnLayout {
     id: root
@@ -48,7 +49,7 @@ ColumnLayout {
         onTriggered: root.placed = true
     }
 
-    // Which detail panel the bottom container is showing: "wifi", "bluetooth", or "" for the
+    // Which detail panel the bottom container is showing: "wifi", "bluetooth", "audio", or "" for the
     // notification list. One property rather than a flag per panel — with two flags, swapping
     // panels takes two writes, and the binding below re-evaluates between them, so the Loader
     // built and tore down the notification list on the way from one panel to the other.
@@ -124,7 +125,35 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 20
 
-                AudioSlider {}
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    AudioSlider {}
+
+                    RippleButton {
+                        Layout.fillHeight: true
+                        implicitWidth: 48
+                        padding: 0
+                        buttonRadius: Appearance.rounding.full
+                        toggled: root.openPanel === "audio"
+                        colBackground: Appearance.colors.colSecondaryContainer
+                        colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                        colRipple: Appearance.colors.colPrimary
+
+                        onClicked: root.openPanel = root.openPanel === "audio" ? "" : "audio"
+
+                        contentItem: Item {
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: Audio.outputSymbol(Audio.sink)
+                                iconSize: 20
+                                color: root.openPanel === "audio" ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
+                            }
+                        }
+                    }
+                }
+
                 BrightnessSlider {}
             }
         }
@@ -161,6 +190,8 @@ ColumnLayout {
                 return wifiPanelComponent;
             if (root.openPanel === "bluetooth")
                 return bluetoothPanelComponent;
+            if (root.openPanel === "audio")
+                return audioPanelComponent;
             return notificationPanelComponent;
         }
     }
@@ -180,6 +211,17 @@ ColumnLayout {
         id: bluetoothPanelComponent
 
         BluetoothPanel {
+            maxPanelHeight: root.maxPanelHeight
+            onClosePanel: {
+                root.openPanel = "";
+            }
+        }
+    }
+
+    Component {
+        id: audioPanelComponent
+
+        AudioPanel {
             maxPanelHeight: root.maxPanelHeight
             onClosePanel: {
                 root.openPanel = "";
