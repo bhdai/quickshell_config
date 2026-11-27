@@ -5,11 +5,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import "notification_retention.js" as Retention
 
 /**
  * Provides extra features not in Quickshell.Services.Notifications:
- *  - Persistent storage
+ *  - Persistent storage, bounded by notification_retention.js
  *  - Popup notifications, with timeout
+ *  - The `transient` hint: such a notification is never stored, leaves the list once its popup
+ *    closes, and is dropped outright while silent
  */
 Singleton {
     id: root
@@ -30,6 +33,7 @@ Singleton {
         property string summary: notification?.summary ?? ""
         property double time
         property string urgency: notification?.urgency.toString() ?? "normal"
+        property bool isTransient: notification?.transient ?? false
 
         property int timeout: -1
         property int timeLeft: 0
@@ -81,7 +85,35 @@ Singleton {
     }
 
     function stringifyList(list) {
-        return JSON.stringify(list.map(notif => notifToJSON(notif)), null, 2);
+        return JSON.stringify(Retention.persistable(list).map(notif => notifToJSON(notif)), null, 2);
+    }
+
+    // Drops what has aged or been pushed out of history, dismissing any the server still tracks
+    // so their senders hear they are gone. Returns whether anything was dropped; the caller
+    // writes the file.
+    function prune(): bool {
+        const kept = Retention.retain(root.list, Date.now());
+        if (kept.length === root.list.length)
+            return false;
+        const keptIds = new Set(kept.map(notif => notif.notificationId));
+        const dropped = root.list.filter(notif => !keptIds.has(notif.notificationId));
+        root._bulkOperationInProgress = true;
+        for (const notif of dropped) {
+            const tracked = notifServer.trackedNotifications.values.find(n => n.id + root.idOffset === notif.notificationId);
+            if (tracked)
+                tracked.dismiss();
+            root.discard(notif.notificationId);
+        }
+        root._bulkOperationInProgress = false;
+        root.list = kept;
+        return true;
+    }
+
+    // Opening the control center is when the list is read, so a session that receives nothing
+    // for a day still sees its history trimmed.
+    onControlCenterOpenChanged: {
+        if (controlCenterOpen && prune())
+            notifFileView.setText(stringifyList(root.list));
     }
 
     property bool silent: false
@@ -169,6 +201,10 @@ Singleton {
         persistenceSupported: true
 
         onNotification: notification => {
+            if (notification.transient && root.silent) {
+                notification.dismiss();
+                return;
+            }
             notification.tracked = true;
             const newNotifObject = notifComponent.createObject(root, {
                 "notificationId": notification.id + root.idOffset,
@@ -176,6 +212,7 @@ Singleton {
                 "time": Date.now()
             });
             root.list = [newNotifObject, ...root.list];
+            root.prune();
 
             // Popup
             if (!root.popupInhibited) {
@@ -218,12 +255,21 @@ Singleton {
     function hideNotificationPopup(id) {
         const index = root.list.findIndex(notif => notif.notificationId === id);
         if (index !== -1) {
+            if (root.list[index].isTransient) {
+                root.discardNotification(id);
+                return;
+            }
             root.list[index].popup = false;
         }
     }
 
     function timeoutNotification(id) {
         const index = root.list.findIndex(notif => notif.notificationId === id);
+        if (root.list[index]?.isTransient) {
+            root.timeout(id);
+            root.discardNotification(id);
+            return;
+        }
         if (root.list[index] != null)
             root.list[index].popup = false;
         root.timeout(id);
@@ -295,6 +341,8 @@ Singleton {
 
             console.log("[Notifications] File loaded");
             root.idOffset = maxId;
+            if (root.prune())
+                notifFileView.setText(stringifyList(root.list));
             root.initDone();
         }
         onLoadFailed: error => {
